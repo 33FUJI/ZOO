@@ -3,62 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>💙 33 日本動物園 訂單統整</title>
+    <title>💙 33 日本動物園 管理系統</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
         :root { --main-blue: #003399; --bg-blue-light: #f0f4fa; --accent-blue: #0047bb; --price-red: #d9534f; }
         body { font-family: sans-serif; background: var(--bg-blue-light); margin: 0; display: flex; flex-direction: column; height: 100vh; color: #333; overflow: hidden; }
+        
+        /* 入口分流頁面 */
+        #entry-page { position: fixed; inset: 0; background: var(--main-blue); display: flex; align-items: center; justify-content: center; z-index: 5000; }
+        .entry-card { background: white; padding: 40px 20px; border-radius: 25px; text-align: center; width: 85%; max-width: 350px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
+        .entry-btn { width: 100%; padding: 18px; margin: 10px 0; border-radius: 15px; border: none; font-size: 1.2em; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-order { background: var(--main-blue); color: white; }
+        .btn-admin { background: #f0f0f0; color: #666; }
+        .entry-btn:active { transform: scale(0.95); }
+
         header { background: var(--main-blue); color: white; padding: 12px; text-align: center; font-size: 1.3em; font-weight: bold; flex-shrink: 0; }
         .nav-bar { background: #dee7f2; padding: 10px; display: flex; gap: 10px; overflow-x: auto; border-bottom: 2px solid #bbc9dd; flex-shrink: 0; }
         .nav-btn { background: white; border: 1px solid #bbc9dd; padding: 8px 18px; border-radius: 20px; white-space: nowrap; cursor: pointer; color: var(--main-blue); font-weight: bold; }
+        
         .main-content { display: flex; flex: 1; overflow: hidden; padding: 10px; gap: 10px; }
         .item-area { flex: 1.8; overflow-y: auto; background: white; border-radius: 15px; padding: 15px; border: 2px solid #dee7f2; }
         .cat-title { background: #eef2f9; padding: 8px 15px; border-radius: 20px; margin: 15px 0 8px; font-weight: bold; border-left: 8px solid var(--main-blue); color: var(--main-blue); }
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 10px; }
-        .p-btn { background: white; border: 1px solid #e1e8f0; border-radius: 12px; padding: 10px 5px; text-align: center; cursor: pointer; box-shadow: 2px 2px 0 #dee7f2; min-height: 90px; transition: 0.2s; }
-        .p-btn:active { transform: scale(0.95); }
-        .p-name { font-size: 0.85em; font-weight: bold; margin-bottom: 5px; height: 2.8em; overflow: hidden; }
-        .p-price { color: var(--accent-blue); font-size: 1.2em; font-weight: bold; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+        .p-btn { background: white; border: 1px solid #e1e8f0; border-radius: 12px; padding: 10px 5px; text-align: center; cursor: pointer; box-shadow: 2px 2px 0 #dee7f2; min-height: 90px; }
+        
         .checkout-area { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 320px; }
         .card { background: white; border-radius: 15px; padding: 12px; border: 2px solid #dee7f2; }
-        #cart-list { max-height: 180px; overflow-y: auto; margin-bottom: 10px; }
         .total-display { font-size: 3em; font-weight: bold; color: var(--price-red); text-align: right; margin: 5px 0; }
-        .qty-input { font-size: 1.8em; padding: 10px; width: 100%; border-radius: 10px; border: 2px solid #bbc9dd; text-align: right; box-sizing: border-box; background: #fff; }
-        .small-note { font-size: 1em; padding: 10px; width: 100%; border-radius: 8px; border: 1.5px solid #003399; margin-top: 5px; box-sizing: border-box; }
+        .qty-input { font-size: 1.8em; padding: 10px; width: 100%; border-radius: 10px; border: 2px solid #bbc9dd; text-align: right; box-sizing: border-box; }
+        
         #admin-panel, #history-panel, #user-search-panel { position: fixed; inset: 10px; background: white; z-index: 1000; border-radius: 20px; display: none; flex-direction: column; padding: 15px; border: 3px solid var(--main-blue); }
         .admin-only { display: none; }
-        .wait-tag { background: #ff9800; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-left: 5px; font-weight: bold; }
         .ok-tag { background: #4caf50; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-left: 5px; font-weight: bold; }
+        .wait-tag { background: #ff9800; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-left: 5px; font-weight: bold; }
         .save-toast { color: #4caf50; font-weight: bold; font-size: 0.9em; display: none; margin-left: 10px; }
-        .exit-btn { background: #666; color: white; border: none; padding: 5px 12px; border-radius: 5px; cursor: pointer; font-size: 0.8em; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-<header id="main-header" onclick="checkMagicClick()">💙 33 日本動物園 訂單統整</header>
+<div id="entry-page">
+    <div class="entry-card">
+        <h2 style="margin:0 0 10px 0; color:var(--main-blue);">💙 33 日本動物園</h2>
+        <p style="color:#666; font-size:0.9em; margin-bottom:20px;">請選擇您的身份進入系統</p>
+        <button class="entry-btn btn-order" onclick="enterOrder()">🛍️ 我要下單 / 查詢</button>
+        <button class="entry-btn btn-admin" onclick="enterAdmin()">⚙️ 老闆管理登入</button>
+    </div>
+</div>
+
+<header id="main-header">💙 33 日本動物園</header>
 <div class="nav-bar"><div id="navbar"></div></div>
 
 <div class="main-content">
     <div class="item-area" id="item-area">讀取中...</div>
     <div class="checkout-area">
         <div class="card">
-            <strong>📋 登記名單</strong>
-            <div id="cart-list"></div>
+            <strong>📋 登記項目</strong>
+            <div id="cart-list" style="max-height:150px; overflow-y:auto; margin-bottom:10px;"></div>
             <div style="font-size: 0.8em; color: #666; margin-bottom: 5px;">🔢 調整數量：</div>
             <input type="number" id="qty-adjust" class="qty-input" value="0" oninput="syncQty(this.value)">
-            <input type="text" id="discount-note" class="small-note" placeholder="✏️ 輸入你的暱稱 (必填)">
+            <input type="text" id="discount-note" style="width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1.5px solid var(--main-blue); box-sizing:border-box;" placeholder="✏️ 請輸入您的暱稱 (必填)">
             <div class="total-display" id="total-price">$ 0</div>
-            <button onclick="checkout()" style="width:100%; padding:15px; background:var(--main-blue); color:white; border-radius:10px; font-size:1.3em; font-weight:bold; cursor:pointer; border:none;">✅ 確認登記</button>
+            <button onclick="checkout()" style="width:100%; padding:15px; background:var(--main-blue); color:white; border-radius:10px; font-size:1.3em; font-weight:bold; border:none; cursor:pointer;">確認登記送出</button>
             
-            <div style="margin-top:10px; display:flex; flex-direction:column; gap:5px;">
-                <button onclick="togglePanel('user-search-panel')" style="width:100%; padding:8px; border:1px solid var(--main-blue); background:none; border-radius:5px; color:var(--main-blue); cursor:pointer;">🔍 查詢我的登記</button>
-                <div class="admin-only" style="border-top:1px dashed #ccc; padding-top:5px; margin-top:5px; display:flex; gap:5px;">
-                    <button onclick="togglePanel('admin-panel')" style="flex:1; padding:8px; background:#f0f0f0; border:1px solid #ccc; border-radius:5px; cursor:pointer;">⚙️ 品項管理</button>
-                    <button onclick="togglePanel('history-panel')" style="flex:1; padding:8px; background:#f0f0f0; border:1px solid #ccc; border-radius:5px; cursor:pointer;">📜 總單(按順位)</button>
+            <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
+                <button onclick="togglePanel('user-search-panel')" style="width:100%; padding:8px; border:1px solid var(--main-blue); background:none; border-radius:8px; color:var(--main-blue); cursor:pointer;">🔍 查詢我的登記紀錄</button>
+                <div class="admin-only" style="border-top:1px dashed #ccc; padding-top:10px; display:flex; gap:5px;">
+                    <button onclick="togglePanel('admin-panel')" style="flex:1; padding:10px; background:#eee; border:1px solid #ccc; border-radius:8px; cursor:pointer;">⚙️ 品項管理</button>
+                    <button onclick="togglePanel('history-panel')" style="flex:1; padding:10px; background:#eee; border:1px solid #ccc; border-radius:8px; cursor:pointer;">📜 查看總單</button>
                 </div>
-                <button onclick="exitAdmin()" class="admin-only exit-btn">🏠 離開老闆模式 (回一般頁面)</button>
+                <button onclick="location.reload()" style="width:100%; padding:8px; background:none; border:none; color:#999; font-size:0.8em; cursor:pointer;">🏠 回到入口選單</button>
             </div>
         </div>
     </div>
@@ -66,31 +81,47 @@
 
 <div id="admin-panel" style="overflow-y:auto;">
     <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2>⚙️ 品項管理 <span id="save-status" class="save-toast">✅ 已同步</span></h2>
+        <h2>⚙️ 品項管理 <span id="save-status" class="save-toast">✅ 自動同步成功</span></h2>
         <button onclick="togglePanel('admin-panel')">✕</button>
     </div>
-    <div style="background:#f0f4fa; padding:10px; border-radius:10px; margin-bottom:10px;">
-        <input type="number" id="new-p-sort" placeholder="排序" style="width:50px;">
-        <input type="text" id="new-p-cat" placeholder="分類" style="width:80px;">
-        <input type="text" id="new-p-name" placeholder="品名">
-        <input type="number" id="new-p-price" placeholder="價格" style="width:70px;">
-        <input type="number" id="new-p-stock" placeholder="限額" style="width:60px;">
-        <button onclick="quickAdd()" style="background:#28a745; color:white; border:none; padding:8px 12px; border-radius:5px; cursor:pointer;">＋新增</button>
+    <div style="background:#f0f4fa; padding:12px; border-radius:12px; margin-bottom:15px;">
+        <div style="display:grid; grid-template-columns: 1fr 1.5fr 1fr; gap:5px; margin-bottom:5px;">
+            <input type="number" id="new-p-sort" placeholder="排序">
+            <input type="text" id="new-p-cat" placeholder="分類(標籤)">
+            <input type="number" id="new-p-stock" placeholder="限額">
+        </div>
+        <div style="display:grid; grid-template-columns: 2fr 1fr; gap:5px;">
+            <input type="text" id="new-p-name" placeholder="商品名稱">
+            <input type="number" id="new-p-price" placeholder="價格">
+        </div>
+        <button onclick="quickAdd()" style="width:100%; margin-top:8px; padding:10px; background:#28a745; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">＋新增商品</button>
     </div>
-    <table border="1" style="width:100%; border-collapse:collapse; text-align:center;">
-        <thead style="background:#eee;"><tr><th>排序</th><th>分類</th><th>品名</th><th>售價</th><th>限額</th><th>刪</th></tr></thead>
+    <table border="1" style="width:100%; border-collapse:collapse; text-align:center; font-size:0.9em;">
+        <thead style="background:#eee;"><tr><th>排序</th><th>品名</th><th>限額</th><th>刪除</th></tr></thead>
         <tbody id="admin-tbody"></tbody>
     </table>
 </div>
 
 <div id="history-panel">
-    <div style="display:flex; justify-content:space-between;"><h2>📜 登記總覽 (最早在最上)</h2><button onclick="togglePanel('history-panel')">✕</button></div>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>📜 登記總覽 (按順位排列)</h2>
+        <button onclick="togglePanel('history-panel')">✕</button>
+    </div>
     <div id="history-list" style="overflow-y:auto;"></div>
 </div>
 
-<div id="user-search-panel"><div style="display:flex; justify-content:space-between;"><h2>🔍 我的登記</h2><button onclick="togglePanel('user-search-panel')">✕</button></div><input type="text" id="search-nickname" class="small-note" placeholder="輸入暱稱"><button onclick="searchOrders()" style="margin-top:10px; padding:10px; background:var(--main-blue); color:white; border:none; width:100%; border-radius:5px;">搜尋</button><div id="search-result" style="margin-top:15px; overflow-y:auto;"></div></div>
+<div id="user-search-panel">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>🔍 查詢我的登記</h2>
+        <button onclick="togglePanel('user-search-panel')">✕</button>
+    </div>
+    <input type="text" id="search-nickname" style="width:100%; padding:12px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;" placeholder="請輸入您登記時用的暱稱">
+    <button onclick="searchOrders()" style="width:100%; margin-top:10px; padding:12px; background:var(--main-blue); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">開始搜尋</button>
+    <div id="search-result" style="margin-top:15px; overflow-y:auto;"></div>
+</div>
 
 <script>
+// Firebase 配置
 const firebaseConfig = {
     apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",
     authDomain: "zoo-62638.firebaseapp.com",
@@ -106,20 +137,32 @@ let products = [];
 let cart = [];
 let allOrders = {};
 
+// 入口選單邏輯
+function enterOrder() { document.getElementById('entry-page').style.display = 'none'; }
+function enterAdmin() {
+    const pw = prompt("🔐 請輸入管理密碼：");
+    if (pw === "3388") { 
+        document.getElementById('entry-page').style.display = 'none';
+        window.location.hash = "#admin";
+        checkAdmin();
+    } else if (pw !== null) {
+        alert("❌ 密碼錯誤，您沒有管理權限。");
+    }
+}
+
 function checkAdmin() {
     if(window.location.hash === '#admin') {
-        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
-        document.getElementById('main-header').innerText = "💙 33 日本動物園 (老闆模式)";
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'flex');
+        document.getElementById('main-header').innerText = "💙 老闆模式 (資料已解鎖)";
     } else {
         document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
         document.getElementById('main-header').innerText = "💙 33 日本動物園";
     }
 }
-window.addEventListener('hashchange', checkAdmin);
 window.addEventListener('load', checkAdmin);
+window.addEventListener('hashchange', checkAdmin);
 
-function exitAdmin() { window.location.hash = ""; }
-
+// 資料讀取
 db.ref("products").on("value", (s) => { 
     products = s.val() || []; 
     products.sort((a,b) => (a.sort || 999) - (b.sort || 999));
@@ -145,7 +188,7 @@ function renderPOS() {
         const grid = document.createElement('div'); grid.className = "product-grid";
         products.filter(p => p.cat === cat).forEach(p => {
             const btn = document.createElement('div'); btn.className = "p-btn"; btn.onclick = () => addToCart(p.id);
-            btn.innerHTML = `<div class="p-name">${p.name}</div><div class="p-price">$ ${p.price}</div><div style="font-size:0.7em; color:#999;">限額: ${p.stock}</div>`;
+            btn.innerHTML = `<div style="font-weight:bold; font-size:0.85em; height:2.5em; overflow:hidden;">${p.name}</div><div style="color:var(--accent-blue); font-weight:bold;">$ ${p.price}</div><div style="font-size:0.7em; color:#999;">限額: ${p.stock}</div>`;
             grid.appendChild(btn);
         });
         area.appendChild(grid);
@@ -154,24 +197,23 @@ function renderPOS() {
 
 function addToCart(id) {
     const p = products.find(i => i.id === id);
-    cart = [{...p, qty: 1}];
+    cart = [{...p, qty: 1}]; 
     document.getElementById('qty-adjust').value = 1;
     renderCart();
 }
 function syncQty(val) { if(cart.length > 0) { cart[0].qty = parseInt(val) || 0; renderCart(); } }
 function renderCart() {
-    document.getElementById('cart-list').innerHTML = cart.map((item, index) => `<div style="display:flex; justify-content:space-between; padding:5px 0;"><span>${item.name}</span><button onclick="clearCart()" style="color:red; background:none; border:none; cursor:pointer;">✕</button></div>`).join('');
-    const sub = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
-    document.getElementById('total-price').innerText = `$ ${sub}`;
+    document.getElementById('cart-list').innerHTML = cart.map(i => `<div style="display:flex; justify-content:space-between; padding:5px; background:#f9f9f9; border-radius:5px;"><span>${i.name}</span><button onclick="clearCart()" style="color:red; border:none; background:none; cursor:pointer;">✕</button></div>`).join('');
+    const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+    document.getElementById('total-price').innerText = `$ ${total}`;
 }
 function clearCart() { cart = []; document.getElementById('qty-adjust').value = 0; renderCart(); }
 
 async function checkout() {
     const note = document.getElementById('discount-note').value.trim();
-    if(cart.length === 0 || !note || cart[0].qty <= 0) return alert("請正確填寫資訊");
-    const order = { time: new Date().toLocaleString(), timestamp: Date.now(), items: cart, total: parseInt(document.getElementById('total-price').innerText.replace('$ ','')), note: note };
-    await db.ref("history").push(order);
-    alert("登記成功！💙"); clearCart(); document.getElementById('discount-note').value="";
+    if(cart.length === 0 || !note || cart[0].qty <= 0) return alert("❌ 請選擇商品、數量並輸入暱稱");
+    await db.ref("history").push({ time: new Date().toLocaleString(), timestamp: Date.now(), items: cart, total: parseInt(document.getElementById('total-price').innerText.replace('$ ','')), note: note });
+    alert("✅ 登記成功！"); clearCart(); document.getElementById('discount-note').value="";
 }
 
 function getOrderPriority(orderKey, itemName) {
@@ -205,23 +247,23 @@ function renderHistory() {
     const sortedKeys = Object.keys(allOrders).sort((a,b) => allOrders[a].timestamp - allOrders[b].timestamp);
     document.getElementById('history-list').innerHTML = sortedKeys.map(key => {
         const o = allOrders[key];
-        return `<div style="border-bottom:1px solid #eee; padding:10px;">👤 <strong>${o.note}</strong> <small>${o.time}</small><button onclick="delH('${key}')" class="admin-only" style="float:right; color:red; border:none; background:none; cursor:pointer;">✕ 刪除</button><br>${o.items.map(i => `<div>- ${i.name} x ${i.qty} ${getOrderPriority(key, i.name)}</div>`).join('')}<strong>總計: $${o.total}</strong></div>`;
+        return `<div style="border-bottom:1px solid #eee; padding:10px;">👤 <strong>${o.note}</strong> <small style="color:#999;">${o.time}</small><button onclick="delH('${key}')" class="admin-only" style="float:right; color:red; border:none; background:none; cursor:pointer;">✕ 刪除</button><br>${o.items.map(i => `<div>- ${i.name} x ${i.qty} ${getOrderPriority(key, i.name)}</div>`).join('')}<strong>總額: $${o.total}</strong></div>`;
     }).join('');
     checkAdmin();
 }
 
 function searchOrders() {
     const name = document.getElementById('search-nickname').value.trim();
-    if(!name) return;
+    if(!name) return alert("請輸入暱稱");
     const myOrders = Object.keys(allOrders).filter(k => allOrders[k].note === name).sort((a,b) => allOrders[b].timestamp - allOrders[a].timestamp);
-    document.getElementById('search-result').innerHTML = myOrders.map(k => `<div style="background:#f9f9f9; padding:10px; margin-bottom:5px; border-radius:8px;"><small>${allOrders[k].time}</small><br>${allOrders[k].items.map(i => `<div>${i.name} x ${i.qty} ${getOrderPriority(k, i.name)}</div>`).join('')}</div>`).join('') || "找不到紀錄";
+    document.getElementById('search-result').innerHTML = myOrders.map(k => `<div style="background:#f9f9f9; padding:12px; margin-bottom:10px; border-radius:10px;"><small style="color:#999;">${allOrders[k].time}</small><br>${allOrders[k].items.map(i => `<div style="font-weight:bold;">${i.name} x ${i.qty} ${getOrderPriority(k, i.name)}</div>`).join('')}</div>`).join('') || "查無登記紀錄，請確認暱稱是否正確。";
 }
 
 function renderAdmin() {
     document.getElementById('admin-tbody').innerHTML = products.map((p, i) => `<tr>
-        <td><input type="number" value="${p.sort || 0}" onchange="editP(${i},'sort',this.value)" style="width:40px;"></td>
-        <td style="font-size:0.8em;">${p.cat}</td><td style="font-size:0.8em;">${p.name}</td><td>${p.price}</td>
-        <td><input type="number" value="${p.stock}" onchange="editP(${i},'stock',this.value)" style="width:50px;"></td>
+        <td><input type="number" value="${p.sort || 0}" onchange="editP(${i},'sort',this.value)" style="width:45px; text-align:center; border:1px solid #ddd; border-radius:4px;"></td>
+        <td style="text-align:left; padding-left:5px;">${p.name}</td>
+        <td><input type="number" value="${p.stock}" onchange="editP(${i},'stock',this.value)" style="width:45px; text-align:center; border:1px solid #ddd; border-radius:4px;"></td>
         <td><button onclick="delP(${i})" style="color:red; border:none; background:none; font-size:1.2em; cursor:pointer;">✕</button></td>
     </tr>`).join('');
 }
@@ -233,21 +275,14 @@ function quickAdd() {
     const name = document.getElementById('new-p-name').value;
     const price = parseInt(document.getElementById('new-p-price').value);
     const stock = parseInt(document.getElementById('new-p-stock').value) || 0;
-    if(!cat || !name) return alert("請填寫完整");
+    if(!cat || !name || !price) return alert("請填寫分類、名稱與價格");
     products.push({ id: Date.now(), sort, cat, name, price, stock });
     db.ref("products").set(products); showSaveStatus();
+    document.getElementById('new-p-name').value = ""; document.getElementById('new-p-price').value = "";
 }
-function delP(i) { if(confirm("確定刪除品項？")) { products.splice(i,1); db.ref("products").set(products); showSaveStatus(); } }
-function delH(k) { if(confirm("確定刪除此筆登記？")) db.ref("history").child(k).remove(); }
+function delP(i) { if(confirm("確定刪除此商品？")) { products.splice(i,1); db.ref("products").set(products); showSaveStatus(); } }
+function delH(k) { if(confirm("確定刪除此筆訂單？")) db.ref("history").child(k).remove(); }
 function togglePanel(id) { const p = document.getElementById(id); p.style.display = (p.style.display==='flex')?'none':'flex'; }
-
-// 隱藏小彩蛋：點擊標題 5 下也可以進入老闆模式
-let clickCount = 0;
-function checkMagicClick() {
-    clickCount++;
-    if(clickCount >= 5) { window.location.hash = "#admin"; clickCount = 0; }
-    setTimeout(() => clickCount = 0, 2000);
-}
 </script>
 </body>
 </html>
