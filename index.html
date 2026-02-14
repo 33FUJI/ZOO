@@ -7,166 +7,48 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        body { font-family: sans-serif; background: #f8f9fa; margin: 0; padding-bottom: 80px; }
+        body { font-family: sans-serif; background: #f8f9fa; margin: 0; padding-bottom: 50px; }
         header { background: #2c3e50; color: white; padding: 15px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 1000; }
+        .container { max-width: 600px; margin: 0 auto; padding: 10px; }
         
-        /* 妳要求的分區框框樣式 */
-        .category-section { margin: 20px auto; max-width: 600px; padding: 0 15px; }
-        .category-title { font-weight: bold; color: #2c3e50; border-left: 5px solid #003399; padding-left: 10px; margin-bottom: 15px; }
+        /* 框框分區 */
+        .category-section { margin-bottom: 30px; }
+        .category-title { font-weight: bold; color: #2c3e50; border-left: 5px solid #003399; padding-left: 10px; margin-bottom: 15px; font-size: 1.1em; }
         
-        .item-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #ddd; }
-        .item-info { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        /* 商品卡片 */
+        .item-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .item-info { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; }
         
-        /* 規格按鈕樣式 */
+        /* 規格按鈕 */
         .spec-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
-        .spec-btn { padding: 10px 12px; border: 1px solid #ccc; border-radius: 5px; background: #fff; cursor: pointer; flex: 1; min-width: 60px; text-align: center; font-weight: bold; }
+        .spec-btn { flex: 1; min-width: 60px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; background: #fff; cursor: pointer; text-align: center; font-weight: bold; font-size: 0.9em; }
         .spec-btn:active { background: #003399; color: white; }
 
-        /* 原始彈窗與面板 ID (不可亂動) */
-        #bottom-panel { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 20px; border-top: 2px solid #ddd; display: none; flex-direction: column; gap: 10px; z-index: 2000; }
-        .input-box { padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 100%; box-sizing: border-box; }
-        .full-panel { position: fixed; inset: 0; background: white; z-index: 3000; display: none; flex-direction: column; padding: 20px; overflow-y: auto; }
+        /* 填寫框 (一頁式) */
+        #order-form-area { background: #fff; padding: 20px; border-radius: 15px; border: 2px solid #003399; margin: 20px 0; display: none; }
+        .input-box { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; margin-bottom: 10px; font-size: 1em; }
+
+        /* 看板樣式 */
+        .board-card { background: #fff; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #003399; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         
-        .admin-trigger { position: fixed; bottom: 10px; right: 10px; color: #ccc; cursor: pointer; padding: 10px; z-index: 5000; }
+        /* 老闆管理區 (隱藏) */
+        #admin-section { display: none; background: #eef2f7; padding: 20px; border-radius: 15px; margin-top: 30px; border: 1px dashed #666; }
+        
+        footer { text-align: center; padding: 50px 0; color: #bbb; font-size: 0.8em; }
+        .footer-trigger { cursor: pointer; display: inline-block; padding: 10px 20px; }
     </style>
 </head>
 <body>
 
 <header onclick="location.reload()">💙 33 代購登記</header>
 
-<div id="display-area">讀取中...</div>
+<div class="container">
+    <div id="display-area">連線中，請稍候...</div>
 
-<div style="text-align: center; margin-top: 20px;">
-    <button onclick="document.getElementById('search-panel').style.display='flex'" style="background: none; border: 1px solid #ccc; padding: 10px 20px; border-radius: 20px; color: #888;">🔍 查看登記進度</button>
-</div>
-
-<div id="bottom-panel">
-    <div id="target-display" style="font-weight: bold; color: #003399;"></div>
-    <input type="text" id="order-name" class="input-box" placeholder="訂單名稱 (如：第一波、現場)">
-    <input type="text" id="user-nick" class="input-box" placeholder="您的暱稱 (必填)">
-    <div style="display: flex; align-items: center; justify-content: space-between;">
-        <span>數量：</span>
-        <input type="number" id="target-qty" value="1" min="1" style="width: 80px; padding: 10px; border: 1px solid #ddd;">
-    </div>
-    <div style="display: flex; gap: 10px;">
-        <button onclick="submitData()" style="flex: 2; padding: 15px; background: #2c3e50; color: white; border: none; border-radius: 8px; font-weight: bold;">確認送出</button>
-        <button onclick="document.getElementById('bottom-panel').style.display='none'" style="flex: 1; padding: 15px; background: #eee; border: none; border-radius: 8px;">取消</button>
-    </div>
-</div>
-
-<div id="search-panel" class="full-panel">
-    <div style="display:flex; justify-content:space-between;"><h3>📊 登記看板</h3><button onclick="this.parentElement.parentElement.style.display='none'">✕</button></div>
-    <div id="live-board">尚未有登記資料</div>
-</div>
-
-<div id="admin-panel" class="full-panel">
-    <div style="display:flex; justify-content:space-between;"><h3>⚙️ 老闆管理</h3><button onclick="this.parentElement.parentElement.style.display='none'">✕</button></div>
-    <div style="background: #eef; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-        <button onclick="seedInitialData()" style="width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 8px; margin-bottom: 10px;">🔄 點我：一鍵重新上架商品</button>
-        <strong>管理商品：</strong><br>
-        <input type="text" id="adm-cat" class="input-box" placeholder="分區">
-        <input type="text" id="adm-name" class="input-box" placeholder="商品名稱">
-        <input type="number" id="adm-price" class="input-box" placeholder="價格">
-        <input type="number" id="adm-stock" class="input-box" placeholder="限額">
-        <button onclick="saveProduct()" style="width: 100%; padding: 12px; background: green; color: white; border: none; border-radius: 8px; margin-top: 5px;">儲存商品</button>
-    </div>
-    <div id="adm-list-area"></div>
-</div>
-
-<div class="admin-trigger" onclick="if(prompt('密碼')==='3388') document.getElementById('admin-panel').style.display='flex'">.</div>
-
-<script>
-const firebaseConfig = {
-    apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",
-    authDomain: "zoo-62638.firebaseapp.com",
-    databaseURL: "https://zoo-62638-default-rtdb.firebaseio.com",
-    projectId: "zoo-62638",
-    storageBucket: "zoo-62638.firebasestorage.app",
-    messagingSenderId: "33012710753",
-    appId: "1:33012710753:web:318636add1f5ac2f7b5920"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-let items = {}, orders = {}, activeKey = "", activeSpec = "";
-
-// 一鍵上架 (絕不刪減)
-function seedInitialData() {
-    if(!confirm("確定重新上架？")) return;
-    const data = {};
-    const list = [
-        { cat: "🛒 日本超市區", name: "超市餅乾", price: 200, stock: 20 },
-        { cat: "🛒 日本超市區", name: "超市小食", price: 150, stock: 20 },
-        { cat: "💎 SS10 週邊區", name: "T-shirt (M/L)", price: 1200, stock: 10 },
-        { cat: "💎 SS10 週邊區", name: "拉鍊連帽衫 (M/L)", price: 2700, stock: 10 },
-        { cat: "💎 SS10 週邊區", name: "動物棒棒糖吊飾 (分成員)", price: 500, stock: 45 },
-        { cat: "💎 SS10 週邊區", name: "馬克杯 (分成員)", price: 800, stock: 18 },
-        { cat: "💎 SS10 週邊區", name: "壓克力立牌(分成員)", price: 700, stock: 27 },
-        { cat: "💎 SS10 週邊區", name: "姓名牌(分成員)", price: 450, stock: 45 },
-        { cat: "💎 SS10 週邊區", name: "方巾", price: 700, stock: 20 },
-        { cat: "💎 SS10 週邊區", name: "可折環保袋", price: 750, stock: 15 },
-        { cat: "💎 SS10 週邊區", name: "手提袋", price: 1150, stock: 10 },
-        { cat: "💎 SS10 週邊區", name: "徽章(隨機)", price: 380, stock: 100 },
-        { cat: "💎 SS10 週邊區", name: "隨機卡包", price: 150, stock: 200 },
-        { cat: "💎 SS10 週邊區", name: "隨機零食盒", price: 500, stock: 30 },
-        { cat: "💎 SS10 週邊區", name: "扭蛋(隨機)", price: 200, stock: 100 }
-    ];
-    list.forEach(i => { const k = db.ref("products").push().key; data[k] = { ...i, key: k }; });
-    db.ref("products").set(data).then(() => alert("商品上架成功！"));
-}
-
-function saveProduct() {
-    const k = db.ref("products").push().key;
-    db.ref("products/"+k).set({
-        cat: document.getElementById('adm-cat').value,
-        name: document.getElementById('adm-name').value,
-        price: parseInt(document.getElementById('adm-price').value),
-        stock: parseInt(document.getElementById('adm-stock').value),
-        key: k
-    });
-}
-
-// 監聽 Firebase (絕不刪減)
-db.ref("products").on("value", (s) => {
-    items = s.val() || {};
-    const area = document.getElementById('display-area');
-    const cats = [...new Set(Object.values(items).map(i => i.cat))].sort((a,b) => a.includes("超市") ? -1 : 1);
-    
-    area.innerHTML = cats.map(c => `
-        <div class="category-section">
-            <div class="category-title">${c}</div>
-            ${Object.values(items).filter(i => i.cat === c).map(i => {
-                let specs = [];
-                if(i.name.includes("(M/L)")) specs = ["M", "L"];
-                else if(i.name.includes("(分成員)")) specs = ["特", "澈", "雲", "童", "赫", "海", "源", "旭", "圭"];
-                
-                return `
-                    <div class="item-card">
-                        <div class="item-info"><b>${i.name}</b><span style="color:red">NT${i.price}</span></div>
-                        <div class="spec-wrap">
-                            ${specs.length > 0 ? 
-                                specs.map(s => `<div class="spec-btn" onclick="startOrder('${i.key}','${s}')">${s}</div>`).join('') :
-                                `<div class="spec-btn" style="background:#2c3e50; color:white;" onclick="startOrder('${i.key}','')">登記</div>`
-                            }
-                        </div>
-                    </div>`;
-            }).join('')}
-        </div>`).join('') || "請初始化資料";
-});
-
-function startOrder(k, s) {
-    activeKey = k; activeSpec = s;
-    document.getElementById('target-display').innerText = items[k].name + (s ? " ["+s+"]" : "");
-    document.getElementById('bottom-panel').style.display = 'flex';
-}
-
-function submitData() {
-    const nick = document.getElementById('user-nick').value;
-    if(!nick) return alert("請填寫暱稱");
-    db.ref("history").push({
-        timestamp: Date.now(),
-        itemKey: activeKey,
-        itemName: items[activeKey].name + (activeSpec ? " ["+activeSpec+"]" : ""),
-        note: nick,
-        orderName: document.getElementById('order-name').value,
-        qty: parseInt(document.getElementById('target-qty').value
+    <div id="order-form-area">
+        <h3 id="target-display" style="margin-top:0; color:#003399;"></h3>
+        <input type="text" id="order-name" class="input-box" placeholder="訂單名稱 (如：現場、第一波)">
+        <input type="text" id="user-nick" class="input-box" placeholder="您的暱稱 (必填)">
+        <div style="margin-bottom:10px;">數量：<input type="number" id="target-qty" value="1" min="1" style="width:60px; padding:8px;"></div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="submitData()" style="flex
