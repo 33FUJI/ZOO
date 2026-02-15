@@ -3,31 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>33日本動物園 - 客戶自助下單系統</title>
+    <title>33日本動物園 - 代購登記系統</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
     <style>
-        :root { --brand-color: #2c3e50; --accent-blue: #3498db; --price-red: #e74c3c; --bg-gray: #f8f9fa; }
+        :root { --brand-color: #1a2a6c; --accent-blue: #4a69bd; --price-red: #e74c3c; --bg-gray: #f4f7f6; }
         body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg-gray); margin: 0; color: #333; }
-        header { background: var(--brand-color); color: white; padding: 15px; text-align: center; font-size: 1.4em; font-weight: bold; }
+        header { background: var(--brand-color); color: white; padding: 15px; text-align: center; font-size: 1.4em; font-weight: bold; letter-spacing: 2px; }
         
-        .container { display: flex; flex-direction: column; height: calc(100vh - 60px); }
-        .main-layout { display: flex; flex: 1; overflow: hidden; padding: 10px; gap: 10px; }
+        .main-layout { display: flex; flex-direction: row; height: calc(100vh - 60px); padding: 10px; gap: 10px; box-sizing: border-box; }
         
-        /* 商品選購區 */
-        .item-area { flex: 1.5; overflow-y: auto; background: white; border-radius: 12px; padding: 15px; }
+        /* 左側商品區 */
+        .item-area { flex: 1.5; overflow-y: auto; background: white; border-radius: 12px; padding: 15px; border: 1px solid #e0e0e0; }
         .cat-group { margin-bottom: 25px; }
-        .cat-header { font-size: 1.2em; font-weight: bold; color: var(--brand-color); border-bottom: 2px solid var(--brand-color); margin-bottom: 15px; padding-bottom: 5px; }
+        .cat-header { font-size: 1.2em; font-weight: bold; color: var(--brand-color); border-bottom: 3px solid var(--brand-color); margin-bottom: 15px; padding-bottom: 5px; display: flex; align-items: center; }
         
         .p-card { border: 1px solid #eee; border-radius: 10px; padding: 15px; margin-bottom: 15px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .p-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1em; margin-bottom: 10px; }
+        .p-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1em; margin-bottom: 12px; }
         
-        /* 規格與數量選擇器 */
+        /* 規格選擇 (A) 方案：選中變色 */
         .spec-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-        .spec-btn { padding: 8px 15px; border: 1px solid #ddd; border-radius: 6px; background: #fff; cursor: pointer; transition: 0.2s; }
-        .spec-btn.active { background: var(--accent-blue); color: white; border-color: var(--accent-blue); }
-        
-        .qty-control { display: none; align-items: center; gap: 10px; background: #f0f2f5; padding: 10px; border-radius: 8px; }
-        .qty-btn { width: 35px; height: 35px; border: none; background: #ddd; border-radius: 5px; font-size: 1.2em; cursor: pointer; }
-        .qty-input { width: 60px; height: 35
+        .spec-btn { padding: 10px 18px; border: 1px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer; transition: 0.2s; font-weight: bold; }
+        .spec-btn.active { background: var(--accent-blue); color
