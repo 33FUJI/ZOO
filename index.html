@@ -7,35 +7,36 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
+        :root { --main: #2c3e50; --accent: #003399; }
         body { font-family: sans-serif; background: #f8f9fa; margin: 0; padding-bottom: 50px; }
-        header { background: #2c3e50; color: white; padding: 15px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 1000; }
+        header { background: var(--main); color: white; padding: 15px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 1000; }
         .container { max-width: 600px; margin: 0 auto; padding: 10px; }
         
         /* 框框分區 */
-        .category-section { margin-bottom: 30px; }
-        .category-title { font-weight: bold; color: #2c3e50; border-left: 5px solid #003399; padding-left: 10px; margin-bottom: 15px; font-size: 1.1em; }
+        .category-section { margin-bottom: 25px; }
+        .category-title { font-weight: bold; color: var(--main); border-left: 5px solid var(--accent); padding-left: 10px; margin-bottom: 12px; }
         
         /* 商品卡片 */
-        .item-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .item-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #ddd; }
         .item-info { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; }
         
         /* 規格按鈕 */
-        .spec-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
-        .spec-btn { flex: 1; min-width: 60px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; background: #fff; cursor: pointer; text-align: center; font-weight: bold; font-size: 0.9em; }
-        .spec-btn:active { background: #003399; color: white; }
+        .spec-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+        .spec-btn { flex: 1; min-width: 50px; padding: 10px 5px; border: 1px solid #ccc; border-radius: 5px; background: #fff; cursor: pointer; text-align: center; font-size: 0.85em; font-weight: bold; }
+        .spec-btn:active { background: var(--accent); color: white; }
 
-        /* 填寫框 (一頁式) */
-        #order-form-area { background: #fff; padding: 20px; border-radius: 15px; border: 2px solid #003399; margin: 20px 0; display: none; }
-        .input-box { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; margin-bottom: 10px; font-size: 1em; }
+        /* 填寫框 (一頁式直接展開) */
+        #order-form-area { background: #fff; padding: 15px; border-radius: 12px; border: 2px solid var(--accent); margin: 15px 0; display: none; }
+        .input-box { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; margin-bottom: 10px; }
 
-        /* 看板樣式 */
-        .board-card { background: #fff; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #003399; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        /* 看板 */
+        .board-card { background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 0.9em; }
         
-        /* 老闆管理區 (隱藏) */
-        #admin-section { display: none; background: #eef2f7; padding: 20px; border-radius: 15px; margin-top: 30px; border: 1px dashed #666; }
+        /* 管理區 */
+        #admin-section { display: none; background: #eef; padding: 15px; border-radius: 12px; margin-top: 30px; border: 1px dashed #999; }
         
-        footer { text-align: center; padding: 50px 0; color: #bbb; font-size: 0.8em; }
-        .footer-trigger { cursor: pointer; display: inline-block; padding: 10px 20px; }
+        footer { text-align: center; padding: 40px 0; color: #aaa; font-size: 0.8em; }
+        .footer-trigger { cursor: pointer; padding: 20px; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -46,9 +47,21 @@
     <div id="display-area">連線中，請稍候...</div>
 
     <div id="order-form-area">
-        <h3 id="target-display" style="margin-top:0; color:#003399;"></h3>
-        <input type="text" id="order-name" class="input-box" placeholder="訂單名稱 (如：現場、第一波)">
+        <h3 id="target-display" style="margin-top:0; color:var(--accent); font-size:1em;"></h3>
+        <input type="text" id="order-name" class="input-box" placeholder="訂單備註 (如：現場、第一波)">
         <input type="text" id="user-nick" class="input-box" placeholder="您的暱稱 (必填)">
         <div style="margin-bottom:10px;">數量：<input type="number" id="target-qty" value="1" min="1" style="width:60px; padding:8px;"></div>
         <div style="display: flex; gap: 10px;">
-            <button onclick="submitData()" style="flex
+            <button onclick="submitData()" style="flex: 2; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold;">確認送出</button>
+            <button onclick="document.getElementById('order-form-area').style.display='none'" style="flex: 1; padding: 12px; background: #eee; border: none; border-radius: 8px;">取消</button>
+        </div>
+    </div>
+
+    <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
+
+    <h3 style="color:var(--main); font-size:1.1em;">📊 即時登記進度</h3>
+    <div id="live-board">讀取名單中...</div>
+
+    <div id="admin-section">
+        <h3>⚙️ 老闆管理後台</h3>
+        <button onclick="seedInitialData()" style="width:100%; padding:15
