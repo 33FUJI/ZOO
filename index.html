@@ -3,40 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>33 代購登記</title>
+    <title>33 代購登記系統</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        :root { --main: #2c3e50; --accent: #003399; }
-        body { font-family: sans-serif; background: #f8f9fa; margin: 0; padding-bottom: 50px; }
-        header { background: var(--main); color: white; padding: 15px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 1000; }
-        .container { max-width: 600px; margin: 0 auto; padding: 10px; }
+        :root { --main: #2c3e50; --accent: #003399; --bg: #f4f7f9; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding-bottom: 50px; line-height: 1.5; }
+        header { background: var(--main); color: white; padding: 18px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; }
+        .container { max-width: 600px; margin: 0 auto; padding: 15px; }
         
-        /* 框框分區 */
+        /* 分類標題 */
         .category-section { margin-bottom: 25px; }
-        .category-title { font-weight: bold; color: var(--main); border-left: 5px solid var(--accent); padding-left: 10px; margin-bottom: 12px; }
+        .category-title { font-size: 1.1em; font-weight: bold; color: var(--main); border-left: 5px solid var(--accent); padding-left: 10px; margin-bottom: 12px; }
         
         /* 商品卡片 */
-        .item-card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 12px; border: 1px solid #ddd; }
-        .item-info { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold; }
+        .item-card { background: white; padding: 16px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #e0e6ed; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .item-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: bold; font-size: 1.05em; }
         
         /* 規格按鈕 */
-        .spec-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
-        .spec-btn { flex: 1; min-width: 50px; padding: 10px 5px; border: 1px solid #ccc; border-radius: 5px; background: #fff; cursor: pointer; text-align: center; font-size: 0.85em; font-weight: bold; }
-        .spec-btn:active { background: var(--accent); color: white; }
+        .spec-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+        .spec-btn { flex: 1; min-width: 60px; padding: 10px 5px; border: 1px solid #d1d9e0; border-radius: 8px; background: #fff; cursor: pointer; text-align: center; font-size: 0.9em; font-weight: 600; transition: all 0.2s; }
+        .spec-btn:active { background: var(--accent); color: white; transform: scale(0.95); }
 
-        /* 填寫框 (一頁式直接展開) */
-        #order-form-area { background: #fff; padding: 15px; border-radius: 12px; border: 2px solid var(--accent); margin: 15px 0; display: none; }
-        .input-box { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; margin-bottom: 10px; }
+        /* 填寫彈窗區域 */
+        #order-form-area { 
+            display: none; background: #fff; padding: 20px; border-radius: 15px; 
+            border: 2px solid var(--accent); margin: 15px 0; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .input-box { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; margin-bottom: 12px; font-size: 16px; }
 
-        /* 看板 */
-        .board-card { background: #fff; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 0.9em; }
+        /* 看板紀錄 */
+        .board-card { background: #fff; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #4caf50; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-size: 0.95em; }
         
         /* 管理區 */
-        #admin-section { display: none; background: #eef; padding: 15px; border-radius: 12px; margin-top: 30px; border: 1px dashed #999; }
+        #admin-section { display: none; background: #f0f4ff; padding: 15px; border-radius: 12px; margin-top: 30px; border: 1px dashed #78909c; }
         
-        footer { text-align: center; padding: 40px 0; color: #aaa; font-size: 0.8em; }
-        .footer-trigger { cursor: pointer; padding: 20px; text-decoration: underline; }
+        footer { text-align: center; padding: 40px 0; color: #99aab5; font-size: 0.85em; }
+        .footer-trigger { cursor: pointer; padding: 10px; text-decoration: none; }
     </style>
 </head>
 <body>
@@ -44,36 +48,47 @@
 <header onclick="location.reload()">💙 33 代購登記</header>
 
 <div class="container">
-    <div id="display-area">連線中，請稍候...</div>
+    <div id="display-area" style="text-align: center; padding: 20px; color: #666;">
+        📡 連線資料庫中...
+    </div>
 
     <div id="order-form-area">
-        <h3 id="target-display" style="margin-top:0; color:var(--accent); font-size:1em;"></h3>
-        <input type="text" id="order-name" class="input-box" placeholder="訂單備註 (如：現場、第一波)">
-        <input type="text" id="user-nick" class="input-box" placeholder="您的暱稱 (必填)">
-        <div style="margin-bottom:10px;">數量：<input type="number" id="target-qty" value="1" min="1" style="width:60px; padding:8px;"></div>
+        <h3 id="target-display" style="margin-top:0; color:var(--accent);"></h3>
+        <label style="font-size: 0.85em; color: #666;">您的暱稱 (必填)</label>
+        <input type="text" id="user-nick" class="input-box" placeholder="例如：王小明">
+        
+        <label style="font-size: 0.85em; color: #666;">登記備註 (選填，如：第一波、現場)</label>
+        <input type="text" id="order-name" class="input-box" placeholder="無則留空">
+        
+        <div style="margin-bottom:15px; font-weight: bold;">
+            數量：<input type="number" id="target-qty" value="1" min="1" style="width:70px; padding:10px; border-radius: 8px; border: 1px solid #ccc;">
+        </div>
+        
         <div style="display: flex; gap: 10px;">
-            <button onclick="submitData()" style="flex: 2; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold;">確認送出</button>
-            <button onclick="document.getElementById('order-form-area').style.display='none'" style="flex: 1; padding: 12px; background: #eee; border: none; border-radius: 8px;">取消</button>
+            <button onclick="submitData()" style="flex: 2; padding: 15px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer;">確認送出</button>
+            <button onclick="closeForm()" style="flex: 1; padding: 15px; background: #eee; border: none; border-radius: 8px; cursor: pointer;">取消</button>
         </div>
     </div>
 
     <hr style="margin: 30px 0; border: 0; border-top: 1px solid #eee;">
 
-    <h3 style="color:var(--main); font-size:1.1em;">📊 即時登記進度</h3>
+    <h3 style="color:var(--main); font-size:1.2em; display: flex; align-items: center; gap: 8px;">
+        📊 即時登記進度
+    </h3>
     <div id="live-board">讀取名單中...</div>
 
     <div id="admin-section">
-        <h3>⚙️ 老闆管理後台</h3>
-        <button onclick="seedInitialData()" style="width:100%; padding:15px; background:#007bff; color:white; border:none; border-radius:8px; font-weight:bold; margin-bottom:15px;">🔄 點我：一鍵重新上架商品 (15項)</button>
+        <h3>⚙️ 管理者功能</h3>
+        <button onclick="seedInitialData()" style="width:100%; padding:15px; background:#007bff; color:white; border:none; border-radius:8px; font-weight:bold; margin-bottom:15px; cursor: pointer;">🔄 點我：一鍵上架 15 項預設商品</button>
         <div style="background:white; padding:15px; border-radius:8px;">
-            <strong>新增/修正商品：</strong><br>
+            <strong>手動新增商品：</strong><br>
             <input type="text" id="adm-cat" class="input-box" placeholder="分類 (如: 日本超市)" style="margin-top:10px;">
             <input type="text" id="adm-name" class="input-box" placeholder="商品名稱">
-            <input type="number" id="adm-price" class="input-box" placeholder="金額">
-            <input type="number" id="adm-stock" class="input-box" placeholder="限額">
-            <button onclick="saveProduct()" style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 8px; font-weight: bold;">儲存商品</button>
+            <input type="number" id="adm-price" class="input-box" placeholder="單價">
+            <input type="number" id="adm-stock" class="input-box" placeholder="限額數量">
+            <button onclick="saveProduct()" style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">儲存並上架</button>
         </div>
-        <div id="adm-list-area" style="margin-top:15px; font-size: 0.8em;"></div>
+        <div id="adm-list-area" style="margin-top:15px; font-size: 0.8em; color: #555;"></div>
     </div>
 </div>
 
@@ -82,7 +97,7 @@
 </footer>
 
 <script>
-// --- 絕對不動的 Firebase 初始化 ---
+// --- Firebase 初始化 ---
 const firebaseConfig = {
     apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",
     authDomain: "zoo-62638.firebaseapp.com",
@@ -92,25 +107,135 @@ const firebaseConfig = {
     messagingSenderId: "33012710753",
     appId: "1:33012710753:web:318636add1f5ac2f7b5920"
 };
+
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const db = firebase.database();
 
-let items = {}, orders = {}, activeKey = "", activeSpec = "";
+let items = {}, activeKey = "", activeSpec = "";
 
-// 管理入口
+// 管理登入
 function adminLogin() {
-    if(prompt("請輸入管理密碼") === "3388") {
+    const pw = prompt("請輸入管理密碼");
+    if(pw === "3388") {
         document.getElementById('admin-section').style.display = 'block';
-        window.scrollTo(0, document.body.scrollHeight);
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    } else if(pw !== null) {
+        alert("密碼錯誤");
     }
 }
 
-// 一鍵上架 (勿刪減勿遺漏)
+// 監聽商品資料 (即時更新)
+db.ref("products").on("value", (snapshot) => {
+    items = snapshot.val() || {};
+    const area = document.getElementById('display-area');
+    
+    if (Object.keys(items).length === 0) {
+        area.innerHTML = "📭 目前尚無商品。";
+        return;
+    }
+
+    const categories = [...new Set(Object.values(items).map(i => i.cat))];
+    
+    area.innerHTML = categories.map(catName => `
+        <div class="category-section">
+            <div class="category-title">${catName}</div>
+            ${Object.values(items).filter(i => i.cat === catName).map(i => {
+                let specs = [];
+                if(i.name.includes("(M/L)")) specs = ["M", "L"];
+                else if(i.name.includes("(分成員)")) specs = ["特", "澈", "雲", "童", "赫", "海", "源", "旭", "圭"];
+                
+                return `
+                    <div class="item-card">
+                        <div class="item-info">
+                            <span>${i.name}</span>
+                            <span style="color:#e91e63;">$${i.price}</span>
+                        </div>
+                        <div class="spec-wrap">
+                            ${specs.length > 0 
+                                ? specs.map(s => `<div class="spec-btn" onclick="openForm('${i.key}','${s}')">${s}</div>`).join('') 
+                                : `<div class="spec-btn" style="background:var(--main); color:white; border:none;" onclick="openForm('${i.key}','')">直接登記</div>`}
+                        </div>
+                    </div>`;
+            }).join('')}
+        </div>`).join('');
+
+    // 更新管理後台清單
+    document.getElementById('adm-list-area').innerHTML = "管理清單：" + Object.values(items).map(i => `
+        <span style="display:inline-block; background:#ddd; padding:2px 8px; margin:2px; border-radius:4px;">
+            ${i.name} <b style="cursor:pointer; color:red;" onclick="deleteProduct('${i.key}')">✕</b>
+        </span>`).join('');
+});
+
+// 開啟登記表單
+function openForm(k, s) {
+    activeKey = k;
+    activeSpec = s;
+    document.getElementById('target-display').innerText = "登記目標：" + items[k].name + (s ? " [" + s + "]" : "");
+    document.getElementById('order-form-area').style.display = 'block';
+    document.getElementById('order-form-area').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function closeForm() {
+    document.getElementById('order-form-area').style.display = 'none';
+}
+
+// 送出登記資料
+function submitData() {
+    const nick = document.getElementById('user-nick').value.trim();
+    const note = document.getElementById('order-name').value.trim();
+    const qty = parseInt(document.getElementById('target-qty').value);
+
+    if (!nick) return alert("請輸入您的暱稱");
+    if (!activeKey) return alert("系統錯誤，請刷新頁面");
+    if (qty < 1 || isNaN(qty)) return alert("數量至少為 1");
+
+    const newOrder = {
+        timestamp: Date.now(),
+        itemKey: activeKey,
+        itemName: items[activeKey].name + (activeSpec ? " [" + activeSpec + "]" : ""),
+        note: nick,
+        orderName: note || "一般",
+        qty: qty,
+        time: new Date().toLocaleString('zh-TW', { hour12: false })
+    };
+
+    db.ref("history").push(newOrder)
+    .then(() => {
+        alert("✅ 登記成功！");
+        closeForm();
+        // 清空欄位
+        document.getElementById('order-name').value = "";
+        document.getElementById('target-qty').value = "1";
+    })
+    .catch(err => alert("登記失敗：" + err.message));
+}
+
+// 監聽看板資料
+db.ref("history").on("value", (snapshot) => {
+    const orders = snapshot.val() || {};
+    const sortedKeys = Object.keys(orders).sort((a,b) => orders[b].timestamp - orders[a].timestamp);
+    
+    document.getElementById('live-board').innerHTML = sortedKeys.map(k => {
+        const o = orders[k];
+        return `
+        <div class="board-card">
+            <div style="display:flex; justify-content:space-between;">
+                <b>👤 ${o.note}</b>
+                <span style="color:#666; font-size:0.8em;">${o.time}</span>
+            </div>
+            <div style="margin-top:5px; color: var(--accent); font-weight:bold;">
+                ${o.itemName} <span style="color:#f44336;">x ${o.qty}</span>
+            </div>
+            ${o.orderName !== '一般' ? `<div style="font-size:0.85em; color:#888;">💬 備註：${o.orderName}</div>` : ''}
+        </div>`;
+    }).join('') || "目前尚無登記資料";
+});
+
+// --- 管理功能 ---
 function seedInitialData() {
     if(!confirm("確定要重設商品並重新上架嗎？")) return;
-    const data = {};
     const list = [
         { cat: "🛒 日本超市區", name: "超市限定餅乾盒", price: 350, stock: 20 },
         { cat: "🛒 日本超市區", name: "超市小食/軟糖組", price: 150, stock: 30 },
@@ -128,81 +253,33 @@ function seedInitialData() {
         { cat: "💎 SS10 週邊區", name: "隨機零食盒", price: 500, stock: 30 },
         { cat: "💎 SS10 週邊區", name: "扭蛋(隨機)", price: 200, stock: 100 }
     ];
-    list.forEach(i => { const k = db.ref("products").push().key; data[k] = { ...i, key: k }; });
-    db.ref("products").set(data).then(() => alert("✅ 上架成功！"));
+    
+    const data = {};
+    list.forEach(i => {
+        const k = db.ref("products").push().key;
+        data[k] = { ...i, key: k };
+    });
+    
+    db.ref("products").set(data).then(() => alert("✅ 商品上架成功！"));
 }
 
 function saveProduct() {
+    const cat = document.getElementById('adm-cat').value;
+    const name = document.getElementById('adm-name').value;
+    const price = parseInt(document.getElementById('adm-price').value);
+    const stock = parseInt(document.getElementById('adm-stock').value);
+
+    if(!cat || !name || isNaN(price)) return alert("請填齊商品資訊");
+
     const k = db.ref("products").push().key;
-    db.ref("products/"+k).set({
-        cat: document.getElementById('adm-cat').value,
-        name: document.getElementById('adm-name').value,
-        price: parseInt(document.getElementById('adm-price').value),
-        stock: parseInt(document.getElementById('adm-stock').value),
-        key: k
-    }).then(() => { alert("儲存完成"); });
+    db.ref("products/" + k).set({ cat, name, price, stock, key: k })
+    .then(() => alert("商品已新增"));
 }
 
-// 監聽商品
-db.ref("products").on("value", (s) => {
-    items = s.val() || {};
-    const area = document.getElementById('display-area');
-    const cats = [...new Set(Object.values(items).map(i => i.cat))].sort((a,b) => a.includes("超市") ? -1 : 1);
-    
-    area.innerHTML = cats.map(c => `
-        <div class="category-section">
-            <div class="category-title">${c}</div>
-            ${Object.values(items).filter(i => i.cat === c).map(i => {
-                let specs = [];
-                if(i.name.includes("(M/L)")) specs = ["M", "L"];
-                else if(i.name.includes("(分成員)")) specs = ["特", "澈", "雲", "童", "赫", "海", "源", "旭", "圭"];
-                return `
-                    <div class="item-card">
-                        <div class="item-info"><span>${i.name}</span><span style="color:red;">NT$ ${i.price}</span></div>
-                        <div class="spec-wrap">
-                            ${specs.length > 0 ? specs.map(s => `<div class="spec-btn" onclick="openForm('${i.key}','${s}')">${s}</div>`).join('') : `<div class="spec-btn" style="background:var(--main); color:white; border:none;" onclick="openForm('${i.key}','')">登記</div>`}
-                        </div>
-                    </div>`;
-            }).join('')}
-        </div>`).join('') || "目前無商品。請點擊頁尾進入後台點擊一鍵上架。";
-    
-    document.getElementById('adm-list-area').innerHTML = "目前清單：" + Object.values(items).map(i => `${i.name} <button onclick="db.ref('products/${i.key}').remove()">✕</button>`).join(' | ');
-});
-
-function openForm(k, s) {
-    activeKey = k; activeSpec = s;
-    document.getElementById('target-display').innerText = "登記目標：" + items[k].name + (s ? " ["+s+"]" : "");
-    document.getElementById('order-form-area').style.display = 'block';
-    document.getElementById('order-form-area').scrollIntoView({ behavior: 'smooth' });
+function deleteProduct(k) {
+    if(confirm("確定刪除此商品？")) db.ref("products/" + k).remove();
 }
-
-function submitData() {
-    const nick = document.getElementById('user-nick').value.trim();
-    if(!nick) return alert("請輸入暱稱");
-    db.ref("history").push({
-        timestamp: Date.now(),
-        itemKey: activeKey,
-        itemName: items[activeKey].name + (activeSpec ? " ["+activeSpec+"]" : ""),
-        note: nick,
-        orderName: document.getElementById('order-name').value,
-        qty: parseInt(document.getElementById('target-qty').value),
-        time: new Date().toLocaleString()
-    }).then(() => {
-        alert("✅ 登記成功！");
-        document.getElementById('order-form-area').style.display = 'none';
-    });
-}
-
-// 監聽看板
-db.ref("history").on("value", (s) => {
-    orders = s.val() || {};
-    const sorted = Object.keys(orders).sort((a,b) => orders[b].timestamp - orders[a].timestamp);
-    document.getElementById('live-board').innerHTML = sorted.map(k => `
-        <div class="board-card">
-            <b>${orders[k].note}</b> (${orders[k].orderName || '一般'})<br>
-            ${orders[k].itemName} x ${orders[k].qty} <small style="color:#999; float:right;">${orders[k].time}</small>
-        </div>`).join('') || "目前尚無登記資料";
-});
 </script>
+
 </body>
 </html>
