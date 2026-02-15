@@ -8,225 +8,69 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root {
-            --bg-creamy: #fdfaf5; /* 溫柔奶油底色 */
-            --accent-soft: #a8b2c1;
-            --text-gray: #666666;
-            --btn-green: #a2d2a2;
-            --radius-lg: 24px;
+            --bg: #fdfaf5;
+            --main-text: #5a5a5a;
+            --accent: #8a7b6a;
+            --card-white: #ffffff;
+            --btn-green: #7ebf7e;
+            --radius: 15px;
         }
-        body { font-family: "PingFang TC", sans-serif; background: var(--bg-creamy); color: var(--text-gray); margin: 0; padding-bottom: 120px; }
-        
-        header { padding: 40px 20px 20px; text-align: center; font-size: 1.5em; font-weight: bold; color: #8a7b6a; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--main-text); margin: 0; padding-bottom: 150px; }
+        header { padding: 30px; text-align: center; font-size: 1.4em; font-weight: bold; color: #b5a491; }
 
-        /* 頂部暱稱 */
-        .user-box { padding: 0 20px 25px; }
-        .user-input { width: 100%; padding: 18px; border-radius: var(--radius-lg); border: 2px solid #efeee5; font-size: 1.1em; box-sizing: border-box; background: white; outline: none; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        /* 首頁卡片 */
+        .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; }
+        .cat-card { background: var(--card-white); padding: 30px 10px; border-radius: var(--radius); text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.03); cursor: pointer; border: 1px solid #f0f0f0; }
 
-        /* 場次卡片 */
-        .cat-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; }
-        .cat-card { background: white; padding: 35px 15px; border-radius: var(--radius-lg); text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.04); cursor: pointer; border: 1px solid #fcfcfc; }
-        .cat-card h3 { margin: 0; font-size: 1.1em; color: #8a9aaa; }
-        .cat-card span { font-size: 0.8em; color: #ccc; margin-top: 10px; display: block; }
-
-        /* 商品列表全螢幕彈窗 */
-        .modal { position: fixed; inset: 0; background: var(--bg-creamy); z-index: 2000; display: none; flex-direction: column; }
-        .modal-nav { padding: 20px; background: white; display: flex; align-items: center; border-bottom: 1px solid #f0f0f0; }
-        .close-icon { font-size: 1.8em; cursor: pointer; margin-right: 15px; color: var(--accent-soft); }
-        .product-scroll { flex: 1; overflow-y: auto; padding: 20px; }
+        /* 商品清單彈窗 */
+        .modal { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: none; flex-direction: column; }
+        .modal-header { padding: 15px; background: white; display: flex; align-items: center; border-bottom: 1px solid #eee; }
+        .back-btn { font-size: 1.5em; cursor: pointer; padding: 0 15px; color: var(--accent); }
 
         /* 商品項目 */
-        .product-item { background: white; margin-bottom: 15px; border-radius: var(--radius-lg); padding: 20px; border: 1px solid #f5f5f5; }
-        .p-info { display: flex; justify-content: space-between; align-items: center; font-weight: bold; margin-bottom: 15px; }
-        .spec-item { display: flex; justify-content: space-between; align-items: center; background: #fafafa; padding: 12px 18px; border-radius: 15px; margin-top: 8px; }
-        .qty-ctrl { display: flex; align-items: center; gap: 15px; }
-        .btn-qty { width: 32px; height: 32px; border-radius: 10px; border: none; background: #eceef1; color: #999; font-weight: bold; }
+        .p-item { background: white; margin: 10px 15px; padding: 15px; border-radius: 12px; border: 1px solid #f0f0f0; }
+        .p-info { display: flex; justify-content: space-between; align-items: center; font-weight: bold; cursor: pointer; }
+        .spec-row { display: none; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px dashed #eee; }
+        .spec-tag { background: #f5f7f9; padding: 6px 12px; border-radius: 8px; font-size: 0.9em; color: var(--accent); cursor: pointer; border: 1px solid #eef0f2; }
+        .spec-tag:active { background: #e0e5e8; }
 
-        /* 底部結帳條 */
-        .footer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 20px; border-radius: 30px 30px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); z-index: 3000; }
-        .price-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .final-price { font-size: 2.2em; font-weight: bold; color: #e67e22; }
-        .btn-submit { width: 100%; padding: 18px; border-radius: var(--radius-lg); border: none; background: var(--btn-green); color: white; font-size: 1.3em; font-weight: bold; }
+        /* 底部登記名單 (明細區) */
+        .order-area { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-radius: 20px 20px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); padding: 15px 20px; z-index: 1100; }
+        .order-title { font-weight: bold; margin-bottom: 10px; font-size: 0.9em; color: #999; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; }
+        .order-scroll { max-height: 120px; overflow-y: auto; margin-bottom: 10px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.95em; }
+        .qty-box { display: flex; align-items: center; gap: 10px; }
+        .qty-btn { width: 28px; height: 28px; border-radius: 6px; border: none; background: #f0f0f0; color: #666; font-weight: bold; }
+        .total-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .total-price { font-size: 1.8em; font-weight: bold; color: #d97706; }
+        .submit-btn { width: 100%; padding: 15px; border-radius: 12px; border: none; background: #2563eb; color: white; font-size: 1.1em; font-weight: bold; }
 
-        /* 管理區域預設隱藏 */
-        #admin-zone { padding: 20px; background: #eee; border-radius: 15px; margin: 20px; display: none; }
-        input[type="text"], input[type="number"] { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #ddd; }
+        /* 暱稱輸入 */
+        .nick-box { padding: 0 20px; margin-bottom: 10px; }
+        .nick-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; outline: none; }
+
+        /* 後台區域 */
+        #admin-panel { display: none; padding: 20px; background: #eee; }
+        .footer-btns { text-align: center; padding: 20px; font-size: 0.8em; color: #ccc; }
     </style>
 </head>
 <body>
 
 <header>✨ 33日本動物園 ✨</header>
 
-<div class="user-box">
-    <input type="text" id="user-nick" class="user-input" placeholder="請填寫您的暱稱 (必填)">
+<div class="nick-box">
+    <input type="text" id="user-nick" class="nick-input" placeholder="✏️ 輸入你的暱稱 (必填)">
 </div>
 
-<div class="cat-container" id="cat-list">
-    <div class="cat-card" onclick="openCat('日本超市')"><h3>🛒 日本超市</h3><span>點擊選購</span></div>
-    <div class="cat-card" onclick="openCat('日本活動代購')"><h3>✨ 日本活動代購</h3><span>點擊選購</span></div>
-</div>
+<div class="cat-grid" id="cat-area">
+    </div>
 
 <div id="item-modal" class="modal">
-    <div class="modal-nav">
-        <span class="close-icon" onclick="closeModal()">❮</span>
-        <h2 id="cat-title" style="margin:0; font-size:1.2em;">商品清單</h2>
+    <div class="modal-header">
+        <span class="back-btn" onclick="closeModal()">❮</span>
+        <h2 id="cat-title" style="margin:0; font-size:1.1em;"></h2>
     </div>
-    <div class="product-scroll" id="product-container"></div>
+    <div id="p-list" style="overflow-y:auto; flex:1; padding-bottom:180px;"></div>
 </div>
 
-<div class="footer-bar" id="checkout-bar" style="display:none;">
-    <div id="summary" style="font-size:0.85em; color:#999; margin-bottom:10px; max-height:60px; overflow:auto;"></div>
-    <div class="price-row">
-        <span style="font-weight:bold;">總金額：</span>
-        <span class="final-price">$<span id="total-val">0</span></span>
-    </div>
-    <button class="btn-submit" onclick="sendOrder()">確認登記送出</button>
-</div>
-
-<center style="margin-top:50px;">
-    <button onclick="authAdmin()" style="background:none; border:none; color:#ddd; text-decoration:underline;">進入管理模式</button>
-</center>
-
-<div id="admin-zone">
-    <h4>上架新商品</h4>
-    <input type="text" id="a-cat" placeholder="活動分類 (如：日本超市)">
-    <input type="text" id="a-name" placeholder="商品名稱">
-    <input type="number" id="a-price" placeholder="價格">
-    <input type="text" id="a-spec" placeholder="規格 (用/隔開，如: M/L，無則留空)">
-    <button onclick="saveProduct()" style="width:100%; padding:10px; background:#8a7b6a; color:white; border:none; border-radius:8px;">立即上架</button>
-    <div id="admin-items" style="margin-top:20px; font-size:0.8em;"></div>
-</div>
-
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",
-        authDomain: "zoo-62638.firebaseapp.com",
-        databaseURL: "https://zoo-62638-default-rtdb.firebaseio.com",
-        projectId: "zoo-62638",
-        storageBucket: "zoo-62638.firebasestorage.app",
-        messagingSenderId: "33012710753",
-        appId: "1:33012710753:web:318636add1f5ac2f7b5920"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    let prods = {}, cart = {};
-
-    function start() {
-        db.ref('products').on('value', snap => {
-            prods = snap.val() || {};
-            showCats();
-            showAdminItems();
-        });
-    }
-
-    function showCats() {
-        const area = document.getElementById('cat-list');
-        let cats = [...new Set(Object.values(prods).map(p => p.cat))];
-        if(cats.length === 0) cats = ["日本超市", "日本活動代購"];
-        area.innerHTML = '';
-        cats.forEach(c => {
-            area.innerHTML += `<div class="cat-card" onclick="openCat('${c}')"><h3>${c}</h3><span>點擊選購</span></div>`;
-        });
-    }
-
-    function openCat(cName) {
-        document.getElementById('cat-title').innerText = cName;
-        const box = document.getElementById('product-container');
-        box.innerHTML = '';
-        let count = 0;
-        Object.keys(prods).forEach(id => {
-            const p = prods[id];
-            if(p.cat === cName) {
-                count++;
-                let specs = p.spec ? p.spec.split('/') : ['一般'];
-                let sHtml = '';
-                specs.forEach(s => {
-                    const key = `${id}_${s}`;
-                    const q = cart[key] || 0;
-                    sHtml += `<div class="spec-item">
-                        <span>${s === '一般' ? '數量' : s}</span>
-                        <div class="qty-ctrl">
-                            <button class="btn-qty" onclick="change('${key}', -1)">-</button>
-                            <span style="font-weight:bold;">${q}</span>
-                            <button class="btn-qty" onclick="change('${key}', 1)">+</button>
-                        </div>
-                    </div>`;
-                });
-                box.innerHTML += `<div class="product-item">
-                    <div class="p-info"><span>${p.name}</span><span style="color:#e67e22">$${p.price}</span></div>
-                    ${sHtml}
-                </div>`;
-            }
-        });
-        if(count === 0) box.innerHTML = '<p style="text-align:center; color:#ccc; margin-top:100px;">此分類尚無商品</p>';
-        document.getElementById('item-modal').style.display = 'flex';
-    }
-
-    function change(key, d) {
-        cart[key] = Math.max(0, (cart[key] || 0) + d);
-        if(cart[key] === 0) delete cart[key];
-        openCat(document.getElementById('cat-title').innerText);
-        updateBar();
-    }
-
-    function updateBar() {
-        const bar = document.getElementById('checkout-bar');
-        const sum = document.getElementById('summary');
-        const total = document.getElementById('total-val');
-        const keys = Object.keys(cart);
-        if(keys.length === 0) { bar.style.display = 'none'; return; }
-        bar.style.display = 'block';
-        let t = 0; let txt = [];
-        keys.forEach(k => {
-            const [pid, s] = k.split('_');
-            const p = prods[pid];
-            if(p) { t += p.price * cart[k]; txt.push(`${p.name}(${s})x${cart[k]}`); }
-        });
-        sum.innerText = txt.join(', ');
-        total.innerText = t;
-    }
-
-    function sendOrder() {
-        const nick = document.getElementById('user-nick').value.trim();
-        if(!nick) return alert("請輸入暱稱！");
-        db.ref('orders').push({
-            nick, time: new Date().toLocaleString(),
-            items: Object.keys(cart).map(k => {
-                const [pid, s] = k.split('_');
-                return { n: prods[pid].name, s, q: cart[k], p: prods[pid].price };
-            }),
-            total: document.getElementById('total-val').innerText
-        }).then(() => {
-            alert("登記完成！"); cart = {}; updateBar(); closeModal();
-        });
-    }
-
-    function authAdmin() {
-        if(prompt("請輸入密碼") === "1239") document.getElementById('admin-zone').style.display = 'block';
-    }
-
-    function saveProduct() {
-        const cat = document.getElementById('a-cat').value;
-        const name = document.getElementById('a-name').value;
-        const price = parseInt(document.getElementById('a-price').value);
-        const spec = document.getElementById('a-spec').value;
-        if(!cat || !name || !price) return alert("資訊不完整");
-        db.ref('products').push({cat, name, price, spec});
-        alert("上架成功！");
-    }
-
-    function showAdminItems() {
-        const area = document.getElementById('admin-items');
-        area.innerHTML = '<strong>目前架上：</strong><br>';
-        Object.keys(prods).forEach(id => {
-            area.innerHTML += `[${prods[id].cat}] ${prods[id].name} <button onclick="del('${id}')" style="color:red">刪除</button><br>`;
-        });
-    }
-
-    function del(id) { if(confirm("刪除？")) db.ref('products/'+id).remove(); }
-    function closeModal() { document.getElementById('item-modal').style.display = 'none'; }
-
-    start();
-</script>
-</body>
-</html>
+<div class="order-area" id="order-bar" style="display:none;">
