@@ -3,40 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>33日本動物園 - 下單系統</title>
+    <title>33日本動物園 - 代購系統</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        :root { --brand: #1a2a6c; --btn: #4a69bd; --accent: #e74c3c; }
-        body { font-family: sans-serif; background: #f4f7f6; margin: 0; padding-bottom: 80px; }
-        header { background: var(--brand); color: white; padding: 15px; text-align: center; font-size: 1.4em; font-weight: bold; }
-        .container { max-width: 900px; margin: auto; padding: 10px; display: flex; flex-direction: column; gap: 15px; }
-        .p-card { background: white; border-radius: 12px; padding: 15px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .p-header { display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2em; margin-bottom: 10px; }
-        .spec-container { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
-        .spec-btn { padding: 10px 18px; border: 1px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .spec-btn.active { background: var(--btn); color: white; border-color: var(--btn); }
-        .qty-control { display: none; align-items: center; gap: 10px; background: #f9f9f9; padding: 12px; border-radius: 8px; border: 1px inset #eee; }
-        .qty-btn { width: 40px; height: 40px; border: none; background: var(--brand); color: white; border-radius: 6px; font-size: 1.5em; cursor: pointer; }
-        .qty-input { width: 70px; height: 40px; text-align: center; border: 2px solid #ddd; font-size: 1.2em; border-radius: 6px; font-weight: bold; }
-        .add-cart-btn { background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-left: auto; font-weight: bold; }
-        .cart-card { background: white; border-radius: 12px; padding: 15px; border: 2px solid var(--brand); }
-        .nick-input { width: 100%; padding: 12px; font-size: 1.2em; border: 2px solid var(--brand); border-radius: 8px; box-sizing: border-box; margin-bottom: 10px; background: #fffdf0; }
-        .total-display { font-size: 2.8em; font-weight: bold; color: var(--accent); text-align: right; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 15px; }
-        .modal-content { background: white; width: 100%; max-width: 800px; height: 85vh; border-radius: 15px; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; }
-        .footer-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; padding: 12px; border-top: 1px solid #ddd; gap: 12px; }
-    </style>
-</head>
-<body>
+        /* 嚴格保留您原本的 POS 樣式 */
+        :root { --main-bg: #f5efe6; --panel-bg: #ffffff; --accent: #6d5d4b; }
+        body { font-family: "PingFang TC", sans-serif; background-color: var(--main-bg); margin: 0; padding: 0; }
+        header { background-color: #34495e; color: white; padding: 15px; text-align: center; font-size: 1.2em; font-weight: bold; }
+        .main-container { display: flex; height: calc(100vh - 50px); padding: 10px; box-sizing: border-box; gap: 10px; }
+        
+        /* 左側商品區 */
+        .product-panel { flex: 1.5; background: var(--panel-bg); border-radius: 15px; padding: 15px; overflow-y: auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .p-item { border-bottom: 1px solid #eee; padding: 15px 0; }
+        .p-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .p-name { font-weight: bold; font-size: 1.1em; }
+        .p-price { color: #e74c3c; font-weight: bold; }
+        
+        /* 規格選擇與數量框 (您的核心需求) */
+        .spec-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+        .spec-btn { padding: 8px 15px; border: 1px solid #ddd; border-radius: 5px; background: #fff; cursor: pointer; }
+        .spec-btn.selected { background-color: #3498db; color: white; border-color: #3498db; }
+        
+        .qty-box { display: none; align-items: center; gap: 8px; background: #f9f9f9; padding: 8px; border-radius: 5px; }
+        .qty-btn { width: 35px; height: 35px; border: 1px solid #ccc; background: white; border-radius: 4px; font-size: 1.2em; cursor: pointer; }
+        .qty-input { width: 50px; height: 35px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
+        .add-btn { background-color: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-left: auto; }
 
-<header>33日本動物園</header>
+        /* 右側結帳區 */
+        .cart-panel { flex: 1; background: var(--panel-bg); border-radius: 15px; padding: 15px; display: flex; flex-direction: column; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .nick-box { margin-bottom: 15px; }
+        .nick-input { width: 100%; padding: 10px; border: 2px solid #34495e; border-radius: 8px; font-size: 1em; box-sizing: border-box; }
+        .cart-list { flex: 1; overflow-y: auto; border-top: 1px solid #eee; padding-top: 10px; }
+        .total-price { font-size: 2.5em; text-align: right; color: #e74c3c; font-weight: bold; margin: 15px 0; }
+        .confirm-btn { width: 100%; padding: 15px; background-color: #82954b; color: white; border: none; border-radius: 10px; font-size: 1.2em; font-weight: bold; cursor: pointer; }
 
-<div class="container">
-    <div id="item-list">正在初始化商品資料...</div>
-    
-    <div class="cart-card">
-        <label style="font-weight: bold;">👤 下單名稱 (必填)：</label>
-        <input type="text" id="user-nick" class="nick-input" placeholder="請輸入您的名稱">
-        <strong>🛒 登記清單：</strong>
-        <div id="cart-display" style="margin: 10px 0;
+        /* 底部按鈕 */
+        .bottom-actions { display: flex; gap: 10px; margin-top: 10px; }
+        .action-btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        
+        /* Modal 樣式 */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 999; }
+        .modal-content { background: white; width: 90%; max-width: 600px; max-height: 80vh;
