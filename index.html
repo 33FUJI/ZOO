@@ -8,83 +8,262 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root {
-            --bg-soft: #fcfaf2; /* 溫柔米色背景 */
+            --bg-soft: #fcfaf2; 
             --card-bg: #ffffff;
-            --accent-soft: #94a3b8; /* 柔和灰藍 */
-            --text-main: #4a4a4a;
-            --price-red: #d9534f;
-            --confirm-green: #82c91e;
-            --radius: 18px;
+            --accent-soft: #a8b2c1; 
+            --text-main: #5a5a5a;
+            --price-red: #e67e22;
+            --confirm-green: #a2d2a2;
+            --radius: 20px;
         }
-        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background: var(--bg-soft); color: var(--text-main); margin: 0; padding-bottom: 80px; }
-        
-        header { padding: 30px 20px; text-align: center; font-size: 1.4em; font-weight: bold; color: #5c5c5c; }
+        body { font-family: sans-serif; background: var(--bg-soft); color: var(--text-main); margin: 0; padding-bottom: 100px; }
+        header { padding: 40px 20px 20px; text-align: center; font-size: 1.5em; font-weight: bold; color: #8a7b6a; }
 
-        /* 頂部暱稱區 */
-        .user-section { padding: 0 20px 20px; }
-        .user-input { width: 100%; padding: 15px; border-radius: var(--radius); border: 2px solid #e2e2e2; font-size: 1.1em; box-sizing: border-box; outline: none; transition: border 0.3s; }
-        .user-input:focus { border-color: var(--accent-soft); }
+        .container { max-width: 600px; margin: 0 auto; padding: 0 20px; }
 
-        /* 場次卡片入口 */
-        .category-grid { padding: 10px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .cat-card { background: white; padding: 25px 15px; border-radius: var(--radius); text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.03); cursor: pointer; border: 1px solid #f0f0f0; transition: transform 0.2s; }
-        .cat-card:active { transform: scale(0.95); }
-        .cat-card h3 { margin: 0; font-size: 1em; color: var(--accent-soft); }
+        /* 暱稱輸入框 */
+        .user-section { margin-bottom: 30px; }
+        .user-input { width: 100%; padding: 18px; border-radius: var(--radius); border: 2px solid #efeee5; font-size: 1.1em; box-sizing: border-box; background: white; outline: none; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
 
-        /* 商品清單彈窗 */
-        .item-modal { position: fixed; inset: 0; background: white; z-index: 1000; display: none; flex-direction: column; }
-        .modal-header { padding: 15px; display: flex; align-items: center; border-bottom: 1px solid #eee; }
-        .back-btn { font-size: 1.5em; cursor: pointer; padding: 0 10px; }
-        .item-list { flex: 1; overflow-y: auto; padding: 15px; }
+        /* 場次卡片 */
+        .category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; }
+        .cat-card { background: white; padding: 30px 15px; border-radius: var(--radius); text-align: center; box-shadow: 0 6px 15px rgba(0,0,0,0.04); cursor: pointer; border: 1px solid #fdfdfd; transition: 0.2s; }
+        .cat-card:active { transform: scale(0.98); }
+        .cat-card h3 { margin: 0; font-size: 1.1em; color: #7a8a9a; }
+        .cat-card span { font-size: 0.8em; color: #ccc; margin-top: 8px; display: block; }
 
-        /* 商品列樣式 */
-        .p-item { background: #fdfdfd; margin-bottom: 12px; border-radius: 15px; padding: 15px; border: 1px solid #f5f5f5; }
-        .p-name { font-weight: bold; font-size: 1.1em; margin-bottom: 10px; display: flex; justify-content: space-between; }
-        .spec-grid { display: flex; flex-wrap: wrap; gap: 10px; }
-        .spec-box { background: #f1f3f5; padding: 8px 12px; border-radius: 12px; display: flex; align-items: center; gap: 10px; }
-        .qty-btn { width: 28px; height: 28px; border-radius: 50%; border: none; background: white; color: var(--accent-soft); font-weight: bold; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .qty-num { min-width: 20px; text-align: center; font-weight: bold; }
+        /* 商品列表彈窗 */
+        .item-modal { position: fixed; inset: 0; background: var(--bg-soft); z-index: 1000; display: none; flex-direction: column; }
+        .modal-header { padding: 20px; display: flex; align-items: center; background: white; border-bottom: 1px solid #f0f0f0; }
+        .back-btn { font-size: 1.5em; cursor: pointer; color: var(--accent-soft); width: 40px; }
+        .item-list { flex: 1; overflow-y: auto; padding: 20px; }
 
-        /* 下單核對區 */
-        .checkout-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); padding: 15px 20px; border-top: 1px solid #eee; z-index: 1100; }
-        .summary-list { max-height: 120px; overflow-y: auto; font-size: 0.9em; margin-bottom: 10px; color: #666; }
-        .summary-item { display: flex; justify-content: space-between; margin-bottom: 4px; border-bottom: 1px dashed #eee; padding-bottom: 4px; }
-        .total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .total-price { font-size: 1.8em; font-weight: bold; color: var(--price-red); }
-        .submit-btn { width: 100%; padding: 15px; border-radius: var(--radius); border: none; background: var(--confirm-green); color: white; font-size: 1.2em; font-weight: bold; cursor: pointer; }
+        /* 商品卡片式樣 */
+        .p-item { background: white; margin-bottom: 15px; border-radius: var(--radius); padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+        .p-name { font-weight: bold; font-size: 1.1em; display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #f9f9f9; padding-bottom: 10px; }
+        .spec-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; background: #fafafa; padding: 10px 15px; border-radius: 12px; }
+        .qty-control { display: flex; align-items: center; gap: 12px; }
+        .qty-btn { width: 32px; height: 32px; border-radius: 10px; border: none; background: #eef1f4; color: #888; font-weight: bold; cursor: pointer; }
+        .qty-num { min-width: 25px; text-align: center; font-weight: bold; color: #555; }
 
-        /* 後台樣式 */
-        .admin-modal { position: fixed; inset: 0; background: #fff; z-index: 2000; display: none; flex-direction: column; padding: 20px; }
+        /* 下單確認列 */
+        .checkout-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 20px; border-top-left-radius: 25px; border-top-right-radius: 25px; box-shadow: 0 -10px 30px rgba(0,0,0,0.05); z-index: 1100; }
+        .summary-list { max-height: 100px; overflow-y: auto; font-size: 0.9em; margin-bottom: 15px; color: #888; }
+        .total-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .total-price { font-size: 2em; font-weight: bold; color: var(--price-red); }
+        .submit-btn { width: 100%; padding: 18px; border-radius: var(--radius); border: none; background: var(--confirm-green); color: white; font-size: 1.3em; font-weight: bold; cursor: pointer; }
+
+        /* 後台入口 */
+        .footer-links { text-align: center; margin: 40px 0; font-size: 0.9em; }
+        .footer-links button { background: none; border: none; color: #ccc; text-decoration: underline; margin: 0 10px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <header>✨ 33日本動物園 ✨</header>
 
-<div class="user-section">
-    <input type="text" id="user-nick" class="user-input" placeholder="請填寫您的暱稱 (必填)">
-</div>
-
-<div class="category-grid" id="category-area">
+<div class="container">
+    <div class="user-section">
+        <input type="text" id="user-nick" class="user-input" placeholder="請填寫您的下單暱稱 (必填)">
     </div>
+
+    <div class="category-grid" id="category-area">
+        <div class="cat-card" onclick="openCategory('日本超市')">
+            <h3>🛒 日本超市</h3>
+            <span>點擊進入選購</span>
+        </div>
+        <div class="cat-card" onclick="openCategory('日本活動代購')">
+            <h3>✨ 日本活動代購</h3>
+            <span>點擊進入選購</span>
+        </div>
+    </div>
+</div>
 
 <div id="item-modal" class="item-modal">
     <div class="modal-header">
         <span class="back-btn" onclick="closeModal('item-modal')">❮</span>
-        <h2 id="modal-title" style="margin:0 0 0 10px; font-size:1.1em;">商品清單</h2>
+        <h2 id="modal-title" style="margin:0; font-size:1.2em; color:#8a7b6a;">商品清單</h2>
     </div>
     <div class="item-list" id="item-list-container"></div>
 </div>
 
 <div class="checkout-bar" id="checkout-bar" style="display:none;">
     <div class="summary-list" id="summary-list"></div>
-    <div class="total-row">
-        <span>已選明細核對：</span>
+    <div class="total-info">
+        <span style="color:#aaa;">下單明細核對中：</span>
         <span class="total-price">$<span id="final-total">0</span></span>
     </div>
     <button class="submit-btn" onclick="submitOrder()">確認登記送出</button>
 </div>
 
-<div style="display:flex; justify-content:center; gap:20px; margin-top:30px;">
-    <button onclick="checkAdmin()" style="border:none; background:none; color:#aaa; font-size:0.9em; text-decoration:underline;">管理後台</button>
-    <button onclick="openHistory()" style="border
+<div class="footer-links">
+    <button onclick="checkAdmin()">管理員後台</button>
+    <button onclick="openHistory()">查詢訂單紀錄</button>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",
+        authDomain: "zoo-62638.firebaseapp.com",
+        databaseURL: "https://zoo-62638-default-rtdb.firebaseio.com",
+        projectId: "zoo-62638",
+        storageBucket: "zoo-62638.firebasestorage.app",
+        messagingSenderId: "33012710753",
+        appId: "1:33012710753:web:318636add1f5ac2f7b5920"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let products = {}, cart = {};
+
+    function init() {
+        db.ref('products').on('value', snap => {
+            products = snap.val() || {};
+            renderCategories();
+        });
+    }
+
+    function renderCategories() {
+        const area = document.getElementById('category-area');
+        // 先獲取資料庫有的分類
+        let cats = [...new Set(Object.values(products).map(p => p.cat))];
+        // 如果資料庫沒東西，預設這兩個場次
+        if(cats.length === 0) cats = ["日本超市", "日本活動代購"];
+        
+        area.innerHTML = '';
+        cats.forEach(cat => {
+            if(!cat) return;
+            area.innerHTML += `
+                <div class="cat-card" onclick="openCategory('${cat}')">
+                    <h3>${cat}</h3>
+                    <span>點擊進入選購</span>
+                </div>`;
+        });
+    }
+
+    function openCategory(catName) {
+        document.getElementById('modal-title').innerText = catName;
+        const container = document.getElementById('item-list-container');
+        container.innerHTML = '';
+        
+        let found = false;
+        Object.keys(products).forEach(id => {
+            const p = products[id];
+            if(p.cat === catName) {
+                found = true;
+                let specHtml = '';
+                const specs = p.spec ? p.spec.split('/') : ['一般'];
+                specs.forEach(s => {
+                    const key = `${id}_${s}`;
+                    const q = cart[key] || 0;
+                    specHtml += `
+                        <div class="spec-row">
+                            <span style="color:#777;">${s === '一般' ? '選購數量' : s}</span>
+                            <div class="qty-control">
+                                <button class="qty-btn" onclick="updateQty('${key}', -1)">-</button>
+                                <span class="qty-num">${q}</span>
+                                <button class="qty-btn" onclick="updateQty('${key}', 1)">+</button>
+                            </div>
+                        </div>`;
+                });
+
+                container.innerHTML += `
+                    <div class="p-item">
+                        <div class="p-name"><span>${p.name}</span> <span style="color:var(--price-red)">$${p.price}</span></div>
+                        ${specHtml}
+                    </div>`;
+            }
+        });
+
+        if(!found) {
+            container.innerHTML = `<p style="text-align:center; color:#ccc; margin-top:50px;">此場次目前尚無商品上架</p>`;
+        }
+        document.getElementById('item-modal').style.display = 'flex';
+    }
+
+    function updateQty(key, delta) {
+        cart[key] = Math.max(0, (cart[key] || 0) + delta);
+        if(cart[key] === 0) delete cart[key];
+        
+        const currentCat = document.getElementById('modal-title').innerText;
+        openCategory(currentCat);
+        renderSummary();
+    }
+
+    function renderSummary() {
+        const bar = document.getElementById('checkout-bar');
+        const list = document.getElementById('summary-list');
+        const totalDisp = document.getElementById('final-total');
+        
+        const cartKeys = Object.keys(cart);
+        if(cartKeys.length === 0) {
+            bar.style.display = 'none';
+            return;
+        }
+        
+        bar.style.display = 'block';
+        list.innerHTML = '';
+        let total = 0;
+        
+        cartKeys.forEach(key => {
+            const [pid, spec] = key.split('_');
+            const p = products[pid];
+            if(p) {
+                const sub = p.price * cart[key];
+                total += sub;
+                list.innerHTML += `<div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                    <span>${p.name} (${spec}) x ${cart[key]}</span>
+                    <span>$${sub}</span>
+                </div>`;
+            }
+        });
+        totalDisp.innerText = total;
+    }
+
+    function submitOrder() {
+        const nick = document.getElementById('user-nick').value.trim();
+        if(!nick) return alert("請輸入您的暱稱！");
+        
+        db.ref('orders').push({
+            nick: nick,
+            time: new Date().toLocaleString(),
+            items: Object.keys(cart).map(key => {
+                const [pid, spec] = key.split('_');
+                return { name: products[pid].name, spec, qty: cart[key], price: products[pid].price };
+            }),
+            total: document.getElementById('final-total').innerText
+        }).then(() => {
+            alert("登記完成！請耐心等候小幫手對帳。");
+            cart = {};
+            renderSummary();
+            closeModal('item-modal');
+        });
+    }
+
+    function checkAdmin() {
+        if(prompt("請輸入管理密碼") === "1239") {
+            window.location.reload(); // 暫時導回原本後台邏輯，或您可直接進入之前寫的編輯區
+        }
+    }
+
+    function openHistory() {
+        const nick = prompt("輸入暱稱查詢您的訂單：");
+        if(!nick) return;
+        db.ref('orders').once('value', snap => {
+            const orders = snap.val() || {};
+            let html = "";
+            Object.values(orders).forEach(o => {
+                if(o.nick === nick) {
+                    html += `【${o.time}】\n明細：${o.items.map(i=>i.name+'('+i.spec+')x'+i.qty).join(', ')}\n總金額：$${o.total}\n----------\n`;
+                }
+            });
+            alert(html || "查無此暱稱的訂單紀錄。");
+        });
+    }
+
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    init();
+</script>
+</body>
+</html>
