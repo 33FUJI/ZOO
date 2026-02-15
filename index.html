@@ -64,4 +64,145 @@
 
     <div id="admin-section">
         <h3>⚙️ 老闆管理後台</h3>
-        <button onclick="seedInitialData()" style="width:100%; padding:15
+        <button onclick="seedInitialData()" style="width:100%; padding:15px; background:#007bff; color:white; border:none; border-radius:8px; font-weight:bold; margin-bottom:15px;">🔄 點我：一鍵重新上架商品 (15項)</button>
+        <div style="background:white; padding:15px; border-radius:8px;">
+            <strong>新增/修正商品：</strong><br>
+            <input type="text" id="adm-cat" class="input-box" placeholder="分類 (如: 日本超市)" style="margin-top:10px;">
+            <input type="text" id="adm-name" class="input-box" placeholder="商品名稱">
+            <input type="number" id="adm-price" class="input-box" placeholder="金額">
+            <input type="number" id="adm-stock" class="input-box" placeholder="限額">
+            <button onclick="saveProduct()" style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 8px; font-weight: bold;">儲存商品</button>
+        </div>
+        <div id="adm-list-area" style="margin-top:15px; font-size: 0.8em;"></div>
+    </div>
+</div>
+
+<footer>
+    <div class="footer-trigger" onclick="adminLogin()">© 2026 33 代購管理後台入口</div>
+</footer>
+
+<script>
+// --- 絕對不動的 Firebase 初始化 ---
+const firebaseConfig = {
+    apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",
+    authDomain: "zoo-62638.firebaseapp.com",
+    databaseURL: "https://zoo-62638-default-rtdb.firebaseio.com",
+    projectId: "zoo-62638",
+    storageBucket: "zoo-62638.firebasestorage.app",
+    messagingSenderId: "33012710753",
+    appId: "1:33012710753:web:318636add1f5ac2f7b5920"
+};
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.database();
+
+let items = {}, orders = {}, activeKey = "", activeSpec = "";
+
+// 管理入口
+function adminLogin() {
+    if(prompt("請輸入管理密碼") === "3388") {
+        document.getElementById('admin-section').style.display = 'block';
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+}
+
+// 一鍵上架 (勿刪減勿遺漏)
+function seedInitialData() {
+    if(!confirm("確定要重設商品並重新上架嗎？")) return;
+    const data = {};
+    const list = [
+        { cat: "🛒 日本超市區", name: "超市限定餅乾盒", price: 350, stock: 20 },
+        { cat: "🛒 日本超市區", name: "超市小食/軟糖組", price: 150, stock: 30 },
+        { cat: "💎 SS10 週邊區", name: "T-shirt (M/L)", price: 1200, stock: 10 },
+        { cat: "💎 SS10 週邊區", name: "拉鍊連帽衫 (M/L)", price: 2700, stock: 10 },
+        { cat: "💎 SS10 週邊區", name: "動物棒棒糖吊飾 (分成員)", price: 500, stock: 45 },
+        { cat: "💎 SS10 週邊區", name: "馬克杯 (分成員)", price: 800, stock: 18 },
+        { cat: "💎 SS10 週邊區", name: "壓克力立牌(分成員)", price: 700, stock: 27 },
+        { cat: "💎 SS10 週邊區", name: "姓名牌(分成員)", price: 450, stock: 45 },
+        { cat: "💎 SS10 週邊區", name: "方巾", price: 700, stock: 20 },
+        { cat: "💎 SS10 週邊區", name: "可折環保袋", price: 750, stock: 15 },
+        { cat: "💎 SS10 週邊區", name: "手提袋", price: 1150, stock: 10 },
+        { cat: "💎 SS10 週邊區", name: "徽章(隨機)", price: 380, stock: 100 },
+        { cat: "💎 SS10 週邊區", name: "隨機卡包", price: 150, stock: 200 },
+        { cat: "💎 SS10 週邊區", name: "隨機零食盒", price: 500, stock: 30 },
+        { cat: "💎 SS10 週邊區", name: "扭蛋(隨機)", price: 200, stock: 100 }
+    ];
+    list.forEach(i => { const k = db.ref("products").push().key; data[k] = { ...i, key: k }; });
+    db.ref("products").set(data).then(() => alert("✅ 上架成功！"));
+}
+
+function saveProduct() {
+    const k = db.ref("products").push().key;
+    db.ref("products/"+k).set({
+        cat: document.getElementById('adm-cat').value,
+        name: document.getElementById('adm-name').value,
+        price: parseInt(document.getElementById('adm-price').value),
+        stock: parseInt(document.getElementById('adm-stock').value),
+        key: k
+    }).then(() => { alert("儲存完成"); });
+}
+
+// 監聽商品
+db.ref("products").on("value", (s) => {
+    items = s.val() || {};
+    const area = document.getElementById('display-area');
+    const cats = [...new Set(Object.values(items).map(i => i.cat))].sort((a,b) => a.includes("超市") ? -1 : 1);
+    
+    area.innerHTML = cats.map(c => `
+        <div class="category-section">
+            <div class="category-title">${c}</div>
+            ${Object.values(items).filter(i => i.cat === c).map(i => {
+                let specs = [];
+                if(i.name.includes("(M/L)")) specs = ["M", "L"];
+                else if(i.name.includes("(分成員)")) specs = ["特", "澈", "雲", "童", "赫", "海", "源", "旭", "圭"];
+                return `
+                    <div class="item-card">
+                        <div class="item-info"><span>${i.name}</span><span style="color:red;">NT$ ${i.price}</span></div>
+                        <div class="spec-wrap">
+                            ${specs.length > 0 ? specs.map(s => `<div class="spec-btn" onclick="openForm('${i.key}','${s}')">${s}</div>`).join('') : `<div class="spec-btn" style="background:var(--main); color:white; border:none;" onclick="openForm('${i.key}','')">登記</div>`}
+                        </div>
+                    </div>`;
+            }).join('')}
+        </div>`).join('') || "目前無商品。請點擊頁尾進入後台點擊一鍵上架。";
+    
+    document.getElementById('adm-list-area').innerHTML = "目前清單：" + Object.values(items).map(i => `${i.name} <button onclick="db.ref('products/${i.key}').remove()">✕</button>`).join(' | ');
+});
+
+function openForm(k, s) {
+    activeKey = k; activeSpec = s;
+    document.getElementById('target-display').innerText = "登記目標：" + items[k].name + (s ? " ["+s+"]" : "");
+    document.getElementById('order-form-area').style.display = 'block';
+    document.getElementById('order-form-area').scrollIntoView({ behavior: 'smooth' });
+}
+
+function submitData() {
+    const nick = document.getElementById('user-nick').value.trim();
+    if(!nick) return alert("請輸入暱稱");
+    db.ref("history").push({
+        timestamp: Date.now(),
+        itemKey: activeKey,
+        itemName: items[activeKey].name + (activeSpec ? " ["+activeSpec+"]" : ""),
+        note: nick,
+        orderName: document.getElementById('order-name').value,
+        qty: parseInt(document.getElementById('target-qty').value),
+        time: new Date().toLocaleString()
+    }).then(() => {
+        alert("✅ 登記成功！");
+        document.getElementById('order-form-area').style.display = 'none';
+    });
+}
+
+// 監聽看板
+db.ref("history").on("value", (s) => {
+    orders = s.val() || {};
+    const sorted = Object.keys(orders).sort((a,b) => orders[b].timestamp - orders[a].timestamp);
+    document.getElementById('live-board').innerHTML = sorted.map(k => `
+        <div class="board-card">
+            <b>${orders[k].note}</b> (${orders[k].orderName || '一般'})<br>
+            ${orders[k].itemName} x ${orders[k].qty} <small style="color:#999; float:right;">${orders[k].time}</small>
+        </div>`).join('') || "目前尚無登記資料";
+});
+</script>
+</body>
+</html>
