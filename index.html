@@ -47,16 +47,16 @@
 <div id="admin-area" style="display:none; padding-bottom:100px;">
     <div class="admin-box">
         <h3>➕ 自行新增商品</h3>
-        <input id="ad-cat" style="width:100%;margin-bottom:5px;padding:8px;" placeholder="分類 (如: 超市代購)">
-        <input id="ad-name" style="width:100%;margin-bottom:5px;padding:8px;" placeholder="名稱 (如: 日清泡麵)">
+        <input id="ad-cat" style="width:100%;margin-bottom:5px;padding:8px;" placeholder="分類名稱 (如: 超市代購)">
+        <input id="ad-name" style="width:100%;margin-bottom:5px;padding:8px;" placeholder="商品名稱 (如: 巧克力)">
         <input id="ad-price" style="width:100%;margin-bottom:5px;padding:8px;" type="number" placeholder="單價">
-        <input id="ad-spec" style="width:100%;margin-bottom:10px;padding:8px;" placeholder="規格 (多項用逗號隔開)">
-        <button onclick="saveProduct()" style="width:100%; background:#28a745; color:#fff; padding:12px; border:none; border-radius:5px; font-weight:bold;">確認上架</button>
+        <input id="ad-spec" style="width:100%;margin-bottom:10px;padding:8px;" placeholder="規格 (利特,希澈...用逗號隔開)">
+        <button onclick="saveProduct()" style="width:100%; background:#28a745; color:#fff; padding:12px; border:none; border-radius:5px; font-weight:bold;">確認上架商品</button>
     </div>
     <div class="admin-box">
-        <h3>📋 所有訂單管理</h3>
-        <button onclick="loadAllOrders()">刷新清單</button>
-        <button onclick="initSystem()" style="color:var(--red); float:right; border:none; background:none; font-weight:bold;">⚠️ 初始化系統(載入全部週邊與超市)</button>
+        <h3>📋 訂單與系統管理</h3>
+        <button onclick="loadAllOrders()">刷新訂單列表</button>
+        <button onclick="initSystem()" style="color:var(--red); float:right; border:none; background:none; font-weight:bold;">⚠️ 初始化系統(載入全部商品)</button>
         <div id="order-table" style="overflow-x:auto; margin-top:10px;"></div>
     </div>
 </div>
@@ -104,18 +104,18 @@
 
     function renderMain(){
         var grid = document.getElementById('main-grid'); grid.innerHTML = '';
-        var hasData = false;
-        Object.keys(cloudData).forEach(function(cat){
-            if (typeof cloudData[cat] === 'object' && !cat.startsWith('-')) {
-                grid.innerHTML += '<div class="cat-card" onclick="openCat(\''+cat+'\')">📂 '+cat+'</div>';
-                hasData = true;
-            }
+        var cats = Object.keys(cloudData).filter(k => typeof cloudData[k] === 'object' && !k.startsWith('-'));
+        if(cats.length === 0){
+            grid.innerHTML = '<div style="text-align:center;padding:50px;color:#999;grid-column:span 2;line-height:2">尚未載入商品<br>請輸入 1239 進入後台<br>點擊「初始化系統」</div>';
+            return;
+        }
+        cats.forEach(function(cat){
+            grid.innerHTML += '<div class="cat-card" onclick="openCat(\''+cat+'\')">📂 '+cat+'</div>';
         });
-        if(!hasData) grid.innerHTML = '<p style="text-align:center;padding:50px;color:#999;">尚未載入商品<br><br>請輸入 1239 進入後台<br>點擊「初始化系統」</p>';
     }
 
     function initSystem(){
-        if(!confirm("確定要初始化嗎？這會載入所有預設週邊與超市品項。")) return;
+        if(!confirm("確定要載入預設資料嗎？(會自動建立週邊與超市分類)")) return;
         var data = {
             "SS10 日本演唱會週邊": {
                 "s1": {n:"01 T恤", p:1070, s:"M,L"}, "s2": {n:"02 外套", p:2300, s:"M,L"},
@@ -123,15 +123,15 @@
                 "s15":{n:"15 娃娃鑰匙圈", p:880, s:sj}, "s18":{n:"18 無尾熊餅乾", p:330, s:"單一規格"}
             },
             "SS10 日周追加": {
-                "a1": {n:"01 衣服", p:1250, s:"M,L"}, "a4": {n:"04 碗(含小卡)", p:1600, s:"單一規格"},
-                "a6": {n:"06 扇套", p:1100, s:sj}
+                "a1": {n:"衣服", p:1250, s:"M,L"}, "a4": {n:"碗(含小卡)", p:1600, s:"單一規格"},
+                "a6": {n:"扇套", p:1100, s:sj}
             },
             "超市代購": {
-                "m1": {n:"日清杯麵", p:65, s:"醬油,海鮮,咖哩"}, "m2": {n:"一蘭拉麵泡麵", p:150, s:"單一規格"},
+                "m1": {n:"日清泡麵", p:65, s:"醬油,海鮮,咖哩"}, "m2": {n:"一蘭拉麵", p:150, s:"單一規格"},
                 "m3": {n:"砂糖樹餅乾", p:280, s:"原味,抹茶"}
             }
         };
-        db.ref('products').set(data).then(function(){ alert("✅ 全部品項已自動鋪貨完成！"); });
+        db.ref('products').set(data).then(() => alert("✅ 商品鋪貨成功！"));
     }
 
     function openCat(cat){
@@ -171,22 +171,22 @@
 
     function submitOrder(){
         var nick = document.getElementById('user-nick').value;
-        if(!nick || nick==='1239') return alert("請輸入暱稱");
+        if(!nick || nick==='1239') return alert("請輸入您的暱稱");
         db.ref('orders').push({nick:nick, time:new Date().toLocaleString(), items:cart, total:document.getElementById('total-val').innerText})
-        .then(function(){ alert("✅ 登記成功！"); clearCart(); });
+        .then(() => { alert("✅ 登記成功！"); clearCart(); });
     }
 
     function fetchHistory(){
         var nick = document.getElementById('user-nick').value;
-        if(!nick || nick==='1239') return alert("請輸入暱稱");
-        var list = document.getElementById('history-list'); list.innerHTML = "正在查詢...";
+        if(!nick || nick==='1239') return alert("請輸入您的暱稱");
+        var list = document.getElementById('history-list'); list.innerHTML = "🔍 查詢中...";
         document.getElementById('history-modal').style.display = 'flex';
         db.ref('orders').orderByChild('nick').equalTo(nick).once('value', function(sn){
             list.innerHTML = "";
-            if(!sn.exists()) { list.innerHTML = "<p style='text-align:center;'>無紀錄</p>"; return; }
+            if(!sn.exists()) { list.innerHTML = "<p style='text-align:center;'>尚未有登記紀錄</p>"; return; }
             sn.forEach(function(d){
                 var v = d.val(); var detail = "";
-                Object.keys(v.items).forEach(function(k){ detail += '<div>▪️ '+k.split('|')[0]+'-'+k.split('|')[2]+' x'+v.items[k]+'</div>'; });
+                Object.keys(v.items).forEach(k => { detail += '<div>▪️ '+k.split('|')[0]+'-'+k.split('|')[2]+' x'+v.items[k]+'</div>'; });
                 list.innerHTML += '<div class="admin-box"><small>'+v.time+'</small><div>'+detail+'</div><div style="text-align:right;color:var(--red);font-weight:bold;">$'+v.total+'</div></div>';
             });
         });
@@ -196,15 +196,15 @@
         var c=document.getElementById('ad-cat').value, n=document.getElementById('ad-name').value, p=document.getElementById('ad-price').value, s=document.getElementById('ad-spec').value;
         if(!c||!n||!p) return alert("資料不全");
         db.ref('products/'+c).push({n:n, p:parseInt(p), s:s||"單一規格"});
-        alert("上架成功");
+        alert("商品上架成功！");
     }
 
     function loadAllOrders(){
         db.ref('orders').once('value', function(sn){
-            var html = '<table><tr><th>暱稱</th><th>內容</th><th>總計</th><th>操作</th></tr>';
+            var html = '<table><tr><th>暱稱</th><th>清單</th><th>總計</th><th>操作</th></tr>';
             sn.forEach(function(d){
                 var v = d.val(); var detail = "";
-                Object.keys(v.items).forEach(function(k){ detail += k.split('|')[2]+" x"+v.items[k]+"<br>"; });
+                Object.keys(v.items).forEach(k => { detail += k.split('|')[2]+" x"+v.items[k]+"<br>"; });
                 html += '<tr><td>'+v.nick+'</td><td>'+detail+'</td><td>$'+v.total+'</td><td><button class="del-btn" onclick="delOrder(\''+d.key+'\')">刪除</button></td></tr>';
             });
             html += '</table>'; document.getElementById('order-table').innerHTML = html;
