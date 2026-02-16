@@ -11,58 +11,66 @@
             --text: #4A4A4A; --border: #E0D7CE; --accent: #C5A358;
         }
         body { font-family: 'Noto Sans TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* 頂部導航 */
         .topbar { background: var(--card); padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
         .wordmark { font-weight: 700; color: var(--main); font-size: 1.2em; }
-        
+
         /* 場次選擇 */
         #event-screen { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .event-card { background: var(--card); border: 1px solid var(--border); padding: 30px; border-radius: 15px; width: 220px; text-align: center; cursor: pointer; margin: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        
+        .event-grid { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        .event-card { background: var(--card); border: 1px solid var(--border); padding: 30px; border-radius: 15px; width: 220px; text-align: center; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .event-card:hover { transform: translateY(-5px); border-color: var(--main); }
+
         /* 主佈局 */
         .main { display: flex; flex: 1; overflow: hidden; }
         .pane { flex: 1; overflow-y: auto; padding: 20px; }
+        
+        /* 商品表格 */
         .ptable { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 10px; overflow: hidden; }
         .ptable th { background: #EFE9E2; padding: 15px; text-align: left; }
         .ptable td { padding: 15px; border-bottom: 1px solid var(--bg); }
 
-        /* 規格按鈕 */
+        /* 成員規格按鈕 */
         .spec-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-        .spec-btn { border: 1px solid var(--border); background: var(--bg); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+        .spec-btn { border: 1px solid var(--border); background: var(--bg); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: 0.2s; }
         .spec-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
-        /* 數量控制 */
+        /* 數量控制器 [-] [數字] [+] */
         .qty-ctrl { display: flex; align-items: center; gap: 5px; }
         .qty-btn { width: 30px; height: 30px; border: 1px solid var(--border); background: white; cursor: pointer; border-radius: 4px; font-weight: bold; }
         .qty-input { width: 45px; text-align: center; border: 1px solid var(--border); padding: 5px; border-radius: 4px; }
 
-        /* 購物車 */
+        /* 購物車側邊欄 */
         .sidebar { width: 350px; background: var(--card); border-left: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; }
         .cart-item { background: var(--bg); padding: 12px; border-radius: 8px; margin-bottom: 10px; position: relative; }
         .total-row { display: flex; justify-content: space-between; font-size: 24px; font-weight: bold; color: #D9534F; margin: 15px 0; }
         .btn-submit { background: var(--sub); color: white; border: none; width: 100%; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        /* 後台 */
+        /* 管理後台 (淺色調) */
         #admin-pane { position: fixed; inset: 0; background: var(--bg); z-index: 3000; display: none; padding: 30px; overflow-y: auto; }
         .admin-card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
+        .admin-table input { border: 1px solid var(--border); padding: 5px; border-radius: 4px; width: 80px; }
     </style>
 </head>
 <body>
 
 <div id="event-screen">
-    <h2 style="color:var(--main); margin-bottom:30px;">🧸 請選擇代購場次</h2>
-    <div style="display:flex; flex-wrap:wrap; justify-content:center;">
+    <h2 style="color:var(--main); margin-bottom:40px;">🧸 請選擇代購場次</h2>
+    <div class="event-grid">
         <div class="event-card" onclick="selectEvent('日本超市')"><h3>🛒 日本超市</h3><p>點擊進入</p></div>
         <div class="event-card" onclick="selectEvent('SS10日本周邊')"><h3>🎤 SS10 日本周邊</h3><p>點擊進入</p></div>
         <div class="event-card" onclick="selectEvent('SS10追加周邊')"><h3>🔥 SS10 追加周邊</h3><p>點擊進入</p></div>
     </div>
-    <button onclick="loginAdmin()" style="margin-top:50px; background:none; border:none; color:#ccc; cursor:pointer;">⚙ 管理入口</button>
+    <button onclick="loginAdmin()" style="margin-top:100px; background:none; border:none; color:#ccc; cursor:pointer;">⚙ 管理入口</button>
 </div>
 
 <div id="admin-pane">
     <div style="display:flex; justify-content:space-between; align-items:center;">
         <h2>⚙ 系統管理後台</h2>
-        <button onclick="location.reload()" style="padding:10px 20px;">關閉並登出</button>
+        <button onclick="location.reload()" style="padding:10px 20px;">關閉後台</button>
     </div>
+    
     <div class="admin-card">
         <h3>✦ 新增商品</h3>
         場次：<select id="a-evt"><option>日本超市</option><option>SS10日本周邊</option><option>SS10追加周邊</option></select>
@@ -70,19 +78,27 @@
         價格：<input id="a-price" type="number" placeholder="金額">
         <button onclick="saveNewProd()">確認新增</button>
     </div>
+
     <div class="admin-card">
-        <h3>📋 商品列表 (價格框可直接修改)</h3>
+        <h3>📋 商品列表 (框內可直接改價)</h3>
         <table style="width:100%; text-align:left;">
             <thead><tr><th>場次</th><th>品名</th><th>價格</th><th>操作</th></tr></thead>
             <tbody id="admin-tbody"></tbody>
         </table>
     </div>
+
     <div class="admin-card">
-        <h3>📋 歷史訂單 (最新在最前)</h3>
+        <h3>📋 訂單管理 (最新在最上)</h3>
         <div id="order-list"></div>
     </div>
 </div>
 
 <header class="topbar">
     <div class="wordmark">✦ 33 PROXY</div>
-    <div id
+    <div id="event-label" style="font-weight:bold; color:var(--main);"></div>
+</header>
+
+<div class="main">
+    <div class="pane">
+        <table class="ptable">
+            <thead><tr><th>商品資訊</th><th style="width:120px">數量</th><th style="width:80px">動作</th></tr>
