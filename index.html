@@ -13,37 +13,32 @@
         body { font-family: sans-serif; background: var(--bg-cream); margin: 0; display: flex; flex-direction: column; height: 100vh; color: #5d5246; overflow: hidden; }
         header { background: var(--main-brown); color: white; padding: 12px; text-align: center; font-size: 1.5em; font-weight: bold; flex-shrink: 0; }
         
-        .user-info-bar { background: #fff; padding: 10px; border-bottom: 2px solid #eee; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        /* 暱稱區 */
+        .user-info-bar { background: #fff; padding: 10px; border-bottom: 2px solid #eee; display: flex; align-items: center; gap: 10px; }
         .nick-input-box { flex: 1; padding: 10px; border-radius: 8px; border: 2px solid var(--main-brown); font-size: 1em; }
 
-        .nav-bar { background: #e8e0d9; padding: 10px; display: flex; gap: 10px; overflow-x: auto; border-bottom: 2px solid #d1c7bc; flex-shrink: 0; align-items: center; }
-        .nav-btn { background: white; border: 1px solid #d1c7bc; padding: 8px 18px; border-radius: 20px; white-space: nowrap; cursor: pointer; font-size: 1.1em; }
+        .nav-bar { background: #e8e0d9; padding: 10px; display: flex; gap: 10px; overflow-x: auto; flex-shrink: 0; }
+        .nav-btn { background: white; border: 1px solid #d1c7bc; padding: 8px 18px; border-radius: 20px; white-space: nowrap; cursor: pointer; }
         
         .main-content { display: flex; flex: 1; overflow: hidden; padding: 10px; gap: 10px; }
         .item-area { flex: 1.8; overflow-y: auto; background: white; border-radius: 15px; padding: 15px; border: 2px solid #e8e0d9; }
-        .cat-title { background: #fdf5f0; padding: 8px 15px; border-radius: 20px; margin: 15px 0 8px; font-weight: bold; border-left: 8px solid var(--main-brown); font-size: 1.2em; }
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 10px; }
-        .p-btn { background: white; border: 1px solid #f0e6dd; border-radius: 12px; padding: 10px 5px; text-align: center; cursor: pointer; box-shadow: 2px 2px 0 #e8e0d9; min-height: 90px; display: flex; flex-direction: column; justify-content: center; }
-        .p-name { font-size: 0.85em; font-weight: bold; margin-bottom: 5px; height: 2.8em; overflow: hidden; line-height: 1.4; }
-        .p-price { color: #c2966d; font-size: 1.2em; font-weight: bold; }
-        .p-stock { font-size: 0.8em; color: #999; }
+        .cat-title { background: #fdf5f0; padding: 8px 15px; border-radius: 20px; margin: 15px 0 8px; font-weight: bold; border-left: 8px solid var(--main-brown); }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+        .p-btn { background: white; border: 1px solid #f0e6dd; border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; box-shadow: 2px 2px 0 #e8e0d9; }
+        .p-name { font-size: 0.9em; font-weight: bold; margin-bottom: 5px; }
+        .p-price { color: #c2966d; font-size: 1.1em; font-weight: bold; }
 
-        .checkout-area { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 320px; overflow-y: auto; }
-        .card { background: white; border-radius: 15px; padding: 12px; border: 2px solid #e8e0d9; }
-        #cart-list { max-height: 250px; overflow-y: auto; border-bottom: 2px dashed #e8e0d9; }
-        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 5px; font-size: 1.1em; border-bottom: 1px solid #eee; }
-        
-        .qty-input { width: 50px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px; font-weight: bold; }
-        .total-display { font-size: 2.8em; font-weight: bold; color: var(--price-red); text-align: right; margin: 10px 0; }
-        .submit-order-btn { width:100%; padding:15px; background:var(--profit-green); color:white; border:none; border-radius:15px; font-weight:bold; font-size: 1.4em; cursor:pointer; }
-        
-        #admin-panel, #query-modal { position: fixed; inset: 10px; background: white; z-index: 1000; border-radius: 20px; display: none; flex-direction: column; padding: 15px; border: 3px solid var(--main-brown); box-shadow: 0 0 50px rgba(0,0,0,0.3); }
-        .admin-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 15px; flex: 1; overflow: hidden; }
-        table { width: 100%; border-collapse: collapse; background: white; }
-        th, td { padding: 8px; border: 1px solid #ddd; text-align: center; }
-        
-        footer { padding: 10px; text-align: center; display: flex; justify-content: center; gap: 15px; flex-shrink: 0; background: #fff; border-top: 1px solid #eee; }
+        .checkout-area { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 300px; }
+        .card { background: white; border-radius: 15px; padding: 15px; border: 2px solid #e8e0d9; }
+        #cart-list { max-height: 250px; overflow-y: auto; border-bottom: 1px solid #eee; margin-bottom: 10px; }
+        .total-display { font-size: 2.5em; font-weight: bold; color: var(--price-red); text-align: right; }
+        .submit-btn { width: 100%; padding: 15px; background: var(--profit-green); color: white; border: none; border-radius: 15px; font-size: 1.3em; font-weight: bold; cursor: pointer; }
+
+        footer { padding: 10px; display: flex; justify-content: center; gap: 20px; background: #fff; border-top: 1px solid #eee; }
         .foot-btn { padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; }
+        
+        /* 彈窗 */
+        #admin-panel { position: fixed; inset: 10px; background: white; z-index: 1000; border-radius: 20px; display: none; flex-direction: column; padding: 20px; border: 3px solid var(--main-brown); }
     </style>
 </head>
 <body>
@@ -52,17 +47,74 @@
 
 <div class="user-info-bar">
     <span>👤 暱稱:</span>
-    <input type="text" id="user-nick" class="nick-input-box" placeholder="請先輸入您的暱稱 (必填)">
+    <input type="text" id="user-nick" class="nick-input-box" placeholder="請先輸入您的暱稱 (下單用)">
 </div>
 
-<div class="nav-bar" id="navbar">
-    </div>
+<div class="nav-bar" id="navbar"></div>
 
 <div class="main-content">
-    <div class="item-area" id="item-area">讀取中，請檢查 Firebase 配置...</div>
+    <div class="item-area" id="item-area">
+        <div id="status-msg" style="text-align:center; padding:30px;">正在讀取資料庫... 如果畫面一直沒變，請檢查 Firebase 設定。</div>
+    </div>
     
     <div class="checkout-area">
         <div class="card">
-            <strong>🛒 您的登記清單</strong>
+            <strong>🛒 登記清單</strong>
             <div id="cart-list"></div>
-            <div class="total-display">$<span id="final-total
+            <div class="total-display">$<span id="final-total">0</span></div>
+            <button class="submit-btn" onclick="submitOrder()">✅ 確認登記送出</button>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <button class="foot-btn" style="background:#f0e6dd;" onclick="openQuery()">🔍 查詢紀錄</button>
+    <button class="foot-btn" style="background:var(--main-brown); color:white;" onclick="openAdmin()">⚙️ 管理後台</button>
+</footer>
+
+<div id="admin-panel">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h2>⚙️ 管理中心 (密碼: 1239)</h2>
+        <button onclick="document.getElementById('admin-panel').style.display='none'">✕ 關閉</button>
+    </div>
+    <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
+        <select id="select-cat" onchange="checkNewCat(this.value)"></select>
+        <input type="text" id="new-n" placeholder="商品名稱" style="width:150px;">
+        <input type="number" id="new-p" placeholder="售價" style="width:70px;">
+        <button onclick="addNewProduct()" style="background:var(--profit-green); color:white; border:none; padding:5px 15px;">➕ 新增</button>
+    </div>
+    <div style="flex:1; overflow-y:auto;">
+        <table style="width:100%; border-collapse: collapse; text-align:center;">
+            <thead><tr style="background:#eee;"><th>品名</th><th>售價</th><th>刪除</th></tr></thead>
+            <tbody id="admin-tbody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // ⚠️ 請確保這段配置與您的 Firebase Console 一致
+    const firebaseConfig = {
+        apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",
+        authDomain: "zoo-62638.firebaseapp.com",
+        databaseURL: "https://zoo-62638-default-rtdb.firebaseio.com",
+        projectId: "zoo-62638",
+        storageBucket: "zoo-62638.appspot.com",
+        messagingSenderId: "123456789",
+        appId: "1:123456789:web:abcdef"
+    };
+
+    let db;
+    let inv = [];
+    let cart = {};
+
+    // 啟動與防錯
+    window.onload = function() {
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            db = firebase.database();
+            console.log("Firebase 嘗試連線...");
+            loadData();
+        } catch (err) {
+            console.error(err);
