@@ -8,64 +8,39 @@
     <style>
         :root { --bg: #F5F2ED; --card: #FFFFFF; --main: #A68B6D; --sub: #829481; --text: #4A4A4A; --border: #E0D7CE; --accent: #C5A358; }
         body { font-family: 'Noto Sans TC', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        
-        /* 頂部列 */
-        .topbar { background: var(--card); padding: 12px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .topbar { background: var(--card); padding: 12px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
         .wordmark { font-weight: 700; color: var(--main); font-size: 1.2em; cursor: pointer; }
-        .nav-right { display: flex; align-items: center; gap: 15px; }
-        .back-btn { background: var(--bg); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 0.9em; color: var(--text); transition: 0.2s; }
-        .back-btn:hover { background: var(--border); }
-
-        /* 場次選擇 */
+        .back-btn { background: var(--bg); border: 1px solid var(--border); padding: 6px 15px; border-radius: 20px; cursor: pointer; font-size: 0.9em; }
         #event-screen { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .event-grid { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
-        .event-card { background: #1A1C22; color: white; padding: 40px 30px; border-radius: 15px; width: 220px; text-align: center; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .event-card:hover { transform: translateY(-5px); background: #2D3039; }
-        .event-card h3 { margin: 0 0 10px 0; font-size: 1.3em; }
-        .event-card p { margin: 0; opacity: 0.7; font-size: 0.9em; }
-
-        /* 主佈局 */
+        .event-card { background: #1A1C22; color: white; padding: 40px 30px; border-radius: 15px; width: 220px; text-align: center; cursor: pointer; margin: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
         .main { display: flex; flex: 1; overflow: hidden; }
-        .pane { flex: 1; overflow-y: auto; padding: 25px; }
-        .ptable { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
-        .ptable th { background: #EFE9E2; padding: 18px; text-align: left; color: var(--main); font-weight: 700; }
-        .ptable td { padding: 20px; border-bottom: 1px solid var(--bg); vertical-align: middle; }
-
-        /* 商品資訊美化 */
-        .prod-name { font-size: 1.1em; font-weight: 700; margin-bottom: 4px; }
-        .prod-price { color: #D9534F; font-weight: bold; font-size: 1.05em; margin-bottom: 12px; }
-        .spec-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-        .spec-btn { border: 1px solid var(--border); background: var(--bg); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: 0.2s; }
-        .spec-btn:hover { border-color: var(--main); }
+        .pane { flex: 1; overflow-y: auto; padding: 20px; }
+        .ptable { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; }
+        .ptable th { background: #EFE9E2; padding: 15px; text-align: left; color: var(--main); }
+        .ptable td { padding: 20px; border-bottom: 1px solid var(--bg); }
+        .prod-name { font-size: 1.1em; font-weight: 700; }
+        .prod-price { color: #D9534F; font-weight: bold; margin: 5px 0; }
+        .spec-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .spec-btn { border: 1px solid var(--border); background: var(--bg); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
         .spec-btn.active { background: var(--main); color: white; border-color: var(--main); }
-
-        /* 數量與按鈕組合 */
-        .action-group { display: flex; align-items: center; gap: 12px; }
-        .qty-ctrl { display: flex; align-items: center; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: white; }
-        .qty-btn { width: 32px; height: 32px; border: none; background: white; cursor: pointer; font-size: 16px; transition: 0.2s; }
-        .qty-btn:hover { background: var(--bg); }
-        .qty-input { width: 40px; text-align: center; border-left: 1px solid var(--border); border-right: 1px solid var(--border); border-top: none; border-bottom: none; font-size: 14px; }
-        .btn-add { background: var(--main); color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-add:hover { background: #8E7458; }
-
-        /* 購物車側邊欄 */
-        .sidebar { width: 360px; background: var(--card); border-left: 1px solid var(--border); display: flex; flex-direction: column; padding: 25px; }
-        .cart-item { background: var(--bg); padding: 15px; border-radius: 10px; margin-bottom: 12px; position: relative; animation: slideIn 0.3s ease; }
-        .total-row { display: flex; justify-content: space-between; font-size: 26px; font-weight: bold; color: #D9534F; margin: 20px 0; border-top: 2px dashed var(--border); padding-top: 20px; }
-        .btn-submit { background: var(--sub); color: white; border: none; width: 100%; padding: 16px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1.1em; }
-        
-        /* 後台 */
+        .action-group { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
+        .qty-ctrl { display: flex; align-items: center; border: 1px solid var(--border); border-radius: 6px; background: white; }
+        .qty-btn { width: 32px; height: 32px; border: none; background: none; cursor: pointer; font-weight: bold; }
+        .qty-input { width: 35px; text-align: center; border: none; font-size: 14px; }
+        .btn-add { background: var(--main); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .sidebar { width: 350px; background: var(--card); border-left: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; }
+        .cart-item { background: var(--bg); padding: 12px; border-radius: 10px; margin-bottom: 10px; position: relative; }
+        .total-row { display: flex; justify-content: space-between; font-size: 24px; font-weight: bold; color: #D9534F; margin: 20px 0; border-top: 1px solid #ddd; padding-top: 15px; }
+        .btn-submit { background: var(--sub); color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; }
         #admin-pane { position: fixed; inset: 0; background: var(--bg); z-index: 3000; display: none; padding: 30px; overflow-y: auto; }
-        .admin-card { background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 25px; }
-
-        @keyframes slideIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+        .admin-card { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--border); margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
 <div id="event-screen">
-    <h2 style="color:var(--main); margin-bottom:40px; letter-spacing: 2px;">🧸 請選擇代購場次</h2>
-    <div class="event-grid">
+    <h2 style="color:var(--main); margin-bottom:40px;">🧸 請選擇代購場次</h2>
+    <div style="display:flex; flex-wrap:wrap; justify-content:center;">
         <div class="event-card" onclick="selectEvent('日本超市')"><h3>🛒 日本超市</h3><p>點擊進入</p></div>
         <div class="event-card" onclick="selectEvent('SS10日本周邊')"><h3>🎤 SS10 日本周邊</h3><p>點擊進入</p></div>
         <div class="event-card" onclick="selectEvent('SS10追加周邊')"><h3>🔥 SS10 追加周邊</h3><p>點擊進入</p></div>
@@ -74,21 +49,20 @@
 </div>
 
 <div id="admin-pane">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2>⚙ 系統管理後台 (1239)</h2>
-        <button onclick="location.reload()" style="padding:10px 20px; border-radius:8px; cursor:pointer;">關閉並登出</button>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2>⚙ 系統管理後台 (密碼:1239)</h2>
+        <button onclick="location.reload()" style="padding:10px 20px;">退出後台</button>
     </div>
     <div class="admin-card">
         <h3>✦ 新增商品</h3>
-        場次：<select id="a-evt" style="padding:8px;"><option>日本超市</option><option>SS10日本周邊</option><option>SS10追加周邊</option></select>
-        品名：<input id="a-name" placeholder="請輸入品名" style="padding:8px;"> 
-        價格：<input id="a-price" type="number" placeholder="金額" style="padding:8px;">
-        <button onclick="saveNewProd()" style="padding:8px 20px; background:var(--sub); color:white; border:none; border-radius:5px; cursor:pointer;">確認新增</button>
+        場次：<select id="a-evt"><option>日本超市</option><option>SS10日本周邊</option><option>SS10追加周邊</option></select>
+        品名：<input id="a-name" placeholder="品名"> 價格：<input id="a-price" type="number" placeholder="金額">
+        <button onclick="saveNewProd()" style="background:var(--sub); color:white; border:none; padding:5px 15px; border-radius:5px;">新增</button>
     </div>
     <div class="admin-card">
-        <h3>📋 商品列表 (修改價格後直接生效)</h3>
-        <table style="width:100%; text-align:left; border-collapse: collapse;">
-            <thead><tr style="border-bottom:2px solid var(--bg);"><th style="padding:10px;">場次</th><th style="padding:10px;">品名</th><th style="padding:10px;">價格</th><th style="padding:10px;">操作</th></tr></thead>
+        <h3>📋 商品列表 (修改價格直接生效)</h3>
+        <table style="width:100%; text-align:left;">
+            <thead><tr><th>場次</th><th>品名</th><th>價格編輯</th><th>操作</th></tr></thead>
             <tbody id="admin-tbody"></tbody>
         </table>
     </div>
@@ -97,8 +71,8 @@
 
 <header class="topbar">
     <div class="wordmark" onclick="goHome()">✦ 33 PROXY</div>
-    <div class="nav-right">
-        <div id="event-label" style="font-weight:700; color:var(--main); font-size:1.1em;"></div>
+    <div style="display:flex; align-items:center; gap:15px;">
+        <div id="event-label" style="font-weight:700; color:var(--main);"></div>
         <button class="back-btn" onclick="goHome()">⬅ 回上一頁</button>
     </div>
 </header>
@@ -106,61 +80,53 @@
 <div class="main">
     <div class="pane">
         <table class="ptable">
-            <thead>
-                <tr>
-                    <th>商品資訊</th>
-                    <th style="text-align:right; padding-right:50px;">點選規格與數量</th>
-                </tr>
-            </thead>
+            <thead><tr><th>商品資訊</th><th style="text-align:right">點選規格與數量</th></tr></thead>
             <tbody id="prod-tbody"></tbody>
         </table>
     </div>
-
     <div class="sidebar">
-        <h3 style="margin-top:0;">🛒 結帳清單</h3>
+        <h3 style="margin:0 0 15px 0;">🛒 結帳清單</h3>
         <div id="cart-items" style="flex:1; overflow-y:auto;"></div>
         <div class="total-row"><span>總計</span><span>$ <span id="total-val">0</span></span></div>
-        <input type="text" id="nick" style="width:100%; padding:14px; margin-bottom:12px; border:1px solid var(--border); border-radius:10px; box-sizing:border-box; font-size:1em;" placeholder="請填寫您的 Line 暱稱">
-        <button class="btn-submit" onclick="submitOrder()">確認送出訂單</button>
+        <input type="text" id="nick" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid var(--border); border-radius:8px; box-sizing:border-box;" placeholder="Line 暱稱">
+        <button class="btn-submit" onclick="submitOrder()">送出訂單</button>
     </div>
 </div>
 
 <script>
     const members = ["特", "澈", "雲", "童", "赫", "海", "源", "旭", "圭"];
     
-    // 初始化數據
-    let products = JSON.parse(localStorage.getItem('33_prods')) || [
-        { id: 1, e: "日本超市", n: "動物棒棒糖吊飾", p: 500 },
-        { id: 2, e: "SS10日本周邊", n: "演唱會T恤", p: 1070 }
+    // 預設商品：保證每個場次進去都有東西！
+    const defaultProds = [
+        { id: 101, e: "日本超市", n: "動物棒棒糖吊飾", p: 500 },
+        { id: 102, e: "日本超市", n: "超市購物袋", p: 350 },
+        { id: 201, e: "SS10日本周邊", n: "演唱會限定T恤", p: 1070 },
+        { id: 202, e: "SS10日本周邊", n: "應援手燈", p: 1500 },
+        { id: 301, e: "SS10追加周邊", n: "追加款明信片組", p: 450 },
+        { id: 302, e: "SS10追加周邊", n: "隨機小卡包", p: 150 }
     ];
+
+    let products = JSON.parse(localStorage.getItem('33_prods')) || defaultProds;
     let orders = JSON.parse(localStorage.getItem('33_orders')) || [];
     let cart = [];
     let activeSpecs = {}; 
 
-    // 回到主頁面
-    function goHome() {
-        document.getElementById('event-screen').style.display = 'flex';
-        activeSpecs = {}; // 清空選擇狀態
-    }
+    function goHome() { document.getElementById('event-screen').style.display = 'flex'; }
 
-    // 選擇場次
-    function selectEvent(eName) {
+    function selectEvent(e) {
         document.getElementById('event-screen').style.display = 'none';
-        document.getElementById('event-label').innerText = "📍 " + eName;
-        renderProducts(eName);
+        document.getElementById('event-label').innerText = "📍 " + e;
+        renderProducts(e);
     }
 
-    // 渲染商品列表 (優化版：拿掉動作欄位，合在一起)
-    function renderProducts(eName) {
+    function renderProducts(e) {
         const tbody = document.getElementById('prod-tbody');
-        const filtered = products.filter(p => p.e === eName);
-        
-        if(filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:50px; color:#999;">目前此場次尚無商品</td></tr>';
+        const list = products.filter(p => p.e === e);
+        if(list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:50px;">此場次目前無商品，請至後台新增。</td></tr>';
             return;
         }
-
-        tbody.innerHTML = filtered.map(p => `
+        tbody.innerHTML = list.map(p => `
             <tr>
                 <td>
                     <div class="prod-name">${p.n}</div>
@@ -169,22 +135,21 @@
                         ${members.map(m => `<button class="spec-btn" id="spec-${p.id}-${m}" onclick="pickSpec(${p.id},'${m}')">${m}</button>`).join('')}
                     </div>
                 </td>
-                <td style="text-align:right;">
-                    <div class="action-group" style="justify-content: flex-end;">
+                <td style="text-align:right">
+                    <div class="action-group">
                         <div class="qty-ctrl">
                             <button class="qty-btn" onclick="adjQty(${p.id},-1)">-</button>
-                            <input type="number" id="qty-${p.id}" value="1" class="qty-input">
+                            <input id="qty-${p.id}" value="1" class="qty-input" readonly>
                             <button class="qty-btn" onclick="adjQty(${p.id},1)">+</button>
                         </div>
                         <button class="btn-add" onclick="addToCart(${p.id})">加入</button>
                     </div>
                 </td>
-            </tr>
-        `).join('');
+            </tr>`).join('');
     }
 
     function pickSpec(pid, m) {
-        members.forEach(mem => {
+        members.forEach(mem => { 
             const b = document.getElementById(`spec-${pid}-${mem}`);
             if(b) b.classList.remove('active');
         });
@@ -201,10 +166,8 @@
     function addToCart(pid) {
         const p = products.find(x => x.id === pid);
         const s = activeSpecs[pid];
-        if(!s) return alert("請先點選成員規格（如：特、澈...）");
-        
-        const q = parseInt(document.getElementById(`qty-${pid}`).value);
-        cart.push({ n: p.n, s: s, q: q, p: p.p });
+        if(!s) return alert("請先選擇成員！");
+        cart.push({ n: p.n, s: s, q: parseInt(document.getElementById(`qty-${pid}`).value), p: p.p });
         renderCart();
     }
 
@@ -213,57 +176,43 @@
         let total = 0;
         box.innerHTML = cart.map((i, idx) => {
             total += (i.p * i.q);
-            return `
-                <div class="cart-item">
-                    <div style="font-weight:700;">${i.n}</div>
-                    <div style="font-size:0.9em; color:#666;">規格：${i.s} | 數量：${i.q}</div>
-                    <div style="color:#D9534F; font-weight:700; margin-top:5px;">$${i.p * i.q}</div>
-                    <button onclick="cart.splice(${idx},1);renderCart()" style="position:absolute; right:12px; top:15px; border:none; color:#ccc; background:none; cursor:pointer; font-size:1.2em;">✕</button>
-                </div>`;
+            return `<div class="cart-item">
+                <b>${i.n}</b> (${i.s}) x ${i.q}<br>$${i.p*i.q}
+                <button onclick="cart.splice(${idx},1);renderCart()" style="position:absolute; right:10px; top:10px; border:none; background:none; color:#ccc; cursor:pointer;">✕</button>
+            </div>`;
         }).join('');
         document.getElementById('total-val').innerText = total.toLocaleString();
     }
 
     function submitOrder() {
         const n = document.getElementById('nick').value;
-        if(!n || cart.length === 0) return alert("請填寫暱稱並確保清單內有商品");
-        const order = { nick: n, items: [...cart], total: document.getElementById('total-val').innerText, time: new Date().toLocaleString() };
-        orders.unshift(order);
+        if(!n || cart.length === 0) return alert("請填暱稱和選購商品");
+        orders.unshift({ nick: n, items: [...cart], total: document.getElementById('total-val').innerText, time: new Date().toLocaleString() });
         localStorage.setItem('33_orders', JSON.stringify(orders));
-        alert("訂單已送出！請記得截圖傳給 33 唷 🧸");
+        alert("下單完成！請截圖傳給 33 唷 🧸");
         cart = []; renderCart();
-        document.getElementById('nick').value = '';
     }
 
-    // 後台邏輯
     function loginAdmin() {
-        if(prompt("請輸入管理密碼") === "1239") {
+        if(prompt("管理密碼") === "1239") {
             document.getElementById('admin-pane').style.display = 'block';
             renderAdmin();
-        } else { alert("密碼錯誤"); }
+        }
     }
 
     function renderAdmin() {
         document.getElementById('admin-tbody').innerHTML = products.map((p, i) => `
-            <tr style="border-bottom:1px solid #eee;">
-                <td style="padding:10px;">${p.e}</td>
-                <td style="padding:10px;">${p.n}</td>
-                <td style="padding:10px;"><input type="number" value="${p.p}" style="width:80px; padding:5px;" onchange="updatePrice(${i}, this.value)"></td>
-                <td style="padding:10px;"><button onclick="delProd(${i})" style="color:red; border:none; background:none; cursor:pointer;">刪除</button></td>
-            </tr>`).join('');
-
+            <tr><td>${p.e}</td><td>${p.n}</td>
+            <td><input type="number" value="${p.p}" style="width:70px" onchange="products[${i}].p=parseInt(this.value);localStorage.setItem('33_prods',JSON.stringify(products))"></td>
+            <td><button onclick="products.splice(${i},1);localStorage.setItem('33_prods',JSON.stringify(products));renderAdmin()" style="color:red; border:none; background:none; cursor:pointer;">刪除</button></td></tr>`).join('');
+        
         document.getElementById('order-list').innerHTML = orders.map((o, i) => `
-            <div style="border-bottom:1px solid #ddd; padding:15px; background:#f9f9f9; margin-bottom:10px; border-radius:8px;">
-                <b>👤 ${o.nick}</b> <small style="color:#999; margin-left:10px;">${o.time}</small>
-                <button onclick="delOrder(${i})" style="float:right; color:red; border:none; background:none; cursor:pointer;">刪除</button><br>
-                <div style="margin-top:8px;">${o.items.map(it => `${it.n}(${it.s})x${it.q}`).join(', ')}</div>
-                <div style="color:#D9534F; font-weight:bold; margin-top:5px;">總計: $${o.total}</div>
+            <div style="border-bottom:1px solid #ddd; padding:10px; font-size:13px;">
+                <b>${o.nick}</b> (${o.time}) <button onclick="orders.splice(${i},1);localStorage.setItem('33_orders',JSON.stringify(orders));renderAdmin()" style="float:right">刪</button><br>
+                ${o.items.map(it => `${it.n}(${it.s})x${it.q}`).join(', ')} | $${o.total}
             </div>`).join('');
     }
 
-    function updatePrice(idx, val) { products[idx].p = parseInt(val); localStorage.setItem('33_prods', JSON.stringify(products)); }
-    function delProd(idx) { if(confirm("確定刪除商品？")){ products.splice(idx,1); localStorage.setItem('33_prods', JSON.stringify(products)); renderAdmin(); } }
-    function delOrder(idx) { if(confirm("確定刪除此訂單？")){ orders.splice(idx,1); localStorage.setItem('33_orders', JSON.stringify(orders)); renderAdmin(); } }
     function saveNewProd() {
         const n = document.getElementById('a-name').value, p = parseInt(document.getElementById('a-price').value), e = document.getElementById('a-evt').value;
         if(n && p) {
@@ -272,7 +221,7 @@
             renderAdmin();
             document.getElementById('a-name').value = '';
             document.getElementById('a-price').value = '';
-        } else { alert("請填寫品名與價格"); }
+        }
     }
 </script>
 </body>
