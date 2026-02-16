@@ -8,42 +8,44 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root { --bg: #fdfaf5; --main-text: #5a5a5a; --accent: #8a7b6a; --btn-blue: #003399; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--main-text); margin: 0; padding-bottom: 300px; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--main-text); margin: 0; padding-bottom: 300px; -webkit-tap-highlight-color: transparent; }
         header { padding: 30px; text-align: center; font-size: 1.4em; font-weight: bold; color: #b5a491; }
         
         /* 暱稱區 */
         .top-section { padding: 0 20px 20px; }
-        .nick-input { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+        .nick-input { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
 
-        /* 首頁場次卡片 - 這次直接顯示，不准消失 */
+        /* 首頁場次卡片 */
         .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; }
         .cat-card { background: #fff; padding: 40px 10px; border-radius: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); cursor: pointer; border: 1px solid #eee; }
-        .cat-card h3 { margin: 0; font-size: 1.1em; color: var(--accent); }
+        .cat-card h3 { margin: 0; font-size: 1.1em; color: var(--accent); pointer-events: none; }
 
-        /* 商品清單彈窗 */
+        /* 商品列表彈窗 */
         .modal { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: none; flex-direction: column; }
-        .modal-header { padding: 20px; background: white; display: flex; align-items: center; border-bottom: 1px solid #eee; }
-        .back-btn { font-size: 1.5em; cursor: pointer; padding-right: 15px; }
+        .modal-header { padding: 20px; background: white; display: flex; align-items: center; border-bottom: 1px solid #eee; position: sticky; top: 0; }
+        .back-btn { font-size: 1.5em; cursor: pointer; padding-right: 20px; color: var(--accent); }
 
-        /* 商品項目（不展開） */
-        .p-item { background: white; margin: 10px 15px; padding: 15px; border-radius: 12px; border: 1px solid #f0f0f0; }
+        /* 商品項目 - 不展開邏輯 */
+        .p-item { background: white; margin: 10px 15px; padding: 18px; border-radius: 12px; border: 1px solid #f0f0f0; }
         .p-info { display: flex; justify-content: space-between; align-items: center; font-weight: bold; cursor: pointer; }
         .spec-row { display: none; flex-wrap: wrap; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #eee; }
-        .spec-tag { background: #f0f2f5; padding: 8px 16px; border-radius: 8px; font-size: 0.9em; cursor: pointer; border: 1px solid #ddd; }
+        .spec-tag { background: #f0f2f5; padding: 8px 16px; border-radius: 8px; font-size: 0.9em; cursor: pointer; border: 1px solid #ddd; color: var(--main-text); }
+        .spec-tag:active { background: #e0e0e0; }
 
-        /* 底部明細登記區 (參考 image_0dc06.png) */
+        /* 底部明細登記區 */
         .order-area { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-radius: 20px 20px 0 0; box-shadow: 0 -8px 25px rgba(0,0,0,0.1); padding: 20px; z-index: 3000; }
-        .order-title { font-weight: bold; margin-bottom: 10px; }
-        .order-scroll { max-height: 150px; overflow-y: auto; margin-bottom: 10px; border: 1px solid #f9f9f9; }
+        .order-title { font-weight: bold; margin-bottom: 12px; font-size: 1.1em; border-left: 4px solid var(--btn-blue); padding-left: 8px; }
+        .order-scroll { max-height: 140px; overflow-y: auto; margin-bottom: 15px; background: #fafafa; border-radius: 8px; padding: 5px; }
         
-        .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 5px 0; border-bottom: 1px solid #f9f9f9; }
-        .qty-box { display: flex; align-items: center; gap: 10px; }
-        .qty-btn { width: 30px; height: 30px; border-radius: 5px; border: none; background: #3c4a62; color: white; cursor: pointer; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 8px; background: white; border-radius: 6px; }
+        .qty-box { display: flex; align-items: center; gap: 12px; }
+        .qty-btn { width: 30px; height: 30px; border-radius: 6px; border: none; background: #3c4a62; color: white; cursor: pointer; font-weight: bold; }
 
         .total-price { font-size: 2.2em; font-weight: bold; color: #d9534f; text-align: right; margin-bottom: 15px; }
         .submit-btn { width: 100%; padding: 18px; border-radius: 12px; border: none; background: var(--btn-blue); color: white; font-size: 1.2em; font-weight: bold; cursor: pointer; }
         
-        .footer-nav { text-align: center; padding: 30px; color: #ccc; font-size: 0.8em; }
+        .footer-nav { text-align: center; padding: 30px; color: #bbb; font-size: 0.85em; }
+        .footer-nav span { cursor: pointer; margin: 0 10px; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -61,10 +63,10 @@
 
 <div id="item-modal" class="modal">
     <div class="modal-header">
-        <span class="back-btn" onclick="closeModal()">❮</span>
-        <h2 id="cat-title" style="margin:0;">商品清單</h2>
+        <span class="back-btn" onclick="closeModal()">❮ 返回</span>
+        <h2 id="cat-title" style="margin:0; font-size:1.1em;">商品清單</h2>
     </div>
-    <div id="p-list" style="overflow-y:auto; flex:1; padding-bottom:300px;"></div>
+    <div id="p-list" style="overflow-y:auto; flex:1; padding-bottom:320px;"></div>
 </div>
 
 <div class="order-area" id="order-bar" style="display:none;">
@@ -91,14 +93,17 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let prods = {}, cart = {};
+    let prods = {};
+    let cart = {};
 
-    // 監聽資料庫
+    // 啟動時立刻讀取一次資料
     db.ref('products').on('value', snap => {
         prods = snap.val() || {};
+        console.log("資料已同步", prods);
     });
 
     function openCat(cName) {
+        console.log("正在開啟分類：" + cName);
         document.getElementById('cat-title').innerText = cName;
         const list = document.getElementById('p-list');
         list.innerHTML = '';
@@ -106,7 +111,8 @@
         
         Object.keys(prods).forEach(id => {
             const p = prods[id];
-            if(p.cat === cName) {
+            // 修正：檢查分類名稱是否匹配
+            if(p.cat === cName || (cName === '日本超市代購' && p.cat === '日本超市')) {
                 found = true;
                 const specs = p.spec ? p.spec.split('/') : ['預設'];
                 let specHtml = specs.map(s => `<div class="spec-tag" onclick="addToCart('${id}','${s}')">${s}</div>`).join('');
@@ -120,12 +126,18 @@
                     </div>`;
             }
         });
-        if(!found) list.innerHTML = `<p style="text-align:center; padding:50px; color:#ccc;">「${cName}」目前沒貨<br>請去後台上架，場次填寫要一模一樣喔！</p>`;
+
+        if(!found) {
+            list.innerHTML = `<p style="text-align:center; padding:50px; color:#999;">目前沒有「${cName}」的商品<br>請確認後台分類名稱是否正確</p>`;
+        }
         document.getElementById('item-modal').style.display = 'flex';
     }
 
     function toggleSpec(el) {
         const row = el.nextElementSibling;
+        const allRows = document.querySelectorAll('.spec-row');
+        // 可選：點擊一個時關閉其他已展開的
+        // allRows.forEach(r => { if(r !== row) r.style.display = 'none'; });
         row.style.display = (row.style.display === 'flex') ? 'none' : 'flex';
     }
 
@@ -160,10 +172,13 @@
                 total += p.price * cart[k];
                 list.innerHTML += `
                     <div class="cart-item">
-                        <span>${p.name} (${spec})</span>
+                        <div style="flex:1;">
+                            <div style="font-weight:bold; font-size:0.9em;">${p.name}</div>
+                            <div style="font-size:0.8em; color:#888;">規格：${spec}</div>
+                        </div>
                         <div class="qty-box">
                             <button class="qty-btn" onclick="updateQty('${k}',-1)">-</button>
-                            <span style="font-weight:bold;">${cart[k]}</span>
+                            <span style="font-weight:bold; min-width:20px; text-align:center;">${cart[k]}</span>
                             <button class="qty-btn" onclick="updateQty('${k}',1)">+</button>
                         </div>
                     </div>`;
@@ -173,4 +188,42 @@
     }
 
     function submitOrder() {
-        const nick = document.getElementById('user-nick').value.trim
+        const nick = document.getElementById('user-nick').value.trim();
+        if(!nick) return alert("⚠️ 請先輸入您的暱稱喔！");
+        
+        const orderData = {
+            nick: nick,
+            time: new Date().toLocaleString(),
+            items: Object.keys(cart).map(k => {
+                const [pid, s] = k.split('_');
+                return { name: prods[pid].name, spec: s, qty: cart[k], price: prods[pid].price };
+            }),
+            total: document.getElementById('total-val').innerText
+        };
+
+        db.ref('orders').push(orderData).then(() => {
+            alert("🎉 登記成功！請記得私訊對帳喔。");
+            cart = {};
+            updateOrderBar();
+            closeModal();
+        }).catch(err => alert("傳送失敗：" + err));
+    }
+
+    function closeModal() { document.getElementById('item-modal').style.display = 'none'; }
+    function openAdmin() { if(prompt("管理密碼") === "1239") window.location.href="https://console.firebase.google.com/"; }
+    function checkHistory() {
+        const n = prompt("請輸入您的暱稱查詢：");
+        if(!n) return;
+        db.ref('orders').orderByChild('nick').equalTo(n).once('value', snap => {
+            const os = snap.val();
+            if(!os) return alert("查無紀錄喔！");
+            let msg = `【${n} 的登記紀錄】\n`;
+            Object.values(os).forEach(o => {
+                msg += `\n📅 ${o.time}\n💰 總計：$${o.total}\n---`;
+            });
+            alert(msg);
+        });
+    }
+</script>
+</body>
+</html>
