@@ -8,64 +8,88 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-    <script>
-        const firebaseConfig = { 
-            apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4", 
-            databaseURL: "https://zoo-62638-default-rtdb.firebaseio.com", 
-            projectId: "zoo-62638" 
-        };
-        
-        // 防止重複初始化
-        let db;
-        window.onload = function() {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
-            db = firebase.database();
-        };
+    <style>
+        :root { --main-brown: #b0a496; --bg-cream: #fcf8f5; --price-red: #d9534f; --profit-green: #6b8e23; --dark-blue: #161b26; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-cream); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; color: #5d5246; }
+        header { background: var(--main-brown); color: white; padding: 12px; text-align: center; font-size: 1.2em; font-weight: bold; flex-shrink: 0; }
+        #event-selector { position: fixed; inset: 0; background: var(--bg-cream); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .event-card { background: var(--dark-blue); color: white; border-radius: 12px; padding: 20px; width: 220px; margin: 10px; cursor: pointer; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .nav-bar { background: #e8e0d9; padding: 8px; display: flex; gap: 8px; overflow-x: auto; flex-shrink: 0; }
+        .nav-btn { background: white; border: 1px solid #d1c7bc; padding: 6px 12px; border-radius: 20px; cursor: pointer; white-space: nowrap; font-size: 0.9em; font-weight: bold; }
+        .main-content { display: flex; flex: 1; overflow: hidden; padding: 10px; gap: 10px; }
+        .item-area { flex: 1.8; overflow-y: auto; background: white; border-radius: 12px; padding: 15px; border: 1px solid #e8e0d9; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+        .p-btn { background: white; border: 1px solid #f0e6dd; border-radius: 10px; padding: 10px; text-align: center; cursor: pointer; box-shadow: 2px 2px 0 #e8e0d9; }
+        .p-name { font-weight: bold; font-size: 0.85em; margin-bottom: 4px; height: 32px; overflow: hidden; text-overflow: ellipsis; }
+        .p-price { color: var(--price-red); font-size: 0.9em; font-weight: bold; }
+        .checkout-area { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 280px; }
+        .card { background: white; border-radius: 12px; padding: 12px; border: 1px solid #e8e0d9; }
+        .submit-btn { width: 100%; padding: 14px; background: var(--profit-green); color: white; border: none; border-radius: 8px; font-size: 1.1em; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
 
-        const products = [
-            { e: "日本超市", c: "服飾配件", n: "T-shirt(M/L)", p: 1200 },
-            { e: "日本超市", c: "服飾配件", n: "半拉鍊上衣(M/L)", p: 2700 },
-            { e: "日本超市", c: "生活用品", n: "方巾", p: 700 },
-            { e: "日本超市", c: "生活用品", n: "摺疊環保袋", p: 750 },
-            { e: "日本超市", c: "生活用品", n: "手提袋", p: 1150 },
-            { e: "日本超市", c: "個人周邊", n: "動物棒棒糖吊飾", p: 500 },
-            { e: "日本超市", c: "個人周邊", n: "馬克杯", p: 800 },
-            { e: "日本超市", c: "個人周邊", n: "壓克力立牌", p: 700 },
-            { e: "日本超市", c: "個人周邊", n: "姓名牌", p: 450 },
-            { e: "日本超市", c: "食品/隨機", n: "蜂蜜奶油蛋糕v2.0", p: 500 },
-            { e: "日本超市", c: "食品/隨機", n: "徽章(隨機)", p: 380 },
-            { e: "日本超市", c: "食品/隨機", n: "隨機卡包", p: 150 },
-            { e: "日本超市", c: "食品/隨機", n: "扭蛋(隨機)", p: 200 },
-            { e: "SS10日本周邊", c: "服飾", n: "01 演唱會T恤", p: 1070 },
-            { e: "SS10日本周邊", c: "服飾", n: "02 演唱會外套", p: 2300 },
-            { e: "SS10日本周邊", c: "服飾", n: "03 演唱會睡衣", p: 3050 },
-            { e: "SS10日本周邊", c: "配件", n: "04 演唱會背包", p: 1420 },
-            { e: "SS10日本周邊", c: "配件", n: "05 演唱會零錢包", p: 680 },
-            { e: "SS10日本周邊", c: "配件", n: "06 演唱會毛毯", p: 1550 },
-            { e: "SS10日本周邊", c: "應援", n: "07 手燈裝飾", p: 600 },
-            { e: "SS10日本周邊", c: "應援", n: "08 手幅", p: 800 },
-            { e: "SS10日本周邊", c: "應援", n: "09 應援扇", p: 350 },
-            { e: "SS10日本周邊", c: "應援", n: "10 發光立牌", p: 830 },
-            { e: "SS10日本周邊", c: "應援", n: "11 旗幟", p: 540 },
-            { e: "SS10日本周邊", c: "周邊", n: "12 棒球衣鑰匙圈", p: 840 },
-            { e: "SS10日本周邊", c: "周邊", n: "13 磁吸盒+小卡", p: 600 },
-            { e: "SS10日本周邊", c: "周邊", n: "14 盤子+小卡組", p: 970 },
-            { e: "SS10日本周邊", c: "周邊", n: "15 娃娃鑰匙圈", p: 880 },
-            { e: "SS10日本周邊", c: "周邊", n: "16 徽章", p: 580 },
-            { e: "SS10日本周邊", c: "珍藏", n: "17 20週年紀念手冊", p: 1240 },
-            { e: "SS10日本周邊", c: "食品", n: "18 無尾熊餅乾", p: 330 },
-            { e: "SS10追加周邊", c: "追加", n: "01 衣服 M/L", p: 1250 },
-            { e: "SS10追加周邊", c: "追加", n: "02 拖鞋", p: 1360 },
-            { e: "SS10追加周邊", c: "追加", n: "03 多功能收納包", p: 1200 },
-            { e: "SS10追加周邊", c: "追加", n: "04 碗(含小卡)", p: 1600 },
-            { e: "SS10追加周邊", c: "追加", n: "05 手機鑰匙圈", p: 650 },
-            { e: "SS10追加周邊", c: "追加", n: "06 扇套", p: 1100 }
-        ];
+<div id="event-selector">
+    <h2 style="margin-bottom:20px;">🧸 請選擇代購場次</h2>
+    <div style="display: flex; flex-wrap: wrap; justify-content: center;">
+        <div class="event-card" onclick="startApp('日本超市')">🛒 日本超市<br><small>點擊進入</small></div>
+        <div class="event-card" onclick="startApp('SS10日本周邊')">🎤 SS10 日本周邊<br><small>點擊進入</small></div>
+        <div class="event-card" onclick="startApp('SS10追加周邊')">🔥 SS10 追加周邊<br><small>點擊進入</small></div>
+    </div>
+</div>
 
-        let cart = [], curItem = null;
+<header>✨ <span id="head-title">代購系統</span></header>
 
-        function startApp(eventName) {
-            document.getElementById('event-selector').style.display = 'none';
-            document.getElementById('head-title').innerText
+<div class="nav-bar">
+    <button onclick="location.reload()" style="background:#8c7b6c; color:white; border:none; padding:6px 12px; border-radius:15px; cursor:pointer;">⬅ 回首頁</button>
+    <div id="cat-nav" style="display:flex; gap:8px;"></div>
+</div>
+
+<div class="main-content">
+    <div class="item-area" id="item-list"></div>
+    <div class="checkout-area">
+        <div class="card">
+            <strong>👤 填寫暱稱：</strong>
+            <input type="text" id="nick-input" style="width:100%; padding:8px; margin-top:5px; box-sizing:border-box;" placeholder="Line 名稱">
+        </div>
+        <div class="card" style="text-align:center; background:#fffcf5;">
+            <div id="sel-n" style="font-weight:bold; color:#8c7b6c;">請點選左側商品</div>
+            <div style="margin:10px 0;">
+                <button onclick="adj(-1)" style="width:30px; height:30px;">-</button>
+                <input type="number" id="qty" value="1" style="width:40px; text-align:center; height:26px;">
+                <button onclick="adj(1)" style="width:30px; height:30px;">+</button>
+            </div>
+            <button id="add-btn" onclick="addToCart()" style="width:100%; padding:10px; background:#ccc; color:white; border:none; border-radius:5px; cursor:pointer;" disabled>加入清單</button>
+        </div>
+        <div class="card" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+            <strong>📋 下單明細</strong>
+            <div id="cart-area" style="flex:1; overflow-y:auto; margin:10px 0;"></div>
+            <div style="text-align:right; font-size:1.8em; font-weight:bold; color:var(--price-red);">$<span id="total-price">0</span></div>
+            <button class="submit-btn" onclick="sendOrder()">確認下單</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 確保所有變數在全域範圍可用
+    var db;
+    var cart = [];
+    var curItem = null;
+    var products = [
+        { e: "日本超市", c: "服飾配件", n: "T-shirt(M/L)", p: 1200 },
+        { e: "日本超市", c: "服飾配件", n: "半拉鍊上衣(M/L)", p: 2700 },
+        { e: "日本超市", c: "生活用品", n: "方巾", p: 700 },
+        { e: "日本超市", c: "生活用品", n: "摺疊環保袋", p: 750 },
+        { e: "日本超市", c: "生活用品", n: "手提袋", p: 1150 },
+        { e: "日本超市", c: "個人周邊", n: "動物棒棒糖吊飾", p: 500 },
+        { e: "日本超市", c: "個人周邊", n: "馬克杯", p: 800 },
+        { e: "日本超市", c: "個人周邊", n: "壓克力立牌", p: 700 },
+        { e: "日本超市", c: "個人周邊", n: "姓名牌", p: 450 },
+        { e: "日本超市", c: "食品/隨機", n: "蜂蜜奶油蛋糕v2.0", p: 500 },
+        { e: "日本超市", c: "食品/隨機", n: "徽章(隨機)", p: 380 },
+        { e: "日本超市", c: "食品/隨機", n: "隨機卡包", p: 150 },
+        { e: "日本超市", c: "食品/隨機", n: "扭蛋(隨機)", p: 200 },
+        { e: "SS10日本周邊", c: "服飾", n: "01 演唱會T恤", p: 1070 },
+        { e: "SS10日本周邊", c: "服飾", n: "02 演唱會外套", p: 2300 },
+        { e: "SS10日本周邊", c: "服飾", n: "03 演唱會睡衣", p: 3050 },
+        { e: "SS
