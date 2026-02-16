@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🧸 33日本動物園 x LITTLE NOOK</title>
+    <title>✨ 33動物園 ✨</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -11,21 +11,19 @@
     <style>
         :root { --main-brown: #b0a496; --bg-cream: #fcf8f5; --accent-brown: #8c7b6c; --price-red: #d9534f; --profit-green: #6b8e23; }
         body { font-family: sans-serif; background: var(--bg-cream); margin: 0; display: flex; flex-direction: column; height: 100vh; color: #5d5246; overflow: hidden; }
-        header { background: var(--main-brown); color: white; padding: 12px; text-align: center; font-size: 1.3em; font-weight: bold; flex-shrink: 0; }
+        header { background: var(--main-brown); color: white; padding: 12px; text-align: center; font-size: 1.5em; font-weight: bold; flex-shrink: 0; }
         
-        /* 暱稱輸入區 */
-        .user-info-bar { background: #fff; padding: 10px; border-bottom: 2px solid #eee; display: flex; align-items: center; gap: 10px; }
+        .user-info-bar { background: #fff; padding: 10px; border-bottom: 2px solid #eee; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
         .nick-input-box { flex: 1; padding: 10px; border-radius: 8px; border: 2px solid var(--main-brown); font-size: 1em; }
 
         .nav-bar { background: #e8e0d9; padding: 10px; display: flex; gap: 10px; overflow-x: auto; border-bottom: 2px solid #d1c7bc; flex-shrink: 0; align-items: center; }
         .nav-btn { background: white; border: 1px solid #d1c7bc; padding: 8px 18px; border-radius: 20px; white-space: nowrap; cursor: pointer; font-size: 1.1em; }
-        .sync-btn { background: #ff9800; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; margin-left: auto; }
         
         .main-content { display: flex; flex: 1; overflow: hidden; padding: 10px; gap: 10px; }
         .item-area { flex: 1.8; overflow-y: auto; background: white; border-radius: 15px; padding: 15px; border: 2px solid #e8e0d9; }
         .cat-title { background: #fdf5f0; padding: 8px 15px; border-radius: 20px; margin: 15px 0 8px; font-weight: bold; border-left: 8px solid var(--main-brown); font-size: 1.2em; }
         .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 10px; }
-        .p-btn { background: white; border: 1px solid #f0e6dd; border-radius: 12px; padding: 10px 5px; text-align: center; cursor: pointer; box-shadow: 2px 2px 0 #e8e0d9; min-height: 90px; display: flex; flex-direction: column; justify-content: center; position: relative; }
+        .p-btn { background: white; border: 1px solid #f0e6dd; border-radius: 12px; padding: 10px 5px; text-align: center; cursor: pointer; box-shadow: 2px 2px 0 #e8e0d9; min-height: 90px; display: flex; flex-direction: column; justify-content: center; }
         .p-name { font-size: 0.85em; font-weight: bold; margin-bottom: 5px; height: 2.8em; overflow: hidden; line-height: 1.4; }
         .p-price { color: #c2966d; font-size: 1.2em; font-weight: bold; }
         .p-stock { font-size: 0.8em; color: #999; }
@@ -35,5 +33,36 @@
         #cart-list { max-height: 250px; overflow-y: auto; border-bottom: 2px dashed #e8e0d9; }
         .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 5px; font-size: 1.1em; border-bottom: 1px solid #eee; }
         
-        /* 數量控制 */
-        .qty-input { width: 50px; text-align: center; border: 1px solid
+        .qty-input { width: 50px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px; font-weight: bold; }
+        .total-display { font-size: 2.8em; font-weight: bold; color: var(--price-red); text-align: right; margin: 10px 0; }
+        .submit-order-btn { width:100%; padding:15px; background:var(--profit-green); color:white; border:none; border-radius:15px; font-weight:bold; font-size: 1.4em; cursor:pointer; }
+        
+        #admin-panel, #query-modal { position: fixed; inset: 10px; background: white; z-index: 1000; border-radius: 20px; display: none; flex-direction: column; padding: 15px; border: 3px solid var(--main-brown); box-shadow: 0 0 50px rgba(0,0,0,0.3); }
+        .admin-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 15px; flex: 1; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { padding: 8px; border: 1px solid #ddd; text-align: center; }
+        
+        footer { padding: 10px; text-align: center; display: flex; justify-content: center; gap: 15px; flex-shrink: 0; background: #fff; border-top: 1px solid #eee; }
+        .foot-btn { padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; }
+    </style>
+</head>
+<body>
+
+<header>✨ 33動物園 ✨</header>
+
+<div class="user-info-bar">
+    <span>👤 暱稱:</span>
+    <input type="text" id="user-nick" class="nick-input-box" placeholder="請先輸入您的暱稱 (必填)">
+</div>
+
+<div class="nav-bar" id="navbar">
+    </div>
+
+<div class="main-content">
+    <div class="item-area" id="item-area">讀取中，請檢查 Firebase 配置...</div>
+    
+    <div class="checkout-area">
+        <div class="card">
+            <strong>🛒 您的登記清單</strong>
+            <div id="cart-list"></div>
+            <div class="total-display">$<span id="final-total
