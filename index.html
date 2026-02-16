@@ -74,3 +74,189 @@
 </div>
 
 <div class="order-area" id="order-bar" style="display:none;">
+    <div class="order-title">📋 登記名單</div>
+    <div class="order-scroll" id="cart-list"></div>
+    <div class="total-info">
+        <span style="color:#aaa;">總金額：</span>
+        <span class="total-price">$<span id="total-val">0</span></span>
+    </div>
+    <button class="submit-btn" onclick="submitOrder()">✅ 確認登記 (私訊/轉帳)</button>
+</div>
+
+<div class="footer-btns">
+    <span onclick="openAdmin()">管理後台</span> | <span onclick="checkHistory()">查詢紀錄</span>
+</div>
+
+<div id="admin-panel">
+    <h3>管理上架</h3>
+    <input type="text" id="a-cat" placeholder="分類">
+    <input type="text" id="a-name" placeholder="商品名稱">
+    <input type="number" id="a-price" placeholder="價格">
+    <input type="text" id="a-spec" placeholder="規格 (用/分開，例如: 特/澈/雲)">
+    <button onclick="addP()">新增商品</button>
+    <div id="a-list" style="margin-top:20px;"></div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",
+        authDomain: "zoo-62638.firebaseapp.com",
+        databaseURL: "https://zoo-62638-default-rtdb.firebaseio.com",
+        projectId: "zoo-62638",
+        storageBucket: "zoo-62638.firebasestorage.app",
+        messagingSenderId: "33012710753",
+        appId: "1:33012710753:web:318636add1f5ac2f7b5920"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let prods = {}, cart = {};
+
+    function init() {
+        db.ref('products').on('value', snap => {
+            prods = snap.val() || {};
+            renderCats();
+        });
+    }
+
+    function renderCats() {
+        const area = document.getElementById('cat-area');
+        let cats = [...new Set(Object.values(prods).map(p => p.cat))];
+        if(cats.length === 0) cats = ["日本超市", "日本活動代購"];
+        area.innerHTML = '';
+        cats.forEach(c => {
+            area.innerHTML += `<div class="cat-card" onclick="openCat('${c}')"><h3>${c}</h3><span style="font-size:0.7em; color:#ccc;">選購 →</span></div>`;
+        });
+    }
+
+    function openCat(cName) {
+        document.getElementById('cat-title').innerText = cName;
+        const list = document.getElementById('p-list');
+        list.innerHTML = '';
+        Object.keys(prods).forEach(id => {
+            const p = prods[id];
+            if(p.cat === cName) {
+                let specHtml = '';
+                const specs = p.spec ? p.spec.split('/') : ['預設'];
+                specs.forEach(s => {
+                    specHtml += `<div class="spec-tag" onclick="addToCart('${id}','${s}')">${s}</div>`;
+                });
+
+                list.innerHTML += `
+                    <div class="p-item">
+                        <div class="p-info" onclick="toggleSpec(this)">
+                            <span>${p.name}</span>
+                            <span style="color:#e67e22">$${p.price}</span>
+                        </div>
+                        <div class="spec-row">${specHtml}</div>
+                    </div>`;
+            }
+        });
+        document.getElementById('item-modal').style.display = 'flex';
+    }
+
+    function toggleSpec(el) {
+        const row = el.nextElementSibling;
+        row.style.display = (row.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function addToCart(id, s) {
+        const key = `${id}_${s}`;
+        cart[key] = (cart[key] || 0) + 1;
+        updateOrderBar();
+    }
+
+    function updateQty(key, delta) {
+        cart[key] = Math.max(0, (cart[key] || 0) + delta);
+        if(cart[key] === 0) delete cart[key];
+        updateOrderBar();
+    }
+
+    function updateOrderBar() {
+        const bar = document.getElementById('order-bar');
+        const list = document.getElementById('cart-list');
+        const totalDisp = document.getElementById('total-val');
+        const keys = Object.keys(cart);
+        
+        if(keys.length === 0) { bar.style.display = 'none'; return; }
+        
+        bar.style.display = 'block';
+        list.innerHTML = '';
+        let total = 0;
+        
+        keys.forEach(k => {
+            const [pid, spec] = k.split('_');
+            const p = prods[pid];
+            if(p) {
+                const sub = p.price * cart[k];
+                total += sub;
+                list.innerHTML += `
+                    <div class="cart-item">
+                        <span>${p.name} (${spec})</span>
+                        <div class="qty-box">
+                            <button class="qty-btn" onclick="updateQty('${k}',-1)">-</button>
+                            <span>${cart[k]}</span>
+                            <button class="qty-btn" onclick="updateQty('${k}',1)">+</button>
+                        </div>
+                    </div>`;
+            }
+        });
+        totalDisp.innerText = total;
+    }
+
+    function submitOrder() {
+        const nick = document.getElementById('user-nick').value.trim();
+        if(!nick) return alert("請填寫暱稱！");
+        db.ref('orders').push({
+            nick, time: new Date().toLocaleString(),
+            items: Object.keys(cart).map(k => {
+                const [pid, s] = k.split('_');
+                return { name: prods[pid].name, spec: s, qty: cart[k], price: prods[pid].price };
+            }),
+            total: document.getElementById('total-val').innerText
+        }).then(() => {
+            alert("登記完成！"); cart = {}; updateOrderBar();
+        });
+    }
+
+    function openAdmin() {
+        if(prompt("密碼") === "1239") {
+            document.getElementById('admin-panel').style.display = 'block';
+            renderAdminList();
+        }
+    }
+
+    function addP() {
+        const cat = document.getElementById('a-cat').value;
+        const name = document.getElementById('a-name').value;
+        const price = parseInt(document.getElementById('a-price').value);
+        const spec = document.getElementById('a-spec').value;
+        db.ref('products').push({cat, name, price, spec});
+        alert("完成");
+    }
+
+    function renderAdminList() {
+        const area = document.getElementById('a-list');
+        area.innerHTML = '';
+        Object.keys(prods).forEach(id => {
+            area.innerHTML += `<div>${prods[id].name} <button onclick="delP('${id}')">刪</button></div>`;
+        });
+    }
+
+    function delP(id) { db.ref('products/'+id).remove(); }
+    function checkHistory() {
+        const n = prompt("輸入暱稱查詢：");
+        if(!n) return;
+        db.ref('orders').once('value', snap => {
+            const os = snap.val() || {};
+            let txt = "";
+            Object.values(os).forEach(o => { if(o.nick === n) txt += `${o.time}\n總計:$${o.total}\n---\n`; });
+            alert(txt || "無資料");
+        });
+    }
+    function closeModal() { document.getElementById('item-modal').style.display = 'none'; }
+
+    init();
+</script>
+</body>
+</html>
