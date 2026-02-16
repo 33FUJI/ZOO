@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html>
+<html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
@@ -8,73 +8,77 @@
 <script src=""></script>
 <script src=""></script>
 <style>
-:root { --bg: #fdfaf5; --blue: #003399; }
-body { font-family: sans-serif; background: var(--bg); margin: 0; padding-bottom: 350px; }
-header { padding: 20px; text-align: center; font-size: 1.3em; font-weight: bold; color: #b5a491; }
-.input-box { padding: 0 20px 20px; }
-.nick-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+:root { --bg: #fdfaf5; --blue: #003399; --accent: #8a7b6a; }
+body { font-family: sans-serif; background: var(--bg); margin: 0; padding-bottom: 300px; color: #5a5a5a; }
+header { padding: 25px; text-align: center; font-size: 1.3em; font-weight: bold; color: #b5a491; }
+.top-section { padding: 0 20px 20px; }
+.nick-input { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
 .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; }
-.cat-card { background: #fff; padding: 30px 10px; border-radius: 15px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; border: 1px solid #eee; }
+.cat-card { background: #fff; padding: 35px 10px; border-radius: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); cursor: pointer; border: 1px solid #eee; }
 .modal { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: none; flex-direction: column; }
-.modal-header { padding: 15px; background: #fff; display: flex; align-items: center; border-bottom: 1px solid #eee; }
-.p-group { background: #fff; margin: 10px; border-radius: 10px; border: 1px solid #f0f0f0; overflow: hidden; }
-.p-header { padding: 10px 15px; display: flex; justify-content: space-between; font-weight: bold; background: #fafafa; }
-.spec-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #f9f9f9; }
-.qty-controls { display: flex; align-items: center; gap: 10px; }
-.qty-btn { width: 30px; height: 30px; border-radius: 5px; border: none; background: #eee; cursor: pointer; font-weight: bold; }
-.order-area { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; padding: 20px; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); z-index: 10000; }
-.total-price { font-size: 2.5em; font-weight: bold; color: #d9534f; text-align: right; }
-.submit-btn { width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--blue); color: #fff; font-weight: bold; cursor: pointer; margin-top: 10px; }
-.footer { text-align: center; padding: 20px; color: #ccc; font-size: 0.8em; }
+.modal-header { padding: 15px 20px; background: #fff; display: flex; align-items: center; border-bottom: 1px solid #eee; position: sticky; top: 0; }
+.p-group { background: #fff; margin: 10px 15px; border-radius: 12px; border: 1px solid #f0f0f0; overflow: hidden; }
+.p-header { padding: 12px 15px; display: flex; justify-content: space-between; font-weight: bold; background: #fafafa; border-bottom: 1px solid #f0f0f0; }
+.spec-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f9f9f9; }
+.qty-controls { display: flex; align-items: center; gap: 15px; }
+.qty-btn { width: 32px; height: 32px; border-radius: 6px; border: none; background: #eee; cursor: pointer; font-size: 1.2em; }
+.order-area { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; padding: 20px; border-radius: 20px 20px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); z-index: 10000; }
+.cart-list { max-height: 100px; overflow-y: auto; font-size: 0.9em; margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 10px; }
+.total-row { display: flex; justify-content: space-between; align-items: baseline; }
+.total-price { font-size: 3em; font-weight: bold; color: #d9534f; margin: 0; }
+.submit-btn { width: 100%; padding: 18px; border-radius: 12px; border: none; background: var(--blue); color: #fff; font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 10px; }
+.footer-nav { text-align: center; padding: 30px 20px; color: #aaa; font-size: 0.9em; }
+.footer-nav span { cursor: pointer; text-decoration: underline; margin: 0 10px; }
 </style>
 </head>
 <body>
 <header>✨ 33日本動物園 ✨</header>
-<div class="input-box"><input type="text" id="user-nick" class="nick-input" placeholder="✎ 輸入暱稱 (必填)"></div>
+<div class="top-section"><input type="text" id="user-nick" class="nick-input" placeholder="✎ 輸入你的暱稱 (必填)"></div>
 <div class="cat-grid">
-<div class="cat-card" onclick="openCat()"><h3>🛒 日本超市代購</h3></div>
-<div class="cat-card" onclick="location.reload()"><h3>🔄 刷新頁面</h3></div>
+<div class="cat-card" onclick="openCat('日本SJ MARKET')"><h3>🇯🇵 日本SJ MARKET</h3></div>
+<div class="cat-card" onclick="openCat('日本超市代購')"><h3>🛒 日本超市代購</h3></div>
 </div>
 <div id="item-modal" class="modal">
-<div class="modal-header"><span onclick="closeModal()" style="cursor:pointer; padding:10px;">❮ 返回</span><h2 style="margin-left:10px; font-size:1.1em;">商品清單</h2></div>
+<div class="modal-header"><span onclick="closeModal()" style="cursor:pointer; font-size:1.2em;">❮ 返回</span><h2 id="cat-title" style="margin-left:15px; font-size: 1.1em;">清單</h2></div>
 <div id="p-list" style="overflow-y:auto; flex:1;"></div>
 </div>
 <div class="order-area" id="order-bar" style="display:none;">
-<div style="font-weight:bold; margin-bottom:5px;">📋 已選明細：</div>
-<div id="cart-list" style="max-height:80px; overflow-y:auto; font-size:0.9em; color:#666; margin-bottom:10px;"></div>
-<div class="total-price">$<span id="total-val">0</span></div>
-<button class="submit-btn" onclick="submitOrder()">✅ 確認登記</button>
-<div onclick="clearCart()" style="text-align:center; color:#999; margin-top:10px; cursor:pointer; font-size:0.8em;">清空重選</div>
+<div style="font-weight:bold; margin-bottom:8px;">📋 登記明細</div>
+<div id="cart-list" class="cart-list"></div>
+<div class="total-row"><span>總金額：</span><p class="total-price">$<span id="total-val">0</span></p></div>
+<button class="submit-btn" onclick="submitOrder()">✅ 確認登記 (私訊/轉帳)</button>
+<div onclick="clearCart()" style="text-align:center; color:#999; margin-top:12px; cursor:pointer; font-size:0.9em;">清空重選</div>
 </div>
-<div class="footer"><span onclick="window.open('')">管理後台</span></div>
+<div class="footer-nav">
+<span onclick="window.open('')">管理後台</span> |
+<span onclick="alert('查詢功能連線中，請稍後再試')">查詢紀錄</span>
+</div>
 <script>
 const members = ["特", "澈", "雲", "童", "赫", "海", "源", "旭", "圭"];
 const shopItems = [
-{n: "T-shirt ($1200)", p: 1200, s: ["M", "L"]},
-{n: "拉鍊連帽衫 ($2700)", p: 2700, s: ["M", "L"]},
-{n: "吊飾 ($500)", p: 500, s: members},
-{n: "馬克杯 ($800)", p: 800, s: members},
-{n: "姓名牌 ($450)", p: 450, s: members},
-{n: "環保袋 ($750)", p: 750, s: ["單一規格"]},
-{n: "扭蛋 ($200)", p: 200, s: ["單一規格"]}
+{n: "T-shirt", p: 1200, s: ["M", "L"]},
+{n: "拉鍊連帽衫", p: 2700, s: ["M", "L"]},
+{n: "方巾", p: 700, s: ["單一規格"]},
+{n: "可折環保袋", p: 750, s: ["單一規格"]},
+{n: "手提袋", p: 1150, s: ["單一規格"]},
+{n: "動物棒棒糖吊飾", p: 500, s: members},
+{n: "馬克杯", p: 800, s: members},
+{n: "徽章(隨機)", p: 380, s: ["單一規格"]},
+{n: "壓克力立牌", p: 700, s: members},
+{n: "姓名牌", p: 450, s: members},
+{n: "隨機卡包", p: 150, s: ["單一規格"]},
+{n: "隨機零食盒", p: 500, s: ["單一規格"]},
+{n: "扭蛋(隨機)", p: 200, s: ["單一規格"]}
 ];
 let cart = {};
-function openCat() {
+function openCat(title) {
+document.getElementById('cat-title').innerText = title;
 const list = document.getElementById('p-list');
 list.innerHTML = '';
 shopItems.forEach((p, i) => {
 let sr = p.s.map(s => {
-let k = ${i}_${s};
-return &lt;div class=&quot;spec-item&quot;&gt;&lt;span&gt;${s}&lt;/span&gt;&lt;div class=&quot;qty-controls&quot;&gt; &lt;button class=&quot;qty-btn&quot; onclick=&quot;updateQty(&#39;${k}&#39;,-1)&quot;&gt;-&lt;/button&gt; &lt;span id=&quot;num-${k}&quot;&gt;${cart[k] || 0}&lt;/span&gt; &lt;button class=&quot;qty-btn&quot; onclick=&quot;updateQty(&#39;${k}&#39;,1)&quot;&gt;+&lt;/button&gt; &lt;/div&gt;&lt;/div&gt;;
-}).join('');
-list.innerHTML += &lt;div class=&quot;p-group&quot;&gt;&lt;div class=&quot;p-header&quot;&gt;&lt;span&gt;${p.n}&lt;/span&gt;&lt;/div&gt;${sr}&lt;/div&gt;;
-});
-document.getElementById('item-modal').style.display = 'flex';
-}
-function updateQty(k, d) {
-cart[k] = (cart[k] || 0) + d;
-if (cart[k] <= 0) delete cart[k];
-const el = document.getElementById(num-${k});
+let k = ${i}\_${s};
+return &lt;div class=&quot;spec-item&quot;&gt;&lt;span&gt;${s}\</span\>\<div class="qty-controls"\> \<button class="qty-btn" onclick="updateQty('${k}&#39;,-1)&quot;&gt;-&lt;/button&gt; &lt;span id=&quot;num-${k}" style="font-weight:bold; min-width:20px; text-align:center;"\>${cart[k] || 0}&lt;/span&gt; &lt;button class=&quot;qty-btn&quot; onclick=&quot;updateQty(&#39;${k}',1)"\>+\</button\> \</div\>\</div\> ; }).join(''); list.innerHTML +=  \<div class="p-group"\>\<div class="p-header"\>\<span\>${p.n}&lt;/span&gt;&lt;span style=&quot;color:#d9534f&quot;&gt;$${p.p}&lt;/span&gt;&lt;/div&gt;${sr}\</div\>; }); document.getElementById('item-modal').style.display = 'flex'; } function updateQty(k, d) { cart[k] = (cart[k] || 0) + d; if (cart[k] <= 0) delete cart[k]; const el = document.getElementById(num-${k});
 if (el) el.innerText = cart[k] || 0;
 updateOrderBar();
 }
@@ -89,7 +93,7 @@ keys.forEach(k => {
 const [i, s] = k.split('_');
 const p = shopItems[i];
 t += p.p * cart[k];
-list.innerHTML += &lt;div&gt;· ${p.n.split(&#39; &#39;)[0]} (${s}) x ${cart[k]}&lt;/div&gt;;
+list.innerHTML += &lt;div style=&quot;display:flex; justify-content:space-between; margin-bottom:3px;&quot;&gt;&lt;span&gt;${p.n} (${s}) x ${cart[k]}&lt;/span&gt;&lt;span&gt;$${p.p \* cart[k]}\</span\>\</div\>\;
 });
 document.getElementById('total-val').innerText = t;
 }
@@ -97,11 +101,11 @@ function closeModal() { document.getElementById('item-modal').style.display = 'n
 function clearCart() { cart = {}; updateOrderBar(); closeModal(); }
 function submitOrder() {
 const nick = document.getElementById('user-nick').value;
-if (!nick) return alert("請輸入暱稱！");
+if (!nick) return alert("⚠️ 請填寫暱稱！");
 const cfg = { apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4", databaseURL: "", projectId: "zoo-62638" };
 if (!firebase.apps.length) firebase.initializeApp(cfg);
 firebase.database().ref('orders').push({ nick, time: new Date().toLocaleString(), items: cart, total: document.getElementById('total-val').innerText })
-.then(() => { alert("登記成功！"); clearCart(); });
+.then(() => { alert("🎉 登記成功！請私訊對帳。"); clearCart(); });
 }
 </script>
 </body>
