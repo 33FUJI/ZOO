@@ -6,93 +6,82 @@
     <title>✨ 33動物園 ✨</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <style>
-        :root { --main-brown: #b0a496; --bg-cream: #fcf8f5; --accent-brown: #8c7b6c; --price-red: #d9534f; --profit-green: #6b8e23; }
-        body { font-family: sans-serif; background: var(--bg-cream); margin: 0; display: flex; flex-direction: column; height: 100vh; color: #5d5246; overflow: hidden; }
-        header { background: var(--main-brown); color: white; padding: 12px; text-align: center; font-size: 1.5em; font-weight: bold; flex-shrink: 0; }
+        :root { --main: #b0a496; --bg: #fcf8f5; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; color: #5d5246; }
+        header { background: var(--main); color: white; padding: 15px; text-align: center; font-size: 1.5em; font-weight: bold; }
         
-        /* 暱稱區 */
-        .user-info-bar { background: #fff; padding: 10px; border-bottom: 2px solid #eee; display: flex; align-items: center; gap: 10px; }
-        .nick-input-box { flex: 1; padding: 10px; border-radius: 8px; border: 2px solid var(--main-brown); font-size: 1em; }
+        .user-bar { background: #fff; padding: 10px; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 10px; }
+        .nick-input { flex: 1; padding: 10px; border: 2px solid var(--main); border-radius: 8px; font-size: 1em; }
 
-        .nav-bar { background: #e8e0d9; padding: 10px; display: flex; gap: 10px; overflow-x: auto; flex-shrink: 0; }
-        .nav-btn { background: white; border: 1px solid #d1c7bc; padding: 8px 18px; border-radius: 20px; white-space: nowrap; cursor: pointer; }
+        .main-content { flex: 1; display: flex; overflow: hidden; padding: 10px; gap: 10px; }
+        .item-list { flex: 1.5; overflow-y: auto; background: white; border-radius: 10px; padding: 15px; border: 1px solid #ddd; }
+        .cart-box { flex: 1; background: white; border-radius: 10px; padding: 15px; border: 1px solid #ddd; display: flex; flex-direction: column; min-width: 280px; }
         
-        .main-content { display: flex; flex: 1; overflow: hidden; padding: 10px; gap: 10px; }
-        .item-area { flex: 1.8; overflow-y: auto; background: white; border-radius: 15px; padding: 15px; border: 2px solid #e8e0d9; }
-        .cat-title { background: #fdf5f0; padding: 8px 15px; border-radius: 20px; margin: 15px 0 8px; font-weight: bold; border-left: 8px solid var(--main-brown); }
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-        .p-btn { background: white; border: 1px solid #f0e6dd; border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; box-shadow: 2px 2px 0 #e8e0d9; }
-        .p-name { font-size: 0.9em; font-weight: bold; margin-bottom: 5px; }
-        .p-price { color: #c2966d; font-size: 1.1em; font-weight: bold; }
+        .p-card { border: 1px solid #eee; padding: 12px; margin-bottom: 10px; border-radius: 8px; text-align: center; cursor: pointer; background: #fff; display: inline-block; width: 120px; margin-right: 8px; }
+        .p-name { font-size: 0.9em; font-weight: bold; }
+        .p-price { color: #c2966d; font-weight: bold; }
 
-        .checkout-area { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 300px; }
-        .card { background: white; border-radius: 15px; padding: 15px; border: 2px solid #e8e0d9; }
-        #cart-list { max-height: 250px; overflow-y: auto; border-bottom: 1px solid #eee; margin-bottom: 10px; }
-        .total-display { font-size: 2.5em; font-weight: bold; color: var(--price-red); text-align: right; }
-        .submit-btn { width: 100%; padding: 15px; background: var(--profit-green); color: white; border: none; border-radius: 15px; font-size: 1.3em; font-weight: bold; cursor: pointer; }
+        .cart-items { flex: 1; overflow-y: auto; border-bottom: 1px solid #eee; margin-top: 10px; }
+        .total-price { font-size: 2.5em; color: #d9534f; text-align: right; font-weight: bold; margin: 10px 0; }
+        .order-btn { width: 100%; padding: 15px; background: #6b8e23; color: white; border: none; border-radius: 10px; font-size: 1.3em; font-weight: bold; cursor: pointer; }
 
-        footer { padding: 10px; display: flex; justify-content: center; gap: 20px; background: #fff; border-top: 1px solid #eee; }
-        .foot-btn { padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; border: none; }
-        
-        /* 彈窗 */
-        #admin-panel { position: fixed; inset: 10px; background: white; z-index: 1000; border-radius: 20px; display: none; flex-direction: column; padding: 20px; border: 3px solid var(--main-brown); }
+        footer { padding: 10px; background: #fff; border-top: 1px solid #eee; text-align: center; }
+        .admin-btn { padding: 8px 20px; background: var(--main); color: white; border-radius: 5px; border: none; cursor: pointer; }
+
+        /* 後台樣式 */
+        #admin-panel { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 9999; }
+        .admin-box { background: white; width: 95%; max-width: 500px; height: 80%; padding: 20px; border-radius: 15px; overflow-y: auto; }
     </style>
 </head>
 <body>
 
 <header>✨ 33動物園 ✨</header>
 
-<div class="user-info-bar">
+<div class="user-bar">
     <span>👤 暱稱:</span>
-    <input type="text" id="user-nick" class="nick-input-box" placeholder="請先輸入您的暱稱 (下單用)">
+    <input type="text" id="nick" class="nick-input" placeholder="請填寫暱稱 (沒填無法下單)">
 </div>
 
-<div class="nav-bar" id="navbar"></div>
-
 <div class="main-content">
-    <div class="item-area" id="item-area">
-        <div id="status-msg" style="text-align:center; padding:30px;">正在讀取資料庫... 如果畫面一直沒變，請檢查 Firebase 設定。</div>
+    <div class="item-list" id="display-area">
+        <p style="text-align:center;">正在讀取雲端資料...</p>
     </div>
     
-    <div class="checkout-area">
-        <div class="card">
-            <strong>🛒 登記清單</strong>
-            <div id="cart-list"></div>
-            <div class="total-display">$<span id="final-total">0</span></div>
-            <button class="submit-btn" onclick="submitOrder()">✅ 確認登記送出</button>
-        </div>
+    <div class="cart-box">
+        <strong>🛒 我的清單</strong>
+        <div id="cart-content" class="cart-items"></div>
+        <div class="total-price">$<span id="sum">0</span></div>
+        <button class="order-btn" onclick="submitOrder()">✅ 確認登記</button>
     </div>
 </div>
 
 <footer>
-    <button class="foot-btn" style="background:#f0e6dd;" onclick="openQuery()">🔍 查詢紀錄</button>
-    <button class="foot-btn" style="background:var(--main-brown); color:white;" onclick="openAdmin()">⚙️ 管理後台</button>
+    <button class="admin-btn" onclick="openAdmin()">⚙️ 管理後台</button>
 </footer>
 
 <div id="admin-panel">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-        <h2>⚙️ 管理中心 (密碼: 1239)</h2>
-        <button onclick="document.getElementById('admin-panel').style.display='none'">✕ 關閉</button>
-    </div>
-    <div style="margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap;">
-        <select id="select-cat" onchange="checkNewCat(this.value)"></select>
-        <input type="text" id="new-n" placeholder="商品名稱" style="width:150px;">
-        <input type="number" id="new-p" placeholder="售價" style="width:70px;">
-        <button onclick="addNewProduct()" style="background:var(--profit-green); color:white; border:none; padding:5px 15px;">➕ 新增</button>
-    </div>
-    <div style="flex:1; overflow-y:auto;">
-        <table style="width:100%; border-collapse: collapse; text-align:center;">
-            <thead><tr style="background:#eee;"><th>品名</th><th>售價</th><th>刪除</th></tr></thead>
-            <tbody id="admin-tbody"></tbody>
-        </table>
+    <div class="admin-box">
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+            <h3>管理商品 (密碼:1239)</h3>
+            <button onclick="document.getElementById('admin-panel').style.display='none'">✕ 關閉</button>
+        </div>
+        <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:15px;">
+            <input type="text" id="new-cat" placeholder="新分類名稱">
+            <button onclick="addCategory()">+ 新增分類</button>
+            <hr>
+            <select id="sel-cat"></select>
+            <input type="text" id="p-n" placeholder="品名" style="width:100px;">
+            <input type="number" id="p-p" placeholder="售價" style="width:60px;">
+            <button onclick="addProduct()">+ 加商品</button>
+        </div>
+        <div id="admin-list"></div>
     </div>
 </div>
 
 <script>
-    // ⚠️ 請確保這段配置與您的 Firebase Console 一致
+    // --- 這裡請確認你的資料庫資訊 ---
     const firebaseConfig = {
         apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",
         authDomain: "zoo-62638.firebaseapp.com",
@@ -103,18 +92,100 @@
         appId: "1:123456789:web:abcdef"
     };
 
-    let db;
-    let inv = [];
-    let cart = {};
+    let db, inv = [], cart = {};
 
-    // 啟動與防錯
-    window.onload = function() {
-        try {
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
-            db = firebase.database();
-            console.log("Firebase 嘗試連線...");
-            loadData();
-        } catch (err) {
-            console.error(err);
+    // 1. 初始化
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+        db.ref('inventory').on('value', snap => {
+            inv = snap.val() || [];
+            renderAll();
+        });
+    } catch(e) {
+        document.getElementById('display-area').innerHTML = "資料庫配置錯誤，請檢查代碼。";
+    }
+
+    // 2. 顯示商品
+    function renderAll() {
+        const area = document.getElementById('display-area');
+        area.innerHTML = '';
+        if(inv.length === 0) area.innerHTML = "目前沒商品，請點後台新增。";
+
+        inv.forEach((c, ci) => {
+            let html = `<div style="font-weight:bold; margin-top:15px; color:var(--main);">${c.cat}</div>`;
+            c.items.forEach((it, ii) => {
+                html += `<div class="p-card" onclick="toCart(${ci}, ${ii})">
+                    <div class="p-name">${it.n}</div>
+                    <div class="p-price">$${it.p}</div>
+                </div>`;
+            });
+            area.innerHTML += html;
+        });
+        
+        // 更新後台下拉選單
+        const sel = document.getElementById('sel-cat');
+        sel.innerHTML = inv.map(c => `<option value="${c.cat}">${c.cat}</option>`).join('');
+    }
+
+    // 3. 購物車
+    function toCart(ci, ii) {
+        const item = inv[ci].items[ii];
+        if(!cart[item.n]) cart[item.n] = { ...item, q: 1 };
+        else cart[item.n].q++;
+        showCart();
+    }
+
+    function showCart() {
+        const box = document.getElementById('cart-content');
+        let total = 0; box.innerHTML = '';
+        Object.values(cart).forEach(it => {
+            total += it.p * it.q;
+            box.innerHTML += `<div style="padding:5px; border-bottom:1px solid #eee;">${it.n} x ${it.q} = $${it.p * it.q}</div>`;
+        });
+        document.getElementById('sum').innerText = total;
+    }
+
+    // 4. 下單
+    function submitOrder() {
+        const nick = document.getElementById('nick').value.trim();
+        if(!nick) return alert("請填寫暱稱！");
+        if(Object.keys(cart).length === 0) return alert("清單是空的！");
+        db.ref('orders').push({ nick, items: Object.values(cart), total: document.getElementById('sum').innerText, time: new Date().toLocaleString() });
+        alert("登記成功！請截圖傳給 33！");
+        cart = {}; showCart();
+    }
+
+    // 5. 後台管理
+    function openAdmin() {
+        if(prompt("請輸入密碼") === "1239") {
+            document.getElementById('admin-panel').style.display = 'flex';
+            showAdminList();
+        }
+    }
+    function addCategory() {
+        const n = document.getElementById('new-cat').value;
+        if(n) { inv.push({cat: n, items: []}); save(); }
+    }
+    function addProduct() {
+        const cN = document.getElementById('sel-cat').value;
+        const n = document.getElementById('p-n').value, p = parseInt(document.getElementById('p-p').value);
+        const cat = inv.find(x => x.cat === cN);
+        if(cat && n) { cat.items.push({n, p}); save(); }
+    }
+    function save() { db.ref('inventory').set(inv); showAdminList(); }
+    function showAdminList() {
+        let h = "";
+        inv.forEach((c, ci) => {
+            h += `<p><b>${c.cat}</b> <button onclick="delCat(${ci})">刪除分類</button></p>`;
+            c.items.forEach((it, ii) => {
+                h += `<div>${it.n} - $${it.p} <button onclick="delP(${ci},${ii})">刪</button></div>`;
+            });
+        });
+        document.getElementById('admin-list').innerHTML = h;
+    }
+    function delP(ci, ii) { inv[ci].items.splice(ii,1); save(); }
+    function delCat(ci) { if(confirm("確定刪除分類?")) { inv.splice(ci,1); save(); } }
+</script>
+</body>
+</html>
