@@ -1,3 +1,8 @@
+這真的很令人挫折，我非常理解你的感受。看來系統對較長的代碼塊審查得非常嚴格，導致它們被過濾掉了。
+
+別擔心，我們換一個方式。我現在將代碼分成三個部分，直接用純文字（不使用代碼框）發給你。請你依序複製這三段，並合併貼到你的 index.html 中。
+
+第一部分：頁面頭部與樣式 (貼在最前面)
 <!DOCTYPE html>
 
 <html lang="zh-TW">
@@ -8,105 +13,107 @@
 <script src=""></script>
 <script src=""></script>
 <style>
-:root { --bg: #fdfaf5; --blue: #003399; --accent: #8a7b6a; }
-body { font-family: sans-serif; background: var(--bg); margin: 0; padding-bottom: 300px; color: #5a5a5a; }
-header { padding: 25px; text-align: center; font-size: 1.3em; font-weight: bold; color: #b5a491; }
-.top-section { padding: 0 20px 20px; }
-.nick-input { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 16px; }
-.cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; }
-.cat-card { background: #fff; padding: 35px 10px; border-radius: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); cursor: pointer; border: 1px solid #eee; }
-.modal { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: none; flex-direction: column; }
-.modal-header { padding: 15px 20px; background: #fff; display: flex; align-items: center; border-bottom: 1px solid #eee; position: sticky; top: 0; }
-.p-group { background: #fff; margin: 10px 15px; border-radius: 12px; border: 1px solid #f0f0f0; overflow: hidden; }
-.p-header { padding: 12px 15px; display: flex; justify-content: space-between; font-weight: bold; background: #fafafa; border-bottom: 1px solid #f0f0f0; }
-.spec-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f9f9f9; }
-.qty-controls { display: flex; align-items: center; gap: 15px; }
-.qty-btn { width: 32px; height: 32px; border-radius: 6px; border: none; background: #eee; cursor: pointer; font-size: 1.2em; }
-.order-area { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; padding: 20px; border-radius: 20px 20px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); z-index: 10000; }
-.cart-list { max-height: 100px; overflow-y: auto; font-size: 0.9em; margin-bottom: 10px; border-bottom: 1px dashed #eee; padding-bottom: 10px; }
-.total-row { display: flex; justify-content: space-between; align-items: baseline; }
-.total-price { font-size: 3em; font-weight: bold; color: #d9534f; margin: 0; }
-.submit-btn { width: 100%; padding: 18px; border-radius: 12px; border: none; background: var(--blue); color: #fff; font-size: 1.1em; font-weight: bold; cursor: pointer; margin-top: 10px; }
-.footer-nav { text-align: center; padding: 30px 20px; color: #aaa; font-size: 0.9em; }
-.footer-nav span { cursor: pointer; text-decoration: underline; margin: 0 10px; }
+:root{--bg:#fdfaf5;--blue:#003399}body{font-family:sans-serif;background:var(--bg);margin:0;padding-bottom:300px;color:#5a5a5a}header{padding:20px;text-align:center;font-weight:bold;color:#b5a491;font-size:1.2em}.top-section{padding:0 20px 20px}.nick-input{width:100%;padding:12px;border-radius:10px;border:1px solid #ddd;box-sizing:border-box}.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:0 20px}.cat-card{background:#fff;padding:30px 10px;border-radius:15px;text-align:center;box-shadow:0 4px 10px rgba(0,0,0,0.05);cursor:pointer;border:1px solid #eee}.modal{position:fixed;inset:0;background:var(--bg);z-index:9999;display:none;flex-direction:column}.modal-header{padding:15px;background:#fff;display:flex;align-items:center;border-bottom:1px solid #eee}.p-group{background:#fff;margin:10px 15px;border-radius:10px;border:1px solid #f0f0f0}.p-header{padding:10px 15px;display:flex;justify-content:space-between;font-weight:bold;background:#fafafa;border-bottom:1px solid #eee}.spec-item{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;border-bottom:1px solid #f9f9f9}.qty-controls{display:flex;align-items:center;gap:10px}.qty-btn{width:30px;height:30px;border-radius:5px;border:none;background:#eee;cursor:pointer}.order-area{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:20px;box-shadow:0 -5px 15px rgba(0,0,0,0.1);z-index:10000}.total-price{font-size:2.5em;font-weight:bold;color:#d9534f;text-align:right}.submit-btn{width:100%;padding:15px;border-radius:10px;border:none;background:var(--blue);color:#fff;font-weight:bold;cursor:pointer}.footer-nav{text-align:center;padding:20px;color:#999;font-size:0.9em}.footer-nav span{cursor:pointer;text-decoration:underline;margin:0 10px}
 </style>
 </head>
 <body>
 <header>✨ 33日本動物園 ✨</header>
-<div class="top-section"><input type="text" id="user-nick" class="nick-input" placeholder="✎ 輸入你的暱稱 (必填)"></div>
-<div class="cat-grid">
-<div class="cat-card" onclick="openCat('日本SJ MARKET')"><h3>🇯🇵 日本SJ MARKET</h3></div>
-<div class="cat-card" onclick="openCat('日本超市代購')"><h3>🛒 日本超市代購</h3></div>
-</div>
+<div class="top-section"><input type="text" id="user-nick" class="nick-input" placeholder="✎ 輸入暱稱 (必填)"></div>
+<div class="cat-grid" id="main-grid"></div>
 <div id="item-modal" class="modal">
-<div class="modal-header"><span onclick="closeModal()" style="cursor:pointer; font-size:1.2em;">❮ 返回</span><h2 id="cat-title" style="margin-left:15px; font-size: 1.1em;">清單</h2></div>
-<div id="p-list" style="overflow-y:auto; flex:1;"></div>
+<div class="modal-header"><span onclick="closeModal()" style="cursor:pointer">❮ 返回</span><h2 id="cat-title" style="margin-left:15px;font-size:1.1em">清單</h2></div>
+<div id="p-list" style="overflow-y:auto;flex:1"></div>
 </div>
-<div class="order-area" id="order-bar" style="display:none;">
-<div style="font-weight:bold; margin-bottom:8px;">📋 登記明細</div>
-<div id="cart-list" class="cart-list"></div>
-<div class="total-row"><span>總金額：</span><p class="total-price">$<span id="total-val">0</span></p></div>
-<button class="submit-btn" onclick="submitOrder()">✅ 確認登記 (私訊/轉帳)</button>
-<div onclick="clearCart()" style="text-align:center; color:#999; margin-top:12px; cursor:pointer; font-size:0.9em;">清空重選</div>
+<div class="order-area" id="order-bar" style="display:none">
+<div id="cart-list" style="max-height:80px;overflow-y:auto;font-size:0.9em;margin-bottom:10px"></div>
+<div class="total-price">$<span id="total-val">0</span></div>
+<button class="submit-btn" onclick="submitOrder()">✅ 確認登記</button>
+<div onclick="clearCart()" style="text-align:center;margin-top:10px;color:#999;cursor:pointer;font-size:0.8em">清空重選</div>
 </div>
 <div class="footer-nav">
 <span onclick="window.open('')">管理後台</span> |
-<span onclick="alert('查詢功能連線中，請稍後再試')">查詢紀錄</span>
+<span onclick="alert('查詢紀錄開發中')">查詢紀錄</span>
 </div>
 <script>
-const members = ["特", "澈", "雲", "童", "赫", "海", "源", "旭", "圭"];
-const shopItems = [
-{n: "T-shirt", p: 1200, s: ["M", "L"]},
-{n: "拉鍊連帽衫", p: 2700, s: ["M", "L"]},
-{n: "方巾", p: 700, s: ["單一規格"]},
-{n: "可折環保袋", p: 750, s: ["單一規格"]},
-{n: "手提袋", p: 1150, s: ["單一規格"]},
-{n: "動物棒棒糖吊飾", p: 500, s: members},
-{n: "馬克杯", p: 800, s: members},
-{n: "徽章(隨機)", p: 380, s: ["單一規格"]},
-{n: "壓克力立牌", p: 700, s: members},
-{n: "姓名牌", p: 450, s: members},
-{n: "隨機卡包", p: 150, s: ["單一規格"]},
-{n: "隨機零食盒", p: 500, s: ["單一規格"]},
-{n: "扭蛋(隨機)", p: 200, s: ["單一規格"]}
-];
-let cart = {};
-function openCat(title) {
-document.getElementById('cat-title').innerText = title;
-const list = document.getElementById('p-list');
+var members = ["特", "澈", "雲", "童", "赫", "海", "源", "旭", "圭"];
+var sizeML = ["M", "L"];
+var single = ["單一規格"];
+var data = {
+'SS10 日本演唱會週邊': [
+{n:"01 日本演唱會T恤", p:1070, s:sizeML},{n:"02 日本演唱會外套", p:2300, s:sizeML},{n:"03 日本演唱會睡衣", p:3050, s:sizeML},
+{n:"04 日本演唱會背包", p:1420, s:single},{n:"05 日本演唱會零錢包", p:680, s:single},{n:"06 日本演唱會毛毯", p:1550, s:single},
+{n:"07 成員手燈裝飾", p:600, s:members},{n:"08 成員手幅", p:800, s:members},{n:"09 成員應援扇", p:350, s:members},
+{n:"10 發光壓克力立牌", p:830, s:members},{n:"11 成員旗幟", p:540, s:members},{n:"12 棒球衣鑰匙圈", p:840, s:single},
+{n:"13 磁吸盒+小卡", p:600, s:single},{n:"14 盤子+小卡組", p:970, s:single},{n:"15 娃娃鑰匙圈", p:880, s:members},
+{n:"16 成員徽章", p:580, s:members},{n:"17 20週年紀念手冊", p:1240, s:single},{n:"18 無尾熊餅乾+隨機小卡", p:330, s:single}
+],
+'SS10 日周追加周邊': [
+{n:"01 衣服", p:1250, s:sizeML},{n:"02 拖鞋", p:1360, s:single},{n:"03 多功能收納包", p:1200, s:single},
+{n:"04 碗（含小卡）", p:1600, s:single},{n:"05 手機鑰匙圈(不含照片)", p:650, s:single},{n:"06 扇套", p:1100, s:members}
+],
+'日本超市代購': [
+{n:"超市吊飾", p:500, s:members},{n:"超市馬克杯", p:800, s:members},{n:"姓名牌", p:450, s:members},
+{n:"環保袋", p:750, s:single},{n:"扭蛋(隨機)", p:200, s:single}
+]
+};
+var cart = {};
+function renderCards() {
+var grid = document.getElementById('main-grid');
+grid.innerHTML = '';
+Object.keys(data).forEach(function(key) {
+grid.innerHTML += '<div class="cat-card" onclick="openCat(&#39;' + key + '&#39;)"><h3>' + key + '</h3></div>';
+});
+}
+function openCat(cat) {
+document.getElementById('cat-title').innerText = cat;
+var list = document.getElementById('p-list');
 list.innerHTML = '';
-shopItems.forEach((p, i) => {
-let sr = p.s.map(s => {
-let k = ${i}\_${s};
-return &lt;div class=&quot;spec-item&quot;&gt;&lt;span&gt;${s}\</span\>\<div class="qty-controls"\> \<button class="qty-btn" onclick="updateQty('${k}&#39;,-1)&quot;&gt;-&lt;/button&gt; &lt;span id=&quot;num-${k}" style="font-weight:bold; min-width:20px; text-align:center;"\>${cart[k] || 0}&lt;/span&gt; &lt;button class=&quot;qty-btn&quot; onclick=&quot;updateQty(&#39;${k}',1)"\>+\</button\> \</div\>\</div\> ; }).join(''); list.innerHTML +=  \<div class="p-group"\>\<div class="p-header"\>\<span\>${p.n}&lt;/span&gt;&lt;span style=&quot;color:#d9534f&quot;&gt;$${p.p}&lt;/span&gt;&lt;/div&gt;${sr}\</div\>; }); document.getElementById('item-modal').style.display = 'flex'; } function updateQty(k, d) { cart[k] = (cart[k] || 0) + d; if (cart[k] <= 0) delete cart[k]; const el = document.getElementById(num-${k});
-if (el) el.innerText = cart[k] || 0;
+data[cat].forEach(function(p, i) {
+var sr = p.s.map(function(s) {
+var k = cat + '' + i + '' + s;
+return '<div class="spec-item"><span>' + s + '</span><div class="qty-controls">' +
+'<button class="qty-btn" onclick="updateQty(&#39;'+k+'&#39;,-1)">-</button>' +
+'<span id="num-'+k+'">' + (cart[k] || 0) + '</span>' +
+'<button class="qty-btn" onclick="updateQty(&#39;'+k+'&#39;,1)">+</button></div></div>';
+}).join('');
+list.innerHTML += '<div class="p-group"><div class="p-header"><span>' + p.n + '</span><span>$' + p.p + '</span></div>' + sr + '</div>';
+});
+document.getElementById('item-modal').style.display = 'flex';
+}
+function updateQty(k, d) {
+cart[k] = (cart[k] || 0) + d;
+if (cart[k] <= 0) delete cart[k];
+var el = document.getElementById('num-' + k);
+if (el) el.innerText = (cart[k] || 0);
 updateOrderBar();
 }
 function updateOrderBar() {
-const bar = document.getElementById('order-bar');
-const list = document.getElementById('cart-list');
-const keys = Object.keys(cart);
-if (!keys.length) { bar.style.display = 'none'; return; }
+var bar = document.getElementById('order-bar');
+var list = document.getElementById('cart-list');
+var keys = Object.keys(cart);
+if (keys.length === 0) { bar.style.display = 'none'; return; }
 bar.style.display = 'block';
-list.innerHTML = ''; let t = 0;
-keys.forEach(k => {
-const [i, s] = k.split('_');
-const p = shopItems[i];
+list.innerHTML = ''; var t = 0;
+keys.forEach(function(k) {
+var parts = k.split('_');
+var p = data[parts[0]][parseInt(parts[1])];
 t += p.p * cart[k];
-list.innerHTML += &lt;div style=&quot;display:flex; justify-content:space-between; margin-bottom:3px;&quot;&gt;&lt;span&gt;${p.n} (${s}) x ${cart[k]}&lt;/span&gt;&lt;span&gt;$${p.p \* cart[k]}\</span\>\</div\>\;
+list.innerHTML += '<div>' + p.n + '(' + parts[2] + ') x ' + cart[k] + '</div>';
 });
 document.getElementById('total-val').innerText = t;
 }
 function closeModal() { document.getElementById('item-modal').style.display = 'none'; }
 function clearCart() { cart = {}; updateOrderBar(); closeModal(); }
 function submitOrder() {
-const nick = document.getElementById('user-nick').value;
-if (!nick) return alert("⚠️ 請填寫暱稱！");
-const cfg = { apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4", databaseURL: "", projectId: "zoo-62638" };
-if (!firebase.apps.length) firebase.initializeApp(cfg);
-firebase.database().ref('orders').push({ nick, time: new Date().toLocaleString(), items: cart, total: document.getElementById('total-val').innerText })
-.then(() => { alert("🎉 登記成功！請私訊對帳。"); clearCart(); });
+var nick = document.getElementById('user-nick').value;
+if (!nick) { alert("⚠️ 請填寫暱稱"); return; }
+var cfg = { apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4", databaseURL: "", projectId: "zoo-62638" };
+if (!window.firebase.apps.length) window.firebase.initializeApp(cfg);
+window.firebase.database().ref('orders').push({ nick: nick, time: new Date().toLocaleString(), items: cart, total: document.getElementById('total-val').innerText })
+.then(function() { alert("✅ 登記成功！"); clearCart(); });
 }
+renderCards();
 </script>
+
 </body>
 </html>
