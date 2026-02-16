@@ -9,20 +9,21 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        // 2. 初始化函數，確保點擊時函數已存在
         const firebaseConfig = { 
             apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4", 
             databaseURL: "https://zoo-62638-default-rtdb.firebaseio.com", 
             projectId: "zoo-62638" 
         };
         
-        // 檢查是否已初始化，避免重複初始化錯誤
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const db = firebase.database();
+        // 防止重複初始化
+        let db;
+        window.onload = function() {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            db = firebase.database();
+        };
 
-        // 商品資料庫
         const products = [
             { e: "日本超市", c: "服飾配件", n: "T-shirt(M/L)", p: 1200 },
             { e: "日本超市", c: "服飾配件", n: "半拉鍊上衣(M/L)", p: 2700 },
@@ -67,85 +68,4 @@
 
         function startApp(eventName) {
             document.getElementById('event-selector').style.display = 'none';
-            document.getElementById('head-title').innerText = eventName;
-            renderItems(eventName);
-        }
-
-        function renderItems(eventName) {
-            const list = document.getElementById('item-list');
-            const nav = document.getElementById('cat-nav');
-            list.innerHTML = ''; nav.innerHTML = '';
-            
-            const filtered = products.filter(i => i.e === eventName);
-            const cats = [...new Set(filtered.map(i => i.c))];
-            
-            cats.forEach(c => {
-                nav.innerHTML += `<button class="nav-btn" onclick="document.getElementById('cat-${c}').scrollIntoView()">${c}</button>`;
-                let html = `<div id="cat-${c}" style="font-weight:bold; margin:15px 0 5px; border-left:4px solid #b0a496; padding-left:10px;">${c}</div><div class="product-grid">`;
-                filtered.filter(i => i.c === c).forEach(i => {
-                    html += `<div class="p-btn" onclick="sel('${i.n}', ${i.p})"><div class="p-name">${i.n}</div><div class="p-price">$${i.p}</div></div>`;
-                });
-                list.innerHTML += html + '</div>';
-            });
-        }
-
-        function sel(n, p) {
-            curItem = { n, p };
-            document.getElementById('sel-n').innerText = n;
-            document.getElementById('add-btn').disabled = false;
-            document.getElementById('add-btn').style.background = '#b0a496';
-        }
-
-        function adj(v) {
-            let q = document.getElementById('qty');
-            let n = parseInt(q.value) + v;
-            if (n > 0) q.value = n;
-        }
-
-        function addToCart() {
-            if(!curItem) return;
-            const q = parseInt(document.getElementById('qty').value);
-            cart.push({ ...curItem, q: q });
-            showCart();
-            document.getElementById('sel-n').innerText = "✅ 已加入清單";
-            document.getElementById('add-btn').disabled = true;
-            document.getElementById('add-btn').style.background = '#ccc';
-        }
-
-        function showCart() {
-            const div = document.getElementById('cart-area');
-            div.innerHTML = cart.map((i, idx) => `
-                <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee; font-size:0.9em;">
-                    <span>${i.n} x ${i.q}</span>
-                    <span>$${i.p * i.q} <button onclick="cart.splice(${idx},1);showCart()" style="border:none; background:none; color:red; cursor:pointer;">✕</button></span>
-                </div>`).join('');
-            document.getElementById('total-price').innerText = cart.reduce((s, i) => s + (i.p * i.q), 0);
-        }
-
-        function sendOrder() {
-            const nick = document.getElementById('nick-input').value;
-            if (!nick) return alert('請填寫暱稱！');
-            if (cart.length === 0) return alert('清單是空的！');
-            
-            db.ref('orders_final').push({
-                nick: nick,
-                event: document.getElementById('head-title').innerText,
-                items: cart,
-                total: document.getElementById('total-price').innerText,
-                time: new Date().toLocaleString()
-            }).then(() => {
-                alert('下單成功！請通知 33');
-                cart = []; showCart();
-            });
-        }
-    </script>
-
-    <style>
-        :root { --main-brown: #b0a496; --bg-cream: #fcf8f5; --price-red: #d9534f; --profit-green: #6b8e23; --dark-blue: #161b26; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-cream); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; color: #5d5246; }
-        header { background: var(--main-brown); color: white; padding: 12px; text-align: center; font-size: 1.2em; font-weight: bold; flex-shrink: 0; }
-        
-        #event-selector { position: fixed; inset: 0; background: var(--bg-cream); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .event-card { background: var(--dark-blue); color: white; border-radius: 15px; padding: 25px; width: 220px; margin: 10px; cursor: pointer; box-shadow: 0 8px 15px rgba(0,0,0,0.2); }
-        
-        .nav-bar { background: #e8e0d9; padding: 8px; display: flex; gap: 8px
+            document.getElementById('head-title').innerText
