@@ -6,48 +6,83 @@
     <title>🧸 33日本代購下單系統</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
     <style>
-        :root { 
-            --main-brown: #b0a496; --bg-cream: #fcf8f5; --accent-brown: #8c7b6c; 
-            --price-red: #d9534f; --profit-green: #6b8e23; --dark-blue: #161b26;
-        }
-        
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-cream); margin: 0; display: flex; flex-direction: column; height: 100vh; color: #5d5246; overflow: hidden; }
+        :root { --main-brown: #b0a496; --bg-cream: #fcf8f5; --price-red: #d9534f; --profit-green: #6b8e23; --dark-blue: #161b26; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-cream); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; color: #5d5246; }
         header { background: var(--main-brown); color: white; padding: 15px; text-align: center; font-size: 1.4em; font-weight: bold; flex-shrink: 0; }
-
-        /* 活動選擇首頁 */
-        #event-selector { 
-            position: fixed; inset: 0; background: var(--bg-cream); z-index: 2000; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;
-        }
+        #event-selector { position: fixed; inset: 0; background: var(--bg-cream); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .event-card-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
-        .event-card { 
-            background: var(--dark-blue); color: white; border-radius: 15px; padding: 25px; width: 280px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2); transition: 0.3s; cursor: pointer; text-align: center;
-        }
-        .event-card:hover { transform: translateY(-8px); }
-        .event-title { font-size: 1.3em; font-weight: bold; margin-bottom: 10px; height: 60px; display: flex; align-items: center; justify-content: center; }
-        .select-btn { background: #4d6fff; color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
-
-        /* 作業介面 */
-        .nav-bar { background: #e8e0d9; padding: 10px; display: flex; gap: 10px; overflow-x: auto; border-bottom: 2px solid #d1c7bc; flex-shrink: 0; }
-        .nav-btn { background: white; border: 1px solid #d1c7bc; padding: 8px 18px; border-radius: 20px; white-space: nowrap; cursor: pointer; font-weight: bold; }
-        .back-btn { background: #8c7b6c; color: white; border: none; padding: 8px 15px; border-radius: 10px; cursor: pointer; }
-
+        .event-card { background: var(--dark-blue); color: white; border-radius: 15px; padding: 25px; width: 260px; cursor: pointer; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .nav-bar { background: #e8e0d9; padding: 10px; display: flex; gap: 10px; overflow-x: auto; flex-shrink: 0; }
+        .nav-btn { background: white; border: 1px solid #d1c7bc; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; white-space: nowrap; }
         .main-content { display: flex; flex: 1; overflow: hidden; padding: 10px; gap: 10px; }
         .item-area { flex: 1.8; overflow-y: auto; background: white; border-radius: 15px; padding: 20px; border: 2px solid #e8e0d9; }
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
-        .p-btn { background: white; border: 1px solid #f0e6dd; border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; box-shadow: 3px 3px 0 #e8e0d9; }
-        .p-name { font-weight: bold; font-size: 0.95em; height: 40px; overflow: hidden; }
-        .p-spec { font-size: 0.8em; color: #666; background: #f3f3f3; border-radius: 4px; padding: 3px; margin: 5px 0; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+        .p-btn { background: white; border: 1px solid #f0e6dd; border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; box-shadow: 2px 2px 0 #e8e0d9; }
+        .p-name { font-weight: bold; font-size: 0.9em; margin-bottom: 5px; height: 35px; overflow: hidden; }
         .p-price { color: var(--price-red); font-weight: bold; }
-
-        .checkout-area { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 320px; }
+        .checkout-area { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 300px; }
         .card { background: white; border-radius: 15px; padding: 15px; border: 2px solid #e8e0d9; }
-        .temp-zone { background: #fffcf5; border: 2px dashed var(--main-brown); text-align: center; }
-        .qty-controls { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 15px 0; }
-        .qty-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid #ccc; background: white; font-size: 1.4em; cursor: pointer; }
-        .qty-input { width: 60px; text-align: center; font-size: 1.4em; border: 1px solid #ddd; }
+        .total-display { font-size: 2em; font-weight: bold; color: var(--price-red); text-align: right; }
+        .submit-btn { width: 100%; padding: 15px; background: var(--profit-green); color: white; border: none; border-radius: 10px; font-size: 1.2em; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    </style>
+</head>
+<body>
 
-        #cart-list {
+<div id="event-selector">
+    <h2 style="margin-bottom:30px;">🧸 請選擇代購場次</h2>
+    <div class="event-card-container">
+        <div class="event-card" onclick="startApp('日本超市')"><h3>🛒 日本超市</h3><p>點擊進入</p></div>
+        <div class="event-card" onclick="startApp('SS10日本周邊')"><h3>🎤 SS10 日本周邊</h3><p>點擊進入</p></div>
+        <div class="event-card" onclick="startApp('SS10追加周邊')"><h3>🔥 SS10 追加周邊</h3><p>點擊進入</p></div>
+    </div>
+</div>
+
+<header>✨ <span id="head-title">代購系統</span></header>
+
+<div class="nav-bar">
+    <button onclick="location.reload()" style="background:#8c7b6c; color:white; border:none; padding:8px 15px; border-radius:10px; cursor:pointer;">⬅ 換場次</button>
+    <div id="cat-nav"></div>
+</div>
+
+<div class="main-content">
+    <div class="item-area" id="item-list"></div>
+    <div class="checkout-area">
+        <div class="card">
+            <strong>👤 暱稱：</strong>
+            <input type="text" id="nick" style="width:100%; padding:10px; margin-top:5px; border:1px solid #ccc; border-radius:5px;" placeholder="請輸入 Line 名稱">
+        </div>
+        <div class="card" style="text-align:center; background:#fffcf5;">
+            <div id="sel-n" style="font-weight:bold;">請選商品</div>
+            <div style="margin:10px 0;">
+                <button onclick="adj(-1)" style="width:30px;">-</button>
+                <input type="number" id="qty" value="1" style="width:50px; text-align:center;">
+                <button onclick="adj(1)" style="width:30px;">+</button>
+            </div>
+            <button id="add-btn" onclick="add()" style="width:100%; padding:10px; background:var(--main-brown); color:white; border:none; border-radius:5px; cursor:pointer;" disabled>加入清單</button>
+        </div>
+        <div class="card" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+            <strong>📋 下單清單</strong>
+            <div id="cart" style="flex:1; overflow-y:auto; margin:10px 0; border-top:1px solid #eee;"></div>
+            <div class="total-display">$<span id="total">0</span></div>
+            <button class="submit-btn" onclick="send()">確認下單</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = { apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4", databaseURL: "https://zoo-62638-default-rtdb.firebaseio.com", projectId: "zoo-62638" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const data = [
+        { e: "日本超市", c: "服飾配件", n: "T-shirt(M/L)", p: 1200 },
+        { e: "日本超市", c: "服飾配件", n: "半拉鍊上衣(M/L)", p: 2700 },
+        { e: "日本超市", c: "生活用品", n: "方巾", p: 700 },
+        { e: "日本超市", c: "生活用品", n: "摺疊環保袋", p: 750 },
+        { e: "日本超市", c: "生活用品", n: "手提袋", p: 1150 },
+        { e: "日本超市", c: "個人周邊", n: "動物棒棒糖吊飾", p: 500 },
+        { e: "日本超市", c: "個人周邊", n: "馬克杯", p: 800 },
+        { e: "日本超市", c: "個人周邊", n: "壓克力立牌", p: 700 },
+        { e: "日本超市", c: "個人周邊", n: "姓名牌", p: 450 },
+        { e: "日本超市", c: "食品/隨機", n: "蜂蜜奶油蛋糕v2.0",
