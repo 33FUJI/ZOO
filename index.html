@@ -3,25 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-    <title>33日本動物園</title>
+    <title>33日本動物園 | 代購系統</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root{--bg:#f4f4f4;--blue:#003399;--red:#d9534f}
         body{font-family:sans-serif;margin:0;height:100vh;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
-        
-        /* 頂部導航 */
         header{padding:10px;background:#fff;border-bottom:1px solid #ddd;display:flex;gap:10px;z-index:100}
         .nick-input{flex:1;padding:12px;border:1px solid #ccc;border-radius:8px;font-size:16px}
-
-        /* 主容器 */
         .main-container{display:flex;flex:1;overflow:hidden}
-        
-        /* 左側商品欄 */
         .left-menu{width:35%;background:#eee;overflow-y:auto;border-right:1px solid #ddd}
-        .menu-item{padding:20px 10px;border-bottom:1px solid #ddd;font-size:0.9em;cursor:pointer;background:#eee;transition:0.3s}
-        .menu-item.active{background:#fff;font-weight:bold;color:var(--blue);border-left:5px solid var(--blue)}
-
-        /* 右側規格欄 */
+        .menu-item{padding:20px 10px;border-bottom:1px solid #ddd;font-size:0.95em;cursor:pointer}
+        .menu-item.active{background:#fff;font-weight:bold;color:var(--blue);border-left:4px solid var(--blue)}
         .right-content{width:65%;background:#fff;overflow-y:auto;padding:15px;box-sizing:border-box}
-        .spec-card{border:1px solid #f0f0f0;border-radius:10px;padding:15px;margin-bottom:12px;background:#fcfcfc;box-shadow:
+        .spec-card{border:1px solid #f0f0f0;border-radius:10px;padding:15px;margin-bottom:12px;background:#fcfcfc}
+        .spec-info{display:flex;justify-content:space-between;margin-bottom:10px;font-weight:bold}
+        .qty-row{display:flex;align-items:center;justify-content:flex-end;gap:12px}
+        .qty-btn{width:35px;height:35px;border:1px solid var(--blue);background:#fff;color:var(--blue);border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+        .bottom-bar{background:#fff;border-top:2px solid var(--blue);padding:15px 20px 30px;z-index:1000}
+        .summary-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+        .submit-btn{width:100%;padding:15px;background:var(--blue);color:#fff;border:none;border-radius:10px;font-weight:bold;font-size:1.1em}
+        #cart-modal{position:fixed;bottom:90px;left:0;right:0;background:#fff;max-height:60%;overflow-y:auto;z-index:999;display:none;border-radius:20px 20px 0 0;padding:20px;box-shadow:0 -5px 20px rgba(0,0,0,0.1)}
+        .cart-item{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #eee}
+        #admin-panel{position:fixed;inset:0;background:#fff;z-index:2000;display:none;padding:20px;overflow-y:auto}
+        table{width:100%;border-collapse:collapse;margin-top:10px}
+        th,td{border:1px solid #ddd;padding:10px;text-align:left}
+    </style>
+</head>
+<body>
+
+<header>
+    <input type="text" id="user-nick" class="nick-input" placeholder="✎ 請先輸入您的暱稱">
+    <button onclick="toggleAdmin()" id="admin-btn" style="display:none;background
