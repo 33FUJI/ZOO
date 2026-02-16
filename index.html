@@ -8,25 +8,26 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root{--bg:#fdfaf5;--blue:#003399;--red:#d9534f;--gold:#b5a491}
-        body{font-family:sans-serif;background:var(--bg);margin:0;padding-bottom:180px;color:#333}
+        body{font-family:sans-serif;background:var(--bg);margin:0;padding-bottom:180px;color:#333;user-select:none}
         header{padding:20px;text-align:center;font-weight:bold;color:var(--gold);font-size:1.4em;background:#fff;box-shadow:0 2px 5px rgba(0,0,0,0.05)}
         .top-section{padding:15px;background:#fff;margin-bottom:10px}
         .nick-input{width:100%;padding:12px;border-radius:10px;border:1px solid #ddd;box-sizing:border-box;font-size:16px}
         .cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;padding:10px 15px}
-        .cat-card{background:#fff;padding:30px 10px;border-radius:15px;text-align:center;box-shadow:0 4px 10px rgba(0,0,0,0.05);cursor:pointer;border:1px solid #eee;font-weight:bold}
+        .cat-card{background:#fff;padding:30px 10px;border-radius:15px;text-align:center;box-shadow:0 4px 10px rgba(0,0,0,0.05);cursor:pointer;border:1px solid #eee;font-weight:bold;font-size:1.1em}
         .modal{position:fixed;inset:0;background:var(--bg);z-index:9999;display:none;flex-direction:column}
         .modal-header{padding:15px;background:#fff;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee}
         .p-group{background:#fff;margin:10px 15px;border-radius:10px;border:1px solid #eee;overflow:hidden}
-        .p-header{padding:10px 15px;font-weight:bold;background:#fafafa;border-bottom:1px solid #eee;display:flex;justify-content:space-between}
+        .p-header{padding:12px 15px;font-weight:bold;background:#fafafa;border-bottom:1px solid #eee;display:flex;justify-content:space-between}
         .spec-item{display:flex;justify-content:space-between;align-items:center;padding:12px 15px;border-bottom:1px solid #f9f9f9}
         .qty-controls{display:flex;align-items:center;gap:12px;flex-shrink:0}
         .qty-btn{width:38px;height:38px;border-radius:8px;border:none;background:#eee;cursor:pointer;font-size:22px;display:flex;align-items:center;justify-content:center}
         .order-area{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:15px;border-radius:20px 20px 0 0;box-shadow:0 -5px 20px rgba(0,0,0,0.15);z-index:10000;border-top:2px solid var(--blue)}
         .submit-btn{width:100%;padding:15px;border-radius:10px;border:none;background:var(--blue);color:#fff;font-weight:bold;cursor:pointer;font-size:1.1em;margin-top:10px}
-        .cart-detail{max-height:80px;overflow-y:auto;font-size:0.85em;margin-bottom:10px;border-bottom:1px solid #eee;padding-bottom:5px}
+        .cart-detail{max-height:80px;overflow-y:auto;font-size:0.9em;margin-bottom:10px;border-bottom:1px solid #eee;padding-bottom:5px;line-height:1.5}
         .admin-box{padding:15px;background:#fff;margin:10px;border-radius:10px;border:1px solid #ddd}
-        table{width:100%;border-collapse:collapse;font-size:0.8em;margin-top:10px;background:#fff}
+        table{width:100%;border-collapse:collapse;font-size:0.85em;margin-top:10px;background:#fff}
         th,td{border:1px solid #eee;padding:10px;text-align:left}
+        .del-btn{color:var(--red);border:none;background:none;cursor:pointer;font-weight:bold}
     </style>
 </head>
 <body>
@@ -35,9 +36,9 @@
 
 <div class="top-section">
     <input type="text" id="user-nick" class="nick-input" placeholder="✎ 請輸入您的暱稱">
-    <div style="display:flex; justify-content:space-between; margin-top:10px;">
+    <div style="display:flex; justify-content:space-between; margin-top:12px; align-items:center;">
         <button onclick="fetchHistory()" style="background:none; border:none; color:var(--blue); text-decoration:underline; font-size:0.9em; cursor:pointer;">🔍 查詢我的登記紀錄</button>
-        <button id="admin-trigger" onclick="toggleAdmin()" style="display:none; background:var(--gold); border:none; color:white; padding:5px 12px; border-radius:5px; font-size:0.8em;">🛠 管理者介面</button>
+        <button id="admin-trigger" onclick="toggleAdmin()" style="display:none; background:var(--gold); border:none; color:white; padding:8px 16px; border-radius:5px; font-size:0.85em; font-weight:bold;">🛠 管理者介面</button>
     </div>
 </div>
 
@@ -45,122 +46,175 @@
 
 <div id="admin-area" style="display:none; padding-bottom:100px;">
     <div class="admin-box">
-        <h3>➕ 新增商品</h3>
-        <input id="ad-cat" style="width:100%;margin-bottom:5px;" placeholder="分類 (例如: SS10週邊)">
-        <input id="ad-name" style="width:100%;margin-bottom:5px;" placeholder="名稱 (例如: 01 T恤)">
-        <input id="ad-price" style="width:100%;margin-bottom:5px;" type="number" placeholder="價格">
-        <input id="ad-spec" style="width:100%;margin-bottom:10px;" placeholder="規格 (用逗號隔開)">
-        <button onclick="saveProduct()" style="width:100%; background:#28a745; color:#fff; padding:10px; border:none; border-radius:5px;">確認上架</button>
+        <h3>➕ 自行新增商品</h3>
+        <input id="ad-cat" style="width:100%;margin-bottom:5px;padding:8px;" placeholder="分類 (如: 超市代購)">
+        <input id="ad-name" style="width:100%;margin-bottom:5px;padding:8px;" placeholder="名稱 (如: 日清泡麵)">
+        <input id="ad-price" style="width:100%;margin-bottom:5px;padding:8px;" type="number" placeholder="單價">
+        <input id="ad-spec" style="width:100%;margin-bottom:10px;padding:8px;" placeholder="規格 (多項用逗號隔開)">
+        <button onclick="saveProduct()" style="width:100%; background:#28a745; color:#fff; padding:12px; border:none; border-radius:5px; font-weight:bold;">確認上架</button>
     </div>
     <div class="admin-box">
-        <h3>📋 所有訂單匯總</h3>
-        <button onclick="loadAllOrders()">刷新列表</button>
-        <button onclick="clearSystem()" style="color:red; float:right; border:none; background:none;">⚠️ 系統重設(清空資料)</button>
+        <h3>📋 所有訂單管理</h3>
+        <button onclick="loadAllOrders()">刷新清單</button>
+        <button onclick="initSystem()" style="color:var(--red); float:right; border:none; background:none; font-weight:bold;">⚠️ 初始化系統(載入全部週邊與超市)</button>
         <div id="order-table" style="overflow-x:auto; margin-top:10px;"></div>
     </div>
 </div>
 
 <div id="history-modal" class="modal">
-    <div class="modal-header"><span onclick="closeHistory()" style="cursor:pointer;font-weight:bold;color:var(--blue)">❮ 返回</span><h2 style="font-size:1.1em;margin:0">歷史登記紀錄</h2><div></div></div>
+    <div class="modal-header"><span onclick="closeHistory()" style="cursor:pointer;font-weight:bold;color:var(--blue);padding:10px;">❮ 返回</span><h2 style="font-size:1.1em;margin:0">歷史紀錄</h2><div></div></div>
     <div id="history-list" style="overflow-y:auto;flex:1;padding:10px;"></div>
 </div>
 
 <div id="item-modal" class="modal">
-    <div class="modal-header"><span onclick="closeModal()" style="cursor:pointer;font-weight:bold;color:var(--blue)">❮ 返回</span><h2 id="cat-title" style="font-size:1.1em;margin:0"></h2><div></div></div>
+    <div class="modal-header"><span onclick="closeModal()" style="cursor:pointer;font-weight:bold;color:var(--blue);padding:10px;">❮ 返回</span><h2 id="cat-title" style="font-size:1.1em;margin:0"></h2><div></div></div>
     <div id="p-list" style="overflow-y:auto;flex:1"></div>
 </div>
 
 <div class="order-area" id="order-bar" style="display:none">
     <div id="cart-list" class="cart-detail"></div>
     <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div style="font-size:0.8em; color:#999;" onclick="clearCart()">🗑️ 清空</div>
-        <div style="text-align:right; font-weight:bold; color:var(--red); font-size:1.4em;">總計 $<span id="total-val">0</span></div>
+        <div style="font-size:0.8em; color:#999;" onclick="clearCart()">🗑️ 清除</div>
+        <div style="text-align:right; font-weight:bold; color:var(--red); font-size:1.5em;">總計 $<span id="total-val">0</span></div>
     </div>
     <button class="submit-btn" onclick="submitOrder()">✅ 確認登記下單</button>
 </div>
 
 <script>
-var config={apiKey:"AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",databaseURL:"https://zoo-62638-default-rtdb.firebaseio.com",projectId:"zoo-62638"};
-if (!firebase.apps.length) { firebase.initializeApp(config); }
-var db = firebase.database();
-var cart = {}, cloudData = {};
+    var config={apiKey:"AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",databaseURL:"https://zoo-62638-default-rtdb.firebaseio.com",projectId:"zoo-62638"};
+    if (!firebase.apps.length) { firebase.initializeApp(config); }
+    var db = firebase.database();
+    var cart = {}, cloudData = {};
+    var sj = "利特,希澈,藝聲,神童,銀赫,東海,始源,厲旭,圭賢";
 
-// 檢查管理員隱藏按鈕
-document.getElementById('user-nick').addEventListener('input', function(e){
-    document.getElementById('admin-trigger').style.display = (e.target.value === '1239') ? 'block' : 'none';
-});
-
-function toggleAdmin(){
-    var x = document.getElementById('admin-area');
-    x.style.display = (x.style.display==='none') ? 'block' : 'none';
-    if(x.style.display==='block') loadAllOrders();
-}
-
-// 修正後的資料監聽：排除隨機 ID，確保只顯示分類名稱
-db.ref('products').on('value', function(sn){
-    cloudData = sn.val() || {};
-    var grid = document.getElementById('main-grid');
-    grid.innerHTML = '';
-    Object.keys(cloudData).forEach(function(key){
-        // 只有當 key 底下還有物件（代表它是分類名稱）時才顯示
-        if (typeof cloudData[key] === 'object' && !key.startsWith('-')) {
-            grid.innerHTML += '<div class="cat-card" onclick="openCat(\''+key+'\')">'+key+'</div>';
-        }
+    document.getElementById('user-nick').addEventListener('input', function(e){
+        document.getElementById('admin-trigger').style.display = (e.target.value === '1239') ? 'block' : 'none';
     });
-});
 
-function openCat(cat){
-    document.getElementById('cat-title').innerText = cat;
-    var list = document.getElementById('p-list'); list.innerHTML = '';
-    var items = cloudData[cat];
-    Object.keys(items).forEach(function(id){
-        var p = items[id];
-        var specs = (p.s || "單一規格").split(',');
-        var specHtml = specs.map(function(s){
-            var k = cat + '|' + id + '|' + s.trim();
-            return '<div class="spec-item"><span>'+s.trim()+'</span><div class="qty-controls"><button class="qty-btn" onclick="updateQty(\''+k+'\',-1)">-</button><span id="num-'+k+'" style="min-width:30px;text-align:center">'+(cart[k]||0)+'</span><button class="qty-btn" onclick="updateQty(\''+k+'\',1)">+</button></div></div>';
-        }).join('');
-        list.innerHTML += '<div class="p-group"><div class="p-header"><span>'+p.n+'</span><span style="color:var(--red)">$'+p.p+'</span></div>'+specHtml+'</div>';
+    function toggleAdmin(){
+        var x = document.getElementById('admin-area');
+        x.style.display = (x.style.display==='none') ? 'block' : 'none';
+        if(x.style.display==='block') loadAllOrders();
+    }
+
+    db.ref('products').on('value', function(sn){
+        cloudData = sn.val() || {};
+        renderMain();
     });
-    document.getElementById('item-modal').style.display = 'flex';
-}
 
-function updateQty(k, d){
-    cart[k] = (cart[k] || 0) + d;
-    if(cart[k] <= 0) delete cart[k];
-    var el = document.getElementById('num-'+k); if(el) el.innerText = cart[k]||0;
-    updateCartUI();
-}
-
-function updateCartUI(){
-    var bar = document.getElementById('order-bar'), list = document.getElementById('cart-list'), keys = Object.keys(cart);
-    if(!keys.length){ bar.style.display='none'; return; }
-    bar.style.display='block'; list.innerHTML = ''; var total = 0;
-    keys.forEach(function(k){
-        var p = k.split('|'); var info = cloudData[p[0]][p[1]];
-        total += info.p * cart[k];
-        list.innerHTML += '<div style="display:flex;justify-content:space-between"><span>'+info.n+' ('+p[2]+')</span><span>x'+cart[k]+'</span></div>';
-    });
-    document.getElementById('total-val').innerText = total;
-}
-
-function submitOrder(){
-    var nick = document.getElementById('user-nick').value;
-    if(!nick || nick==='1239') return alert("請輸入暱稱");
-    db.ref('orders').push({nick:nick, time:new Date().toLocaleString(), items:cart, total:document.getElementById('total-val').innerText})
-    .then(function(){ alert("✅ 登記成功！"); clearCart(); });
-}
-
-function fetchHistory(){
-    var nick = document.getElementById('user-nick').value;
-    if(!nick || nick==='1239') return alert("請先輸入您的暱稱");
-    var list = document.getElementById('history-list'); list.innerHTML = "查詢中...";
-    document.getElementById('history-modal').style.display = 'flex';
-    db.ref('orders').orderByChild('nick').equalTo(nick).once('value', function(sn){
-        list.innerHTML = "";
-        if(!sn.exists()) { list.innerHTML = "無紀錄"; return; }
-        sn.forEach(function(d){
-            var v = d.val(); var detail = "";
-            Object.keys(v.items).forEach(function(k){ detail += '<div>▪️ ' + k.split('|')[0] + '-' + k.split('|')[2] + ' x' + v.items[k] + '</div>'; });
-            list.innerHTML += '<div class="admin-box"><small>'+v.time+'</small><div>'+detail+'</div><div style="text-align:right;color:var(--red)">$'+v.total+'</div></div>';
+    function renderMain(){
+        var grid = document.getElementById('main-grid'); grid.innerHTML = '';
+        var hasData = false;
+        Object.keys(cloudData).forEach(function(cat){
+            if (typeof cloudData[cat] === 'object' && !cat.startsWith('-')) {
+                grid.innerHTML += '<div class="cat-card" onclick="openCat(\''+cat+'\')">📂 '+cat+'</div>';
+                hasData = true;
+            }
         });
+        if(!hasData) grid.innerHTML = '<p style="text-align:center;padding:50px;color:#999;">尚未載入商品<br><br>請輸入 1239 進入後台<br>點擊「初始化系統」</p>';
+    }
+
+    function initSystem(){
+        if(!confirm("確定要初始化嗎？這會載入所有預設週邊與超市品項。")) return;
+        var data = {
+            "SS10 日本演唱會週邊": {
+                "s1": {n:"01 T恤", p:1070, s:"M,L"}, "s2": {n:"02 外套", p:2300, s:"M,L"},
+                "s7": {n:"07 手燈裝飾", p:600, s:sj}, "s10":{n:"10 壓克力立牌", p:830, s:sj},
+                "s15":{n:"15 娃娃鑰匙圈", p:880, s:sj}, "s18":{n:"18 無尾熊餅乾", p:330, s:"單一規格"}
+            },
+            "SS10 日周追加": {
+                "a1": {n:"01 衣服", p:1250, s:"M,L"}, "a4": {n:"04 碗(含小卡)", p:1600, s:"單一規格"},
+                "a6": {n:"06 扇套", p:1100, s:sj}
+            },
+            "超市代購": {
+                "m1": {n:"日清杯麵", p:65, s:"醬油,海鮮,咖哩"}, "m2": {n:"一蘭拉麵泡麵", p:150, s:"單一規格"},
+                "m3": {n:"砂糖樹餅乾", p:280, s:"原味,抹茶"}
+            }
+        };
+        db.ref('products').set(data).then(function(){ alert("✅ 全部品項已自動鋪貨完成！"); });
+    }
+
+    function openCat(cat){
+        document.getElementById('cat-title').innerText = cat;
+        var list = document.getElementById('p-list'); list.innerHTML = '';
+        var items = cloudData[cat];
+        Object.keys(items).forEach(function(id){
+            var p = items[id];
+            var specs = (p.s || "單一規格").split(',');
+            var specHtml = specs.map(function(s){
+                var k = cat + '|' + id + '|' + s.trim();
+                return '<div class="spec-item"><span>'+s.trim()+'</span><div class="qty-controls"><button class="qty-btn" onclick="updateQty(\''+k+'\',-1)">-</button><span id="num-'+k+'" style="min-width:30px;text-align:center;font-weight:bold;">'+(cart[k]||0)+'</span><button class="qty-btn" onclick="updateQty(\''+k+'\',1)">+</button></div></div>';
+            }).join('');
+            list.innerHTML += '<div class="p-group"><div class="p-header"><span>'+p.n+'</span><span style="color:var(--red)">$'+p.p+'</span></div>'+specHtml+'</div>';
+        });
+        document.getElementById('item-modal').style.display = 'flex';
+    }
+
+    function updateQty(k, d){
+        cart[k] = (cart[k] || 0) + d;
+        if(cart[k] <= 0) delete cart[k];
+        var el = document.getElementById('num-'+k); if(el) el.innerText = cart[k]||0;
+        updateCartUI();
+    }
+
+    function updateCartUI(){
+        var bar = document.getElementById('order-bar'), list = document.getElementById('cart-list'), keys = Object.keys(cart);
+        if(!keys.length){ bar.style.display='none'; return; }
+        bar.style.display='block'; list.innerHTML = ''; var total = 0;
+        keys.forEach(function(k){
+            var p = k.split('|'); var info = cloudData[p[0]][p[1]];
+            total += info.p * cart[k];
+            list.innerHTML += '<div>'+info.n+' ('+p[2]+') x'+cart[k]+'</div>';
+        });
+        document.getElementById('total-val').innerText = total;
+    }
+
+    function submitOrder(){
+        var nick = document.getElementById('user-nick').value;
+        if(!nick || nick==='1239') return alert("請輸入暱稱");
+        db.ref('orders').push({nick:nick, time:new Date().toLocaleString(), items:cart, total:document.getElementById('total-val').innerText})
+        .then(function(){ alert("✅ 登記成功！"); clearCart(); });
+    }
+
+    function fetchHistory(){
+        var nick = document.getElementById('user-nick').value;
+        if(!nick || nick==='1239') return alert("請輸入暱稱");
+        var list = document.getElementById('history-list'); list.innerHTML = "正在查詢...";
+        document.getElementById('history-modal').style.display = 'flex';
+        db.ref('orders').orderByChild('nick').equalTo(nick).once('value', function(sn){
+            list.innerHTML = "";
+            if(!sn.exists()) { list.innerHTML = "<p style='text-align:center;'>無紀錄</p>"; return; }
+            sn.forEach(function(d){
+                var v = d.val(); var detail = "";
+                Object.keys(v.items).forEach(function(k){ detail += '<div>▪️ '+k.split('|')[0]+'-'+k.split('|')[2]+' x'+v.items[k]+'</div>'; });
+                list.innerHTML += '<div class="admin-box"><small>'+v.time+'</small><div>'+detail+'</div><div style="text-align:right;color:var(--red);font-weight:bold;">$'+v.total+'</div></div>';
+            });
+        });
+    }
+
+    function saveProduct(){
+        var c=document.getElementById('ad-cat').value, n=document.getElementById('ad-name').value, p=document.getElementById('ad-price').value, s=document.getElementById('ad-spec').value;
+        if(!c||!n||!p) return alert("資料不全");
+        db.ref('products/'+c).push({n:n, p:parseInt(p), s:s||"單一規格"});
+        alert("上架成功");
+    }
+
+    function loadAllOrders(){
+        db.ref('orders').once('value', function(sn){
+            var html = '<table><tr><th>暱稱</th><th>內容</th><th>總計</th><th>操作</th></tr>';
+            sn.forEach(function(d){
+                var v = d.val(); var detail = "";
+                Object.keys(v.items).forEach(function(k){ detail += k.split('|')[2]+" x"+v.items[k]+"<br>"; });
+                html += '<tr><td>'+v.nick+'</td><td>'+detail+'</td><td>$'+v.total+'</td><td><button class="del-btn" onclick="delOrder(\''+d.key+'\')">刪除</button></td></tr>';
+            });
+            html += '</table>'; document.getElementById('order-table').innerHTML = html;
+        });
+    }
+
+    function delOrder(key){ if(confirm("確定刪除此訂單？")) db.ref('orders/'+key).remove().then(loadAllOrders); }
+    function closeHistory(){ document.getElementById('history-modal').style.display='none'; }
+    function closeModal(){ document.getElementById('item-modal').style.display='none'; }
+    function clearCart(){ cart={}; updateCartUI(); closeModal(); }
+</script>
+</body>
+</html>
