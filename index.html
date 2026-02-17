@@ -258,7 +258,7 @@
                             </div>`).join('')}
                     </div>
                     <div style="margin-top:10px; display:flex; gap:10px;">
-                        <button class="btn-action" style="background:#DDD; color:#333; font-size:0.8em; margin:0;" onclick="openEditOrder(${i})">編輯狀態/備註</button>
+                        <button class="btn-action" style="background:#DDD; color:#333; font-size:0.8em; margin:0;" onclick="openEditOrder(${i})">編輯暱稱/狀態/備註</button>
                         <button class="btn-action" style="background:#E74C3C; width:auto; margin:0;" onclick="deleteOrder(${i})">🗑️ 刪除訂單</button>
                     </div>
                 </div>`).join('');
@@ -291,6 +291,8 @@
         const o = orders[idx];
         document.getElementById('modal-title').innerText = "園長訂單管理";
         document.getElementById('modal-body').innerHTML = `
+            <label>客人 Line 暱稱</label>
+            <input id="e-nick" class="input-standard" value="${o.nick}">
             <label>付款狀態</label>
             <select id="e-pay" class="input-standard">
                 <option ${o.payStatus==="未付款"?'selected':''}>未付款</option>
@@ -302,6 +304,7 @@
         `;
         document.getElementById('edit-modal').style.display='flex';
         document.getElementById('modal-confirm').onclick = () => {
+            o.nick = document.getElementById('e-nick').value.trim();
             o.payStatus = document.getElementById('e-pay').value;
             o.note = document.getElementById('e-note').value;
             o.total = parseInt(document.getElementById('e-ot').value);
