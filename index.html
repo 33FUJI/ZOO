@@ -283,7 +283,7 @@
             </div>`).join('') : "<div style='text-align:center; padding:30px; color:#999;'>找不到紀錄喔！</div>";
     }
 
-    function adminAuth() { if(prompt("店長密碼")==="1239") document.getElementById('admin-panel').style.display='flex'; renderAdmin('orders'); }
+    function adminAuth() { if(prompt("園長密碼")==="1239") document.getElementById('admin-panel').style.display='flex'; renderAdmin('orders'); }
     
     function renderAdmin(type) {
         const main = document.getElementById('admin-main');
@@ -393,4 +393,5 @@
 </script>
 </body>
 </html>
+
 
