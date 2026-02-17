@@ -30,12 +30,9 @@
         .cart-total-area { margin-top: 20px; padding-top: 25px; border-top: 3px solid var(--matcha); }
         .modal { position: fixed; inset: 0; background: rgba(40, 54, 24, 0.7); backdrop-filter: blur(5px); z-index: 4000; display: none; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: #FFF; padding: 35px; border-radius: 30px; width: 100%; max-width: 550px; max-height: 90vh; overflow-y: auto; }
-        
-        /* 數量控制區樣式修正 */
         .qty-inline { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
         .qty-inline-btn { background: var(--matcha); color: #FFF; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 1.2em; }
         .qty-inline-input { width: 50px; text-align: center; border: 2px solid #E9E2D0; border-radius: 8px; padding: 4px; font-weight: bold; }
-
         .btn-action { background: var(--matcha); color: #FFF; border: none; padding: 16px 20px; border-radius: 15px; font-weight: 700; cursor: pointer; width: 100%; font-size: 1.2em; margin-bottom: 10px; }
         .input-standard { width: 100%; padding: 16px; border: 2px solid #E9E2D0; border-radius: 15px; margin-bottom: 20px; font-size: 1.1em; outline: none; }
         .badge { padding: 4px 12px; border-radius: 8px; font-size: 0.9em; font-weight: bold; margin-left: 10px; display: inline-block; }
@@ -129,17 +126,13 @@
         {e:"日本超市", n:"扭蛋(隨機)", p:200, s:"", l:0}
     ];
 
-    // 園長，這裡確保版本號一致，避免商品消失
-    const DB_P = 'zoo_p_v12';
-    const DB_O = 'zoo_o_v12';
-
-    let products = JSON.parse(localStorage.getItem(DB_P)) || INITIAL_DATA;
-    let orders = JSON.parse(localStorage.getItem(DB_O)) || [];
+    let products = JSON.parse(localStorage.getItem('zoo_p_v12')) || INITIAL_DATA;
+    let orders = JSON.parse(localStorage.getItem('zoo_o_v12')) || [];
     let cart = [], curS = {};
 
     function save() { 
-        localStorage.setItem(DB_P, JSON.stringify(products)); 
-        localStorage.setItem(DB_O, JSON.stringify(orders)); 
+        localStorage.setItem('zoo_p_v12', JSON.stringify(products)); 
+        localStorage.setItem('zoo_o_v12', JSON.stringify(orders)); 
     }
 
     function goHall() {
@@ -190,10 +183,10 @@
 
     function addToCartInline(pid) {
         const p = products[pid], s = curS[pid] || (p.s ? "" : "一般");
-        const q = parseInt(document.getElementById(`qty-input-${pid}`).value);
+        const input = document.getElementById(`qty-input-${pid}`);
+        const q = parseInt(input.value);
         if(p.s && !curS[pid]) return alert("請先選擇規格");
         if(isNaN(q) || q < 1) return alert("請輸入正確數量");
-
         for(let i=0; i<q; i++) {
             cart.push({...p, sel: s, ts: Date.now() + i, forceOk: false});
         }
@@ -219,7 +212,7 @@
             total: parseInt(document.getElementById('cart-total').innerText.replace(/,/g,'')), 
             time: new Date().toLocaleString(), payStatus: "未付款", note: "" 
         });
-        save(); alert("訂單已提交給園長！"); cart=[]; renderCart(); document.getElementById('cust-nick').value="";
+        save(); alert("訂單已提交！"); cart=[]; renderCart(); document.getElementById('cust-nick').value="";
     }
 
     function getQueueStatus(prodName, spec, ts, forceOk) {
@@ -262,12 +255,11 @@
                             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f0f0f0; padding:5px 0;">
                                 <span>• ${it.n}(${it.sel}) <small style="color:#999;">(${getQueueStatus(it.n, it.sel, it.ts, it.forceOk)})</small></span>
                                 <span><input type="checkbox" ${it.forceOk?'checked':''} onchange="toggleForceOk(${i}, '${it.ts}', this.checked)"> 強制正取</span>
-                            </div>
-                        `).join('')}
+                            </div>`).join('')}
                     </div>
                     <div style="margin-top:10px; display:flex; gap:10px;">
                         <button class="btn-action" style="background:#DDD; color:#333; font-size:0.8em; margin:0;" onclick="openEditOrder(${i})">編輯狀態/備註</button>
-                        <button class="btn-action" style="background:#E74C3C; width:auto; margin:0;" onclick="if(confirm('確定刪除？')){orders.splice(i,1);save();renderAdmin('orders');}">🗑️</button>
+                        <button class="btn-action" style="background:#E74C3C; width:auto; margin:0;" onclick="deleteOrder(${i})">🗑️ 刪除訂單</button>
                     </div>
                 </div>`).join('');
         } else {
@@ -277,6 +269,14 @@
                     <div>[${p.e}] <b>${p.n}</b> - $${p.p} (限額:${p.l})</div>
                     <button class="btn-action" style="width:auto; margin:0; padding:5px 10px; background:#BBB;" onclick="openEditProd(${i})">編輯</button>
                 </div>`).join('');
+        }
+    }
+
+    function deleteOrder(i) {
+        if(confirm('確定刪除此訂單？資料無法恢復！')) {
+            orders.splice(i, 1);
+            save();
+            renderAdmin('orders');
         }
     }
 
@@ -311,10 +311,24 @@
 
     function openAddProd() {
         document.getElementById('modal-title').innerText = "新增商品";
-        document.getElementById('modal-body').innerHTML = `<input id="n-e" class="input-standard" placeholder="分類"><input id="n-n" class="input-standard" placeholder="品名"><input id="n-p" class="input-standard" type="number" placeholder="價格"><input id="n-s" class="input-standard" placeholder="規格(逗號隔開)"><input id="n-l" class="input-standard" type="number" placeholder="限購量">`;
+        document.getElementById('modal-body').innerHTML = `
+            <input id="n-e" class="input-standard" placeholder="分類 (例如: 日本超市)">
+            <input id="n-n" class="input-standard" placeholder="品名">
+            <input id="n-p" class="input-standard" type="number" placeholder="價格">
+            <input id="n-s" class="input-standard" placeholder="規格(成員以逗號分開，無則空白)">
+            <input id="n-l" class="input-standard" type="number" placeholder="限購量 (無則填0)">
+        `;
         document.getElementById('edit-modal').style.display='flex';
         document.getElementById('modal-confirm').onclick = () => {
-            products.push({ e: document.getElementById('n-e').value, n: document.getElementById('n-n').value, p: parseInt(document.getElementById('n-p').value), s: document.getElementById('n-s').value, l: parseInt(document.getElementById('n-l').value||0) });
+            const newProd = {
+                e: document.getElementById('n-e').value,
+                n: document.getElementById('n-n').value,
+                p: parseInt(document.getElementById('n-p').value) || 0,
+                s: document.getElementById('n-s').value,
+                l: parseInt(document.getElementById('n-l').value) || 0
+            };
+            if(!newProd.e || !newProd.n) return alert("分類與品名必填");
+            products.push(newProd);
             save(); closeModal(); renderAdmin('prods');
         };
     }
