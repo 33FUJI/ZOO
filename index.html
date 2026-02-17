@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>33日本動物園</title>
+    <title>33日本動物園_全品項版</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root { --matcha: #606C38; --caramel: #BC6C25; --bg-rice: #FEF9EF; --status-ok: #2ecc71; --status-wait: #e67e22; }
@@ -15,7 +15,7 @@
         .event-card { background: #FFF; padding: 25px; border-radius: 15px; border: 2px solid #E9E2D0; cursor: pointer; margin: 10px; width: 260px; text-align: center; box-shadow: 0 4px 0 #E9E2D0; }
         .search-card, .admin-order-card { background: #FFF; border: 2px solid #E9E2D0; border-radius: 15px; padding: 15px; margin-bottom: 12px; }
         .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed #EEE; }
-        .badge { padding: 3px 8px; border-radius: 6px; font-size: 0.75em; font-weight: bold; color: #FFF; margin-left: 4px; white-space: nowrap; }
+        .badge { padding: 3px 8px; border-radius: 6px; font-size: 0.75em; font-weight: bold; color: #FFF; margin-left: 4px; }
         .bg-ok { background: var(--status-ok); }
         .bg-wait { background: var(--status-wait); }
         .app-container { display: flex; flex: 1; overflow: hidden; }
@@ -34,13 +34,13 @@
     <div class="hall-title">33 日本動物園</div>
     <div id="hall-grid" style="display:flex; flex-wrap:wrap; justify-content:center;"></div>
     <button class="btn-action" style="width:auto; padding:15px 40px; margin-top:20px; background:var(--caramel);" onclick="openSearch()">🔍 訂單查詢 (正取/候補)</button>
-    <div onclick="adminAuth()" style="margin-top:40px; color:transparent; cursor:pointer; padding:20px;">ADM入口</div>
+    <div onclick="adminAuth()" style="margin-top:40px; color:transparent; cursor:pointer; padding:20px;">ADMIN</div>
 </div>
 
 <div id="admin-panel">
     <div style="background:var(--matcha); color:#FFF; padding:15px; display:flex; justify-content:space-between; align-items:center;">
         <b>園長 33 營運後台</b>
-        <button onclick="location.reload()" style="background:#FFF; color:var(--matcha); border:none; padding:5px 15px; border-radius:8px;">退出後台</button>
+        <button onclick="location.reload()" style="background:#FFF; color:var(--matcha); border:none; padding:5px 15px; border-radius:8px;">退出</button>
     </div>
     <div id="admin-main" style="flex:1; padding:15px; overflow-y:auto;"></div>
 </div>
@@ -58,11 +58,11 @@
 
 <div id="search-modal" class="modal">
     <div class="modal-content">
-        <h3 style="text-align:center; margin-top:0;">我的訂單明細</h3>
-        <input id="search-nick" class="input-std" placeholder="輸入您的 Line 暱稱">
-        <button class="btn-action" onclick="doSearch()">搜尋我的訂單</button>
+        <h3 style="text-align:center; margin-top:0;">訂單查詢</h3>
+        <input id="search-nick" class="input-std" placeholder="輸入 Line 暱稱">
+        <button class="btn-action" onclick="doSearch()">搜尋</button>
         <div id="search-result" style="margin-top:15px;"></div>
-        <button class="btn-action" style="background:#999; margin-top:10px;" onclick="closeSearch()">關閉視窗</button>
+        <button class="btn-action" style="background:#999; margin-top:10px;" onclick="closeSearch()">關閉</button>
     </div>
 </div>
 
@@ -86,12 +86,12 @@
 </div>
 
 <script>
-    const P_KEY = 'zoo_p_v5'; 
-    const O_KEY = 'zoo_o_v5';
+    const P_KEY = 'zoo_p_v_stable_final'; 
+    const O_KEY = 'zoo_o_v_stable_final';
     const MEMBERS = "特,澈,雲,童,赫,海,源,旭,圭";
 
-    // 園長提供的完整商品清單
     const defaultProducts = [
+        // 日本超市 (13項)
         {e:"日本超市", n:"T-shirt (M/L)", p:1200, s:"M,L", l:5},
         {e:"日本超市", n:"半拉鍊上衣 (M/L)", p:2700, s:"M,L", l:5},
         {e:"日本超市", n:"方巾", p:700, s:"", l:99},
@@ -105,9 +105,10 @@
         {e:"日本超市", n:"隨機卡包", p:150, s:"", l:99},
         {e:"日本超市", n:"蜂蜜奶油蛋糕 ver.2.0", p:500, s:"", l:99},
         {e:"日本超市", n:"扭蛋(隨機)", p:200, s:"", l:99},
-        {e:"SS10周邊", n:"01 演唱會T恤 M/L", p:1070, s:"M,L", l:5},
-        {e:"SS10周邊", n:"02 演唱會外套 M/L", p:2300, s:"M,L", l:5},
-        {e:"SS10周邊", n:"03 演唱會睡衣 M/L", p:3050, s:"M,L", l:5},
+        // SS10 周邊 (18項)
+        {e:"SS10周邊", n:"01 演唱會T恤", p:1070, s:"M,L", l:5},
+        {e:"SS10周邊", n:"02 演唱會外套", p:2300, s:"M,L", l:5},
+        {e:"SS10周邊", n:"03 演唱會睡衣", p:3050, s:"M,L", l:5},
         {e:"SS10周邊", n:"04 演唱會背包", p:1420, s:"", l:5},
         {e:"SS10周邊", n:"05 演唱會零錢包", p:680, s:"", l:5},
         {e:"SS10周邊", n:"06 演唱會毛毯", p:1550, s:"", l:5},
@@ -123,6 +124,7 @@
         {e:"SS10周邊", n:"16 徽章", p:580, s:MEMBERS, l:5},
         {e:"SS10周邊", n:"17 20週年紀念手冊", p:1240, s:"", l:5},
         {e:"SS10周邊", n:"18 無尾熊餅乾+小卡", p:330, s:"", l:5},
+        // SS10 追加 (6項)
         {e:"SS10追加", n:"01 衣服 M/L", p:1250, s:"M,L", l:5},
         {e:"SS10追加", n:"02 拖鞋", p:1360, s:"", l:5},
         {e:"SS10追加", n:"03 多功能收納包", p:1200, s:"", l:5},
@@ -140,7 +142,6 @@
         localStorage.setItem(O_KEY, JSON.stringify(orders)); 
     }
 
-    // 關鍵：修正規格合併顯示邏輯
     function getGrouped(items) {
         let res = {};
         items.forEach((it) => {
@@ -193,7 +194,7 @@
 
     function addToCart(pid) {
         let p = products[pid], s = curS[pid] || (p.s ? "" : "一般");
-        if(p.s && !s) return alert("請先選規格");
+        if(p.s && !s) return alert("請選規格");
         cart.push({...p, sel: s, ts: Date.now(), forceOk: false}); renderCart();
     }
 
@@ -205,7 +206,7 @@
 
     function submitOrder() {
         let n = document.getElementById('cust-nick').value.trim();
-        if(!n || !cart.length) return alert("資訊不全");
+        if(!n || !cart.length) return alert("請輸入暱稱！");
         orders.push({ ts: Date.now(), nick: n, items: [...cart], total: document.getElementById('cart-total').innerText, time: new Date().toLocaleString(), payStatus: "未付款", note: "" });
         save(); alert("下單成功！"); cart=[]; renderCart(); goHall();
     }
@@ -222,8 +223,7 @@
                         <div>${g.ts_list.map(obj => checkStatus(g.n, g.sel, obj.ts, obj.forceOk)).join('')}</div>
                     </div>`).join('')}
                 <div style="text-align:right;font-weight:700;color:var(--caramel);margin-top:10px;">總計: $${o.total}</div>
-                ${o.note ? `<div style="font-size:0.8em;background:#F0F0F0;padding:5px;margin-top:5px;">${o.note}</div>` : ''}
-            </div>`).join('') || "查無資料";
+            </div>`).join('') || "查無訂單";
     }
 
     function adminAuth() { if(prompt("密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; renderAdmin(); } }
@@ -235,30 +235,24 @@
                 <div style="font-size:0.85em;margin:10px 0;color:#555;">
                     ${getGrouped(o.items).map(g => `• ${g.n}(${g.sel}) x${g.count}`).join('<br>')}
                 </div>
-                <button class="btn-action" style="background:#EEE;color:#333;width:auto;padding:5px 15px;" onclick="openEdit(${i})">管理 / 轉正 / 改價 / 加購</button>
-                <button class="btn-action" style="background:#ff7675;width:40px;" onclick="if(confirm('刪除訂單？')){orders.splice(${i},1);save();renderAdmin();}">🗑️</button>
+                <button class="btn-action" style="background:#EEE;color:#333;width:auto;padding:5px 15px;" onclick="openEdit(${i})">管理 / 轉正</button>
+                <button class="btn-action" style="background:#ff7675;width:40px;" onclick="if(confirm('刪除？')){orders.splice(${i},1);save();renderAdmin();}">🗑️</button>
             </div>`).join('');
     }
 
     function openEdit(idx) {
         let o = orders[idx];
-        document.getElementById('modal-title').innerText = "管理訂單: " + o.nick;
-        let groupedItems = getGrouped(o.items);
-        let itemsHtml = groupedItems.map(g => `
+        document.getElementById('modal-title').innerText = "管理: " + o.nick;
+        let itemsHtml = getGrouped(o.items).map(g => `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
                 <span style="font-size:0.9em;">${g.n}(${g.sel}) x${g.count}</span>
-                <button style="font-size:0.7em;padding:2px 5px;" onclick="forceOkItem(${idx}, '${g.n}', '${g.sel}')">強制轉正</button>
+                <button style="font-size:0.7em;padding:4px 8px;background:var(--caramel);color:#FFF;border:none;border-radius:4px;" onclick="forceOkItem(${idx}, '${g.n}', '${g.sel}')">強制轉正</button>
             </div>`).join('');
-
         document.getElementById('modal-body').innerHTML = `
             付款: <select id="e-pay" class="input-std"><option ${o.payStatus==='未付款'?'selected':''}>未付款</option><option ${o.payStatus==='已付清'?'selected':''}>已付清</option></select>
             金額: <input id="e-total" class="input-std" value="${o.total}">
-            備註: <input id="e-note" class="input-std" value="${o.note}">
+            備註: <input id="e-note" class="input-std" value="${o.note || ''}">
             <hr><h4>品項轉正</h4>${itemsHtml}
-            <hr><h4>➕ 手動加購</h4>
-            <select id="e-add" class="input-std">${products.map((p,i)=>`<option value="${i}">${p.n}</option>`).join('')}</select>
-            規格: <input id="e-spec" class="input-std" placeholder="M/L 或成員">
-            <button class="btn-action" style="background:var(--caramel);" onclick="addItemToOrder(${idx})">確認加購</button>
         `;
         document.getElementById('edit-modal').style.display='flex';
         document.getElementById('modal-confirm').onclick = () => {
@@ -269,13 +263,7 @@
 
     function forceOkItem(oIdx, n, s) {
         orders[oIdx].items.forEach(it => { if(it.n === n && it.sel === s) it.forceOk = true; });
-        save(); alert("已手動轉正！"); openEdit(oIdx);
-    }
-
-    function addItemToOrder(oIdx) {
-        let p = products[document.getElementById('e-add').value];
-        orders[oIdx].items.push({...p, sel: document.getElementById('e-spec').value || "一般", ts: Date.now(), forceOk: true});
-        save(); alert("已加購，請手動修改總額後儲存！"); openEdit(oIdx);
+        save(); alert("已手動設為正取！"); openEdit(oIdx);
     }
 
     function openSearch() { document.getElementById('search-modal').style.display='flex'; }
