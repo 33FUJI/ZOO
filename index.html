@@ -15,12 +15,9 @@
         .hall-title { font-size: 3em; color: var(--matcha); margin-bottom: 40px; font-weight: 900; }
         .event-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; width: 100%; max-width: 960px; overflow-y: auto; padding: 10px; }
         .event-card { background: var(--soft-white); padding: 45px 25px; border-radius: 25px; border: 2px solid #E9E2D0; cursor: pointer; text-align: center; box-shadow: 0 8px 0 #E9E2D0; transition: 0.2s; }
-        .event-card:active { transform: translateY(4px); box-shadow: 0 2px 0 #E9E2D0; }
-        .hall-search-btn { margin-top: 50px; background: var(--matcha); color: #FFF; padding: 18px 80px; border-radius: 15px; cursor: pointer; font-size: 1.3em; font-weight: 700; border: none; box-shadow: 0 6px 0 #283618; }
         .app-container { display: flex; flex: 1; overflow: hidden; }
         .product-pane { flex: 1; overflow-y: auto; padding: 25px; background: #FFFDF9; }
         .prod-card { background: var(--soft-white); border-radius: 20px; padding: 25px; margin-bottom: 20px; border: 1px solid #E9E2D0; }
-        .prod-header { display: flex; justify-content: space-between; align-items: flex-start; }
         .price-tag { color: var(--caramel); font-weight: 900; margin-top: 8px; font-size: 1.2em; }
         .spec-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #E9E2D0; }
         .spec-btn { border: 2px solid #E9E2D0; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-size: 1em; background: #FFF; font-weight: 500; }
@@ -28,15 +25,13 @@
         .cart-sidebar { width: 420px; background: var(--soft-white); border-left: 3px solid #E9E2D0; padding: 25px; display: flex; flex-direction: column; }
         .cart-items { flex: 1; overflow-y: auto; }
         .cart-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #EEE; }
-        .cart-qty-ctrl { display: flex; align-items: center; gap: 8px; }
-        .cart-qty-btn { background: #EEE; border: none; width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .cart-qty-btn:hover { background: var(--matcha); color: #FFF; }
-        .cart-total-area { margin-top: 20px; padding-top: 20px; border-top: 3px solid var(--matcha); }
+        .cart-qty-ctrl { display: flex; align-items: center; gap: 10px; }
+        .cart-qty-btn { background: #F0F0F0; border: 1px solid #DDD; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.2em; }
         .modal { position: fixed; inset: 0; background: rgba(40, 54, 24, 0.7); backdrop-filter: blur(5px); z-index: 4000; display: none; align-items: center; justify-content: center; padding: 20px; }
         .modal-content { background: #FFF; padding: 35px; border-radius: 30px; width: 100%; max-width: 550px; max-height: 90vh; overflow-y: auto; }
         .btn-action { background: var(--matcha); color: #FFF; border: none; padding: 16px 20px; border-radius: 15px; font-weight: 700; cursor: pointer; width: 100%; font-size: 1.2em; margin-bottom: 10px; }
         .input-standard { width: 100%; padding: 16px; border: 2px solid #E9E2D0; border-radius: 15px; margin-bottom: 20px; font-size: 1.1em; outline: none; }
-        .badge { padding: 4px 12px; border-radius: 8px; font-size: 0.9em; font-weight: bold; margin-left: 10px; display: inline-block; }
+        .badge { padding: 4px 12px; border-radius: 8px; font-size: 0.85em; font-weight: bold; margin-left: 8px; display: inline-block; }
         .bg-ok { background: #DDA15E; color: #FFF; }
         .bg-wait { background: #E9E2D0; color: #666; }
         .bg-pay { background: var(--matcha); color: #FFF; font-size: 0.8em; }
@@ -54,7 +49,7 @@
 
 <div id="edit-modal" class="modal">
     <div class="modal-content">
-        <h3 id="modal-title">園長管理中心</h3>
+        <h3 id="modal-title">管理中心</h3>
         <div id="modal-body"></div>
         <div style="display:flex; gap:15px; margin-top:25px;">
             <button class="btn-action" id="modal-confirm">儲存變更</button>
@@ -99,7 +94,7 @@
         <div id="cart-items" class="cart-items"></div>
         <div class="cart-total-area">
             <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-                <b>總計金額</b>
+                <b>預估總計</b>
                 <b style="font-size:1.8em; color:var(--caramel);">NT$ <span id="cart-total">0</span></b>
             </div>
             <input id="cust-nick" class="input-standard" placeholder="請輸入您的 Line 暱稱">
@@ -154,13 +149,13 @@
         {e:"SS10追加", n:"06 扇套", p:1100, s:MEMBERS, l:0}
     ];
 
-    let products = JSON.parse(localStorage.getItem('zoo_p_v12')) || INITIAL_DATA;
-    let orders = JSON.parse(localStorage.getItem('zoo_o_v12')) || [];
+    let products = JSON.parse(localStorage.getItem('zoo_p_v20')) || INITIAL_DATA;
+    let orders = JSON.parse(localStorage.getItem('zoo_o_v20')) || [];
     let cart = [], curS = {};
 
     function save() { 
-        localStorage.setItem('zoo_p_v12', JSON.stringify(products)); 
-        localStorage.setItem('zoo_o_v12', JSON.stringify(orders)); 
+        localStorage.setItem('zoo_p_v20', JSON.stringify(products)); 
+        localStorage.setItem('zoo_o_v20', JSON.stringify(orders)); 
     }
 
     function goHall() {
@@ -229,7 +224,6 @@
                     <button class="cart-qty-btn" onclick="changeQty('${it.n}','${it.sel}',-1)">-</button>
                     <b>${it.count}</b>
                     <button class="cart-qty-btn" onclick="changeQty('${it.n}','${it.sel}',1)">+</button>
-                    <span style="font-weight:900; margin-left:10px;">$${it.p * it.count}</span>
                 </div>
             </div>`).join('');
         document.getElementById('cart-total').innerText = t.toLocaleString();
@@ -243,13 +237,13 @@
             total: parseInt(document.getElementById('cart-total').innerText.replace(/,/g,'')), 
             time: new Date().toLocaleString(), payStatus: "未付款", note: "" 
         });
-        save(); alert("提交成功！"); cart=[]; renderCart(); document.getElementById('cust-nick').value="";
+        save(); alert("提交成功！園長會儘速處理。"); cart=[]; renderCart(); document.getElementById('cust-nick').value="";
     }
 
     function getQueueStatus(prodName, spec, ts, forceOk) {
         if(forceOk) return `<span class="badge bg-ok">正取</span>`;
         const target = products.find(p => p.n === prodName);
-        if(!target || !target.l) return "";
+        if(!target || !target.l) return `<span class="badge bg-ok">正取</span>`;
         let all = [];
         orders.forEach(o => o.items.forEach(it => { if(it.n===prodName && it.sel===spec) all.push({ots: it.ts}); }));
         all.sort((a,b)=>a.ots - b.ots);
@@ -268,7 +262,7 @@
                 </div>
                 ${o.items.map(it => `• ${it.n}(${it.sel}) ${getQueueStatus(it.n, it.sel, it.ts, it.forceOk)}`).join('<br>')}
                 ${o.note ? `<div style="margin-top:10px; color:var(--caramel); font-size:0.85em;">園長備註: ${o.note}</div>` : ''}
-                <div style="text-align:right; font-weight:900; margin-top:10px; color:var(--caramel);">總額 NT$ ${o.total.toLocaleString()}</div>
+                <div style="text-align:right; font-weight:900; margin-top:10px; color:var(--caramel);">應付總額 NT$ ${o.total.toLocaleString()}</div>
             </div>`).join('') : "查無紀錄";
     }
 
@@ -279,12 +273,12 @@
         if(type==='orders') {
             main.innerHTML = orders.map((o, i) => `
                 <div style="background:#FFF; padding:20px; border-radius:20px; margin-bottom:15px; border-left:8px solid var(--matcha);">
-                    <b>${o.nick}</b> [${o.payStatus}]
+                    <b>${o.nick}</b> [${o.payStatus}] - NT$ ${o.total.toLocaleString()}
                     <div style="margin:10px 0; font-size:0.9em;">
-                        ${o.items.map(it => `• ${it.n}(${it.sel}) ${it.forceOk?'<span style="color:var(--caramel);">[已轉正]</span>':''}`).join('<br>')}
+                        ${o.items.map((it, ii) => `• ${it.n}(${it.sel}) ${it.forceOk?'[正]':''} <button onclick="deleteOrderItem(${i},${ii})" style="background:none; border:none; color:red; cursor:pointer; font-size:12px;">[刪除]</button>`).join('<br>')}
                     </div>
-                    <button class="btn-action" style="background:#DDD; color:#333; font-size:0.8em; width:auto;" onclick="openEditOrder(${i})">管理與轉正</button>
-                    <button class="btn-action" style="background:#E74C3C; width:auto;" onclick="if(confirm('刪除？')){orders.splice(i,1);save();renderAdmin('orders');}">🗑️</button>
+                    <button class="btn-action" style="background:#DDD; color:#333; font-size:0.8em; width:auto;" onclick="openEditOrder(${i})">管理 / 轉正 / 改價</button>
+                    <button class="btn-action" style="background:#E74C3C; width:auto;" onclick="if(confirm('刪除整個訂單？')){orders.splice(i,1);save();renderAdmin('orders');}">🗑️</button>
                 </div>`).join('');
         } else {
             main.innerHTML = `<button class="btn-action" onclick="openAddProd()">＋ 新增商品</button>` + 
@@ -296,31 +290,65 @@
         }
     }
 
+    function deleteOrderItem(oIdx, iIdx) {
+        if(confirm("確定刪除此單項？")) {
+            orders[oIdx].items.splice(iIdx, 1);
+            save(); renderAdmin('orders');
+        }
+    }
+
     function openEditOrder(idx) {
         const o = orders[idx];
-        document.getElementById('modal-title').innerText = "園長管理訂單";
+        document.getElementById('modal-title').innerText = "園長管理：修改訂單價格與狀態";
         document.getElementById('modal-body').innerHTML = `
             <label>付款狀態</label>
             <select id="e-pay" class="input-standard"><option ${o.payStatus==="未付款"?'selected':''}>未付款</option><option ${o.payStatus==="已付訂金"?'selected':''}>已付訂金</option><option ${o.payStatus==="已全額付清"?'selected':''}>已全額付清</option></select>
             <label>園長備註</label><input id="e-note" class="input-standard" value="${o.note||''}">
+            <label><b>訂單應付總額 (園長可手動修改)</b></label>
+            <input id="e-total" class="input-standard" type="number" value="${o.total}">
+            <hr>
+            <label>快速轉正 (勾選即代表該商品有現貨)</label>
             <div id="e-items">
                 ${o.items.map((it, ii) => `<div style="display:flex; justify-content:space-between; margin-bottom:10px; background:#F9F9F9; padding:10px; border-radius:10px;">
-                    <span>${it.n}(${it.sel})</span><label><input type="checkbox" class="ei-f" ${it.forceOk?'checked':''}> 現貨</label>
+                    <span>${it.n}(${it.sel})</span><label><input type="checkbox" class="ei-f" ${it.forceOk?'checked':''}> 正取</label>
                 </div>`).join('')}
             </div>
-            <label>總金額</label><input id="e-ot" class="input-standard" type="number" value="${o.total}">
+            <hr>
+            <label>幫客加購商品</label>
+            <select id="e-add-prod" class="input-standard">
+                <option value="">-- 選擇商品 --</option>
+                ${products.map((p,pi)=>`<option value="${pi}">${p.n} ($${p.p})</option>`).join('')}
+            </select>
+            <input id="e-add-spec" class="input-standard" placeholder="輸入規格 (如: M 或 海)">
+            <button class="btn-action" onclick="addItemToExistingOrder(${idx})" style="background:var(--caramel);">確認加購</button>
         `;
         document.getElementById('edit-modal').style.display='flex';
         document.getElementById('modal-confirm').onclick = () => {
-            o.payStatus = document.getElementById('e-pay').value; o.note = document.getElementById('e-note').value; o.total = parseInt(document.getElementById('e-ot').value);
-            const fs = document.querySelectorAll('.ei-f'); o.items.forEach((it, k) => { it.forceOk = fs[k].checked; });
+            o.payStatus = document.getElementById('e-pay').value; 
+            o.note = document.getElementById('e-note').value;
+            o.total = parseInt(document.getElementById('e-total').value);
+            const fs = document.querySelectorAll('.ei-f'); 
+            o.items.forEach((it, k) => { it.forceOk = fs[k].checked; });
             save(); closeModal(); renderAdmin('orders');
         };
     }
 
+    function addItemToExistingOrder(oIdx) {
+        const pIdx = document.getElementById('e-add-prod').value;
+        const spec = document.getElementById('e-add-spec').value || "一般";
+        if(!pIdx) return alert("請選擇商品");
+        const p = products[pIdx];
+        orders[oIdx].items.push({...p, sel: spec, ts: Date.now(), forceOk: true});
+        // 自動重新計算建議價格
+        let newTotal = 0;
+        orders[oIdx].items.forEach(it => newTotal += it.p);
+        document.getElementById('e-total').value = newTotal;
+        alert("已加入該訂單明細，請記得點擊儲存！");
+    }
+
     function openAddProd() {
         document.getElementById('modal-title').innerText = "新增商品";
-        document.getElementById('modal-body').innerHTML = `<input id="n-e" class="input-standard" placeholder="分類"><input id="n-n" class="input-standard" placeholder="品名"><input id="n-p" class="input-standard" type="number" placeholder="價格"><input id="n-s" class="input-standard" placeholder="規格"><input id="n-l" class="input-standard" type="number" placeholder="限額">`;
+        document.getElementById('modal-body').innerHTML = `<input id="n-e" class="input-standard" placeholder="分類"><input id="n-n" class="input-standard" placeholder="品名"><input id="n-p" class="input-standard" type="number" placeholder="價格"><input id="n-s" class="input-standard" placeholder="規格 (逗號隔開)"><input id="n-l" class="input-standard" type="number" placeholder="限額 (0為無限)">`;
         document.getElementById('edit-modal').style.display='flex';
         document.getElementById('modal-confirm').onclick = () => {
             products.push({ e: document.getElementById('n-e').value, n: document.getElementById('n-n').value, p: parseInt(document.getElementById('n-p').value), s: document.getElementById('n-s').value, l: parseInt(document.getElementById('n-l').value||0) });
@@ -330,7 +358,7 @@
 
     function openEditProd(idx) {
         const p = products[idx];
-        document.getElementById('modal-title').innerText = "編輯商品";
+        document.getElementById('modal-title').innerText = "編輯商品參數";
         document.getElementById('modal-body').innerHTML = `<input id="u-e" class="input-standard" value="${p.e}"><input id="u-n" class="input-standard" value="${p.n}"><input id="u-p" class="input-standard" type="number" value="${p.p}"><input id="u-s" class="input-standard" value="${p.s||''}"><input id="u-l" class="input-standard" type="number" value="${p.l||0}">`;
         document.getElementById('edit-modal').style.display='flex';
         document.getElementById('modal-confirm').onclick = () => {
@@ -343,7 +371,7 @@
         let sum = {}; orders.forEach(o => o.items.forEach(it => { let k = `${it.n} (${it.sel})`; sum[k] = (sum[k] || 0) + 1; }));
         let csv = "\uFEFF商品(規格),數量\n"; for (let k in sum) csv += `${k},${sum[k]}\n`;
         const b = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const l = document.createElement("a"); l.href = URL.createObjectURL(b); l.setAttribute("download", `33採買單_${new Date().toLocaleDateString()}.csv`);
+        const l = document.createElement("a"); l.href = URL.createObjectURL(b); l.setAttribute("download", `33採買單.csv`);
         document.body.appendChild(l); l.click(); document.body.removeChild(l);
     }
 
