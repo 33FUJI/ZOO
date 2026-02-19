@@ -8,27 +8,43 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
         :root { --matcha: #606C38; --rice: #FEF9EF; --caramel: #BC6C25; --wood: #283618; --white: #FFFFFF; --red: #E74C3C; }
-        body { background: var(--rice); margin: 0; font-family: 'Noto Sans TC', sans-serif; overflow: hidden; height: 100dvh; display: flex; flex-direction: column; }
+        * { box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; }
+        body { background: var(--rice); margin: 0; overflow: hidden; height: 100dvh; display: flex; flex-direction: column; }
+        
+        /* 大廳與導航 */
         .hall { position: fixed; inset: 0; background: var(--rice); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 90%; max-width: 500px; margin-top: 20px; }
         .card { background: #FFF; padding: 25px 10px; border-radius: 15px; border: 2px solid #EAE2D1; cursor: pointer; box-shadow: 0 4px 0 #EAE2D1; transition: 0.2s; }
         .card:active { transform: translateY(4px); box-shadow: none; }
-        .container { display: flex; flex: 1; overflow: hidden; visibility: hidden; }
-        .list { flex: 1; overflow-y: auto; padding: 15px; background: #FAF7F2; }
+        
+        /* 主程式佈局 - 修正購物車過長問題 */
+        .container { display: flex; flex: 1; overflow: hidden; visibility: hidden; position: relative; }
+        .list { flex: 1; overflow-y: auto; padding: 15px; background: #FAF7F2; padding-bottom: 80px; }
         .prod { background: #FFF; border-radius: 12px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        /* 側邊購物車 - 限制高度防止變長 */
+        .cart { width: 320px; background: #FFF; border-left: 1px solid #DDD; padding: 15px; display: flex; flex-direction: column; height: 100%; }
+        #cart-items { flex: 1; overflow-y: auto; font-size: 14px; margin: 10px 0; border: 1px solid #F9F9F9; padding: 5px; }
+        
+        /* 按鈕與標籤 */
+        .btn { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-search { background: #8E9775; margin-bottom: 10px; width: 180px; }
         .spec-btn { border: 1px solid #DDD; padding: 6px 12px; border-radius: 6px; margin: 3px; background: #FFF; font-size: 13px; cursor: pointer; }
         .spec-btn.active { background: var(--matcha); color: #FFF; border-color: var(--matcha); }
-        .cart { width: 320px; background: #FFF; border-left: 1px solid #DDD; padding: 15px; display: flex; flex-direction: column; }
-        .btn { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-red { background: var(--red); }
+        
+        /* 後台管理 */
         #admin { position: fixed; inset: 0; background: #FFF; z-index: 200; display: none; flex-direction: column; }
-        .order-item { background: #F9F9F9; padding: 10px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid #CCC; }
-        .tag { padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-left: 5px; }
+        .order-item { background: #F9F9F9; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 6px solid #CCC; }
+        .tag { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 5px; }
         .tag-win { background: #D4EDDA; color: #155724; }
         .tag-wait { background: #FFF3CD; color: #856404; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 300; }
-        .modal-box { background: #FFF; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; }
-        .input-std { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #DDD; border-radius: 5px; box-sizing: border-box; }
+        
+        /* 彈窗 */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 500; }
+        .modal-box { background: #FFF; padding: 20px; border-radius: 15px; width: 90%; max-width: 450px; max-height: 85vh; overflow-y: auto; }
+        .input-std { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #DDD; border-radius: 5px; box-sizing: border-box; }
+
+        @media (max-width: 768px) { .container { flex-direction: column; } .cart { width: 100%; height: 45%; border-top: 2px solid #DDD; } }
     </style>
 </head>
 <body>
@@ -36,15 +52,21 @@
 <div id="hall-screen" class="hall">
     <h1 style="color:var(--matcha); margin:0;">33 日本動物園</h1>
     <p id="status-msg" style="font-size:12px; color:#999;">連線中...</p>
+    
     <div id="hall-grid" class="grid"></div>
-    <div onclick="adminLogin()" style="margin-top:50px; color:#EEE; cursor:pointer; font-size:10px;">ADMIN</div>
+
+    <div style="margin-top: 30px; display: flex; flex-direction: column; align-items: center;">
+        <button class="btn btn-search" onclick="openSearch()">🔍 查詢我的訂單記錄</button>
+    </div>
+    
+    <div onclick="adminLogin()" style="margin-top:40px; color:#EEE; cursor:pointer; font-size:10px;">ADMIN</div>
 </div>
 
 <div id="main-app" class="container">
     <div id="prod-list" class="list"></div>
     <div class="cart">
         <h3>🛒 購物明細</h3>
-        <div id="cart-items" style="flex:1; overflow-y:auto; font-size:14px;"></div>
+        <div id="cart-items"></div>
         <hr>
         <p>總金額: <b style="color:var(--caramel)">$ <span id="cart-total">0</span></b></p>
         <input id="nick" class="input-std" placeholder="您的 LINE 暱稱">
@@ -58,7 +80,7 @@
         <b>園長 33 後台管理</b>
         <button class="btn" onclick="document.getElementById('admin').style.display='none'">退出</button>
     </div>
-    <div style="padding:10px; display:flex; gap:10px; background:#EEE;">
+    <div style="padding:10px; display:flex; gap:10px; background:#EEE; overflow-x:auto;">
         <button class="btn" onclick="renderOrders()">📋 訂單清單</button>
         <button class="btn" onclick="renderProdsAdmin()">📦 商品維護</button>
         <button class="btn" style="background:var(--caramel)" onclick="exportCSV()">📥 匯出採買</button>
@@ -68,16 +90,17 @@
 
 <div id="edit-modal" class="modal">
     <div class="modal-box">
-        <h3 id="modal-title">編輯</h3>
+        <h3 id="modal-title">標題</h3>
         <div id="modal-body"></div>
         <div style="display:flex; gap:10px; margin-top:15px;">
-            <button class="btn" style="flex:1;" id="modal-save">儲存</button>
+            <button class="btn" style="flex:1;" id="modal-save">儲存更新</button>
             <button class="btn" style="flex:1; background:#999;" onclick="closeModal()">取消</button>
         </div>
     </div>
 </div>
 
 <script>
+    // 初始化 Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",
         authDomain: "zoo-62638.firebaseapp.com",
@@ -92,21 +115,12 @@
 
     let products = [], orders = {}, cart = [], curS = {};
 
-    // 監聽數據
-    db.ref('products').on('value', snap => {
-        products = snap.val() || [];
-        renderHall();
-    });
-    db.ref('orders').on('value', snap => {
-        orders = snap.val() || {};
-        if(document.getElementById('admin').style.display === 'flex') renderOrders();
-    });
+    db.ref('products').on('value', snap => { products = snap.val() || []; renderHall(); });
+    db.ref('orders').on('value', snap => { orders = snap.val() || {}; });
 
     function renderHall() {
         const evts = [...new Set(products.map(p => p.e))];
-        document.getElementById('hall-grid').innerHTML = evts.map(e => `
-            <div class="card" onclick="openShop('${e}')"><b>${e}</b></div>
-        `).join('');
+        document.getElementById('hall-grid').innerHTML = evts.map(e => `<div class="card" onclick="openShop('${e}')"><b>${e}</b></div>`).join('');
         document.getElementById('status-msg').style.display = 'none';
     }
 
@@ -155,22 +169,31 @@
     function submitOrder() {
         const n = document.getElementById('nick').value;
         if (!n || cart.length === 0) return alert("請填寫暱稱並挑選商品！");
-        db.ref('orders').push({
-            nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0),
-            time: Date.now(),
-            forceWin: false // 強制正取開關
+        db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), forceWin: false });
+        alert("下單成功！"); location.reload();
+    }
+
+    // 查詢功能
+    function openSearch() {
+        const n = prompt("請輸入您的 LINE 暱稱進行查詢：");
+        if(!n) return;
+        const myOrders = Object.values(orders).filter(o => o.nick === n);
+        if(myOrders.length === 0) return alert("找不到您的訂單記錄。");
+        
+        let msg = `【${n} 的訂單記錄】\n`;
+        myOrders.forEach(o => {
+            msg += `\n時間: ${new Date(o.time).toLocaleString()}\n總額: $${o.total}\n商品: \n`;
+            o.items.forEach(i => msg += ` - ${i.n}(${i.sel})\n`);
         });
-        alert("下單成功！"); cart = []; renderCart(); location.reload();
+        alert(msg);
     }
 
     // 後台邏輯
-    function adminLogin() { if(prompt("密碼")==="1239") document.getElementById('admin').style.display='flex'; renderOrders(); }
+    function adminLogin() { if(prompt("密碼")==="1239") { document.getElementById('admin').style.display='flex'; renderOrders(); } }
 
     function renderOrders() {
         const main = document.getElementById('admin-main');
-        let prodCounts = {}; // 用於計算正取/候補
-
-        // 先按時間排序
+        let prodCounts = {};
         const sortedOrders = Object.entries(orders).sort((a,b) => a[1].time - b[1].time);
 
         main.innerHTML = sortedOrders.map(([key, o]) => {
@@ -179,28 +202,17 @@
                 const limit = p.limit || 999;
                 const specKey = `${it.pid}_${it.sel}`;
                 prodCounts[specKey] = (prodCounts[specKey] || 0) + 1;
-
-                // 判斷邏輯：如果 forceWin 為 true 或是 在限額內 則為正取
                 const isWin = o.forceWin || prodCounts[specKey] <= limit;
-                const tagClass = isWin ? 'tag-win' : 'tag-wait';
-                const tagText = isWin ? '正取' : `候補 ${prodCounts[specKey] - limit}`;
-
-                return `<div>• ${it.n}(${it.sel}) <span class="tag ${tagClass}">${tagText}</span></div>`;
+                return `<div>• ${it.n}(${it.sel}) <span class="tag ${isWin?'tag-win':'tag-wait'}">${isWin?'正取':('候補 '+ (prodCounts[specKey]-limit))}</span></div>`;
             }).join('');
 
             return `
                 <div class="order-item">
-                    <div style="display:flex; justify-content:space-between;">
-                        <b>${o.nick}</b> <span>$${o.total}</span>
-                    </div>
-                    <div style="font-size:13px; color:#666;">${itemsHtml}</div>
-                    <div style="margin-top:10px; display:flex; gap:5px;">
-                        <button class="btn" onclick="openEditOrder('${key}')">編輯金額/內容</button>
-                        <button class="btn" style="background:${o.forceWin?'#666':''}" onclick="toggleForceWin('${key}', ${!o.forceWin})">
-                            ${o.forceWin ? '取消強制正取' : '⭐ 強制正取'}
-                        </button>
-                        <button class="btn btn-red" onclick="deleteOrder('${key}')">刪除</button>
-                    </div>
+                    <b>${o.nick}</b> <span>總計: $${o.total}</span>
+                    <div style="font-size:13px; margin:10px 0;">${itemsHtml}</div>
+                    <button class="btn" onclick="openEditOrder('${key}')">編輯訂單</button>
+                    <button class="btn" style="background:#666" onclick="db.ref('orders/${key}').update({forceWin:!o.forceWin})">⭐ 變更正取</button>
+                    <button class="btn" style="background:var(--red)" onclick="if(confirm('刪除？')) db.ref('orders/${key}').remove()">刪除</button>
                 </div>
             `;
         }).join('');
@@ -208,7 +220,7 @@
 
     function renderProdsAdmin() {
         const main = document.getElementById('admin-main');
-        main.innerHTML = `<button class="btn" style="width:100%; margin-bottom:15px;" onclick="openAddProd()">＋ 新增商品</button>`;
+        main.innerHTML = `<button class="btn" style="width:100%; margin-bottom:15px; height:50px;" onclick="openAddProd()">＋ 新增上架商品</button>`;
         main.innerHTML += products.map((p, i) => `
             <div class="prod" style="display:flex; justify-content:space-between; align-items:center;">
                 <div><b>[${p.e}] ${p.n}</b><br><small>$${p.p} / 限購:${p.limit||'無'}</small></div>
@@ -217,51 +229,53 @@
         `).join('');
     }
 
-    // 視窗控制
+    // 視窗修復與下拉選單補回
     function closeModal() { document.getElementById('edit-modal').style.display='none'; }
 
     function openEditOrder(key) {
         const o = orders[key];
-        document.getElementById('modal-title').innerText = "編輯訂單金額";
+        document.getElementById('modal-title').innerText = "編輯訂單資訊";
         document.getElementById('modal-body').innerHTML = `
-            暱稱：<input id="edit-nick" class="input-std" value="${o.nick}">
-            總金額：<input id="edit-total" type="number" class="input-std" value="${o.total}">
+            訂購人：<input id="ed-nick" class="input-std" value="${o.nick}">
+            總金額：<input id="ed-total" type="number" class="input-std" value="${o.total}">
+            <p style="font-size:12px; color:red;">* 訂單內容(商品)目前僅限園長於 Firebase 視窗直接修改</p>
         `;
         document.getElementById('edit-modal').style.display = 'flex';
         document.getElementById('modal-save').onclick = () => {
             db.ref('orders/'+key).update({
-                nick: document.getElementById('edit-nick').value,
-                total: parseInt(document.getElementById('edit-total').value)
+                nick: document.getElementById('ed-nick').value,
+                total: parseInt(document.getElementById('ed-total').value)
             });
-            closeModal();
+            closeModal(); renderOrders();
         };
     }
 
-    function toggleForceWin(key, val) {
-        db.ref('orders/'+key).update({ forceWin: val });
-    }
-
-    function deleteOrder(key) { if(confirm("確定刪除？")) db.ref('orders/'+key).remove(); }
-
     function openAddProd() {
-        document.getElementById('modal-title').innerText = "新增商品";
+        const currentCats = [...new Set(products.map(p => p.e))];
+        document.getElementById('modal-title').innerText = "上架新商品";
         document.getElementById('modal-body').innerHTML = `
-            分類：<input id="p-e" class="input-std" placeholder="如：日本超市">
+            分類：<select id="p-e" class="input-std">
+                ${currentCats.map(c => `<option value="${c}">${c}</option>`).join('')}
+                <option value="new">+ 新增分類...</option>
+            </select>
+            <input id="p-e-new" class="input-std" style="display:none" placeholder="輸入新分類名稱">
             名稱：<input id="p-n" class="input-std">
             價格：<input id="p-p" type="number" class="input-std">
-            限購數量：<input id="p-l" type="number" class="input-std" placeholder="不填則無限制">
-            規格(逗號隔開)：<input id="p-s" class="input-std" placeholder="如：特,澈,雲">
+            限購數量：<input id="p-l" type="number" class="input-std" placeholder="空值為無限制">
+            規格(以逗號隔開)：<input id="p-s" class="input-std" placeholder="如：M,L 或 特,澈">
         `;
+        document.getElementById('p-e').onchange = (e) => {
+            document.getElementById('p-e-new').style.display = (e.target.value === 'new') ? 'block' : 'none';
+        };
         document.getElementById('edit-modal').style.display = 'flex';
         document.getElementById('modal-save').onclick = () => {
-            const newP = {
-                e: document.getElementById('p-e').value,
-                n: document.getElementById('p-n').value,
+            const cat = document.getElementById('p-e').value === 'new' ? document.getElementById('p-e-new').value : document.getElementById('p-e').value;
+            products.push({
+                e: cat, n: document.getElementById('p-n').value,
                 p: parseInt(document.getElementById('p-p').value),
                 limit: parseInt(document.getElementById('p-l').value) || 999,
                 s: document.getElementById('p-s').value
-            };
-            products.push(newP);
+            });
             db.ref('products').set(products);
             closeModal(); renderProdsAdmin();
         };
@@ -269,11 +283,11 @@
 
     function openEditProd(idx) {
         const p = products[idx];
-        document.getElementById('modal-title').innerText = "修改商品";
+        document.getElementById('modal-title').innerText = "修改商品內容";
         document.getElementById('modal-body').innerHTML = `
             名稱：<input id="p-n" class="input-std" value="${p.n}">
             價格：<input id="p-p" type="number" class="input-std" value="${p.p}">
-            限購數量：<input id="p-l" type="number" class="input-std" value="${p.limit||''}">
+            限購：<input id="p-l" type="number" class="input-std" value="${p.limit||''}">
             規格：<input id="p-s" class="input-std" value="${p.s||''}">
         `;
         document.getElementById('edit-modal').style.display = 'flex';
@@ -290,23 +304,16 @@
     function exportCSV() {
         let csv = "\uFEFF姓名,商品,規格,狀態,金額\n";
         let prodCounts = {};
-        const sortedOrders = Object.entries(orders).sort((a,b) => a[1].time - b[1].time);
-        
-        sortedOrders.forEach(([key, o]) => {
-            o.items.forEach(it => {
-                const p = products[it.pid] || {};
-                const limit = p.limit || 999;
-                const specKey = `${it.pid}_${it.sel}`;
-                prodCounts[specKey] = (prodCounts[specKey] || 0) + 1;
-                const isWin = o.forceWin || prodCounts[specKey] <= limit;
-                csv += `${o.nick},${it.n},${it.sel},${isWin?'正取':'候補'},${it.p}\n`;
+        Object.entries(orders).sort((a,b)=>a[1].time-b[1].time).forEach(([k,o])=>{
+            o.items.forEach(it=>{
+                const limit = (products[it.pid]||{}).limit || 999;
+                const sk = `${it.pid}_${it.sel}`;
+                prodCounts[sk]=(prodCounts[sk]||0)+1;
+                const isW = o.forceWin || prodCounts[sk] <= limit;
+                csv += `${o.nick},${it.n},${it.sel},${isW?'正取':'候補'},${it.p}\n`;
             });
         });
-        const blob = new Blob([csv], {type:'text/csv'});
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "33日本動物園採買表.csv";
-        a.click();
+        const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download="採買清單.csv"; a.click();
     }
 </script>
 </body>
