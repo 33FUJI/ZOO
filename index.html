@@ -20,6 +20,13 @@
         .cart { width: 320px; background: #FFF; border-left: 1px solid #DDD; padding: 15px; display: flex; flex-direction: column; }
         .btn { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         #admin { position: fixed; inset: 0; background: #FFF; z-index: 200; display: none; flex-direction: column; }
+        /* 數量選擇器樣式 */
+        .qty-box { display: flex; align-items: center; margin: 10px 0; gap: 10px; }
+        .qty-btn { width: 30px; height: 30px; border: 1px solid #DDD; background: #f9f9f9; border-radius: 5px; cursor: pointer; }
+        /* 報表樣式 */
+        .report-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+        .report-table th, .report-table td { border: 1px solid #DDD; padding: 5px; text-align: left; }
+        .report-table th { background: #f4f4f4; }
     </style>
 </head>
 <body>
@@ -45,13 +52,18 @@
 </div>
 
 <div id="admin">
-    <div style="background:#283618; color:#FFF; padding:15px; display:flex; justify-content:space-between;">
-        <b>後台管理中心</b>
+    <div style="background:#283618; color:#FFF; padding:15px; display:flex; justify-content:space-between; align-items:center;">
+        <b>後台管理中心 (園長專用)</b>
         <button onclick="document.getElementById('admin').style.display='none'">關閉</button>
     </div>
-    <div style="padding:15px;">
+    <div style="padding:15px; flex:1; overflow-y:auto;">
         <button class="btn" onclick="forceSync()">🔥 強制重整雲端商品 (35項)</button>
-        <div id="order-list" style="margin-top:20px; overflow-y:auto;"></div>
+        
+        <h3 style="border-left:5px solid var(--caramel); padding-left:10px; margin-top:20px;">📦 彙整報表 (採購清單)</h3>
+        <div id="summary-report"></div>
+
+        <h3 style="border-left:5px solid var(--matcha); padding-left:10px; margin-top:20px;">📜 原始訂單明細</h3>
+        <div id="order-list"></div>
     </div>
 </div>
 
@@ -110,9 +122,8 @@
     ];
 
     let products = [];
-    let cart = [], curS = {};
+    let cart = [], curS = {}, curQty = {};
 
-    // 啟動連線
     db.ref('products').on('value', snap => {
         products = snap.val() || [];
         if (products.length === 0) {
@@ -139,16 +150,27 @@
         const list = products.filter(p => p.e === e);
         document.getElementById('prod-list').innerHTML = list.map(p => {
             const pid = products.indexOf(p);
+            if(!curQty[pid]) curQty[pid] = 1; // 預設數量 1
             return `
                 <div class="prod">
                     <b>${p.n}</b> <span style="color:var(--caramel)">$${p.p}</span>
                     <div style="margin:10px 0;">
                         ${p.s ? p.s.split(',').map(v=>`<button class="spec-btn" id="s-${pid}-${v}" onclick="setS(${pid},'${v}')">${v}</button>`).join('') : ''}
                     </div>
+                    <div class="qty-box">
+                        <button class="qty-btn" onclick="updateQty(${pid}, -1)">-</button>
+                        <b id="qty-val-${pid}">${curQty[pid]}</b>
+                        <button class="qty-btn" onclick="updateQty(${pid}, 1)">+</button>
+                    </div>
                     <button class="btn" style="width:100%" onclick="addToCart(${pid})">加入購物車</button>
                 </div>
             `;
         }).join('');
+    }
+
+    function updateQty(pid, delta) {
+        curQty[pid] = Math.max(1, (curQty[pid] || 1) + delta);
+        document.getElementById(`qty-val-${pid}`).innerText = curQty[pid];
     }
 
     function setS(pid, v) {
@@ -160,16 +182,21 @@
 
     function addToCart(pid) {
         const p = products[pid];
+        const qty = curQty[pid] || 1;
         if (p.s && !curS[pid]) return alert("請先選擇成員或規格！");
-        cart.push({...p, sel: curS[pid] || "一般"});
+        cart.push({...p, sel: curS[pid] || "一般", qty: qty, lineTotal: p.p * qty});
         renderCart();
     }
 
     function renderCart() {
         let t = 0;
         document.getElementById('cart-items').innerHTML = cart.map((it, i) => {
-            t += it.p;
-            return `<div style="padding:5px 0; border-bottom:1px solid #EEE;">${it.n}(${it.sel}) $${it.p} <span onclick="cart.splice(${i},1);renderCart()" style="float:right; cursor:pointer;">❌</span></div>`;
+            t += it.lineTotal;
+            return `<div style="padding:5px 0; border-bottom:1px solid #EEE;">
+                ${it.n}(${it.sel}) x ${it.qty} <br>
+                <b>$${it.lineTotal}</b>
+                <span onclick="cart.splice(${i},1);renderCart()" style="float:right; cursor:pointer;">❌</span>
+            </div>`;
         }).join('');
         document.getElementById('cart-total').innerText = t;
     }
@@ -177,13 +204,76 @@
     function submitOrder() {
         const n = document.getElementById('nick').value;
         if (!n || cart.length === 0) return alert("請填寫暱稱並挑選商品！");
-        db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: new Date().toLocaleString() });
+        db.ref('orders').push({ 
+            nick: n, 
+            items: cart, 
+            total: cart.reduce((a,b)=>a+b.lineTotal,0), 
+            time: new Date().toLocaleString() 
+        });
         alert("訂單已送達雲端！");
         cart = []; renderCart();
         location.reload();
     }
 
-    function adminLogin() { if(prompt("密碼")==="1239") document.getElementById('admin').style.display='flex'; }
+    // 後台管理中心邏輯
+    function adminLogin() { 
+        if(prompt("密碼")==="1239") {
+            document.getElementById('admin').style.display='flex';
+            loadOrders(); 
+        } 
+    }
+
+    function loadOrders() {
+        db.ref('orders').on('value', snap => {
+            const data = snap.val();
+            const orderList = document.getElementById('order-list');
+            const summaryDiv = document.getElementById('summary-report');
+            
+            if(!data) {
+                orderList.innerHTML = "尚未有訂單";
+                summaryDiv.innerHTML = "無報表資料";
+                return;
+            }
+
+            let ordersHtml = "";
+            let summary = {}; // 用於統計報表
+
+            for(let key in data) {
+                const o = data[key];
+                ordersHtml += `
+                    <div style="border:1px solid #DDD; padding:10px; margin-bottom:10px; border-radius:8px;">
+                        <b>客戶: ${o.nick}</b> <small style="color:#999">(${o.time})</small>
+                        <div style="font-size:13px; margin:5px 0;">
+                            ${o.items.map(i => `· ${i.n}(${i.sel}) x ${i.qty}`).join('<br>')}
+                        </div>
+                        <b>總額: $${o.total}</b>
+                        <button onclick="deleteOrder('${key}')" style="float:right; color:red; border:none; background:none; cursor:pointer;">刪除</button>
+                    </div>
+                `;
+
+                // 累計報表統計
+                o.items.forEach(item => {
+                    const sKey = `${item.n} | ${item.sel}`;
+                    if(!summary[sKey]) summary[sKey] = 0;
+                    summary[sKey] += item.qty;
+                });
+            }
+            orderList.innerHTML = ordersHtml;
+
+            // 渲染彙整報表
+            let reportHtml = `<table class="report-table"><tr><th>商品名稱 | 規格(成員)</th><th>總數量</th></tr>`;
+            for(let name in summary) {
+                reportHtml += `<tr><td>${name}</td><td><b>${summary[name]}</b></td></tr>`;
+            }
+            reportHtml += `</table>`;
+            summaryDiv.innerHTML = reportHtml;
+        });
+    }
+
+    function deleteOrder(key) {
+        if(confirm("確定刪除此訂單？")) db.ref('orders').child(key).remove();
+    }
+
     function forceSync() { if(confirm("確定要蓋掉雲端資料嗎？")) { db.ref('products').set(fullItems); alert("已同步！"); location.reload(); } }
 </script>
 </body>
