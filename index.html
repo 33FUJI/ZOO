@@ -10,7 +10,6 @@
         :root { --matcha: #606C38; --rice: #FEF9EF; --caramel: #BC6C25; --wood: #283618; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Noto Sans TC', sans-serif; }
         
-        /* 核心佈局修正：確保手機端不會產生奇怪的滾動 */
         html, body { height: 100%; margin: 0; padding: 0; background: var(--rice); overflow: hidden; }
         body { display: flex; flex-direction: column; }
 
@@ -19,10 +18,8 @@
         .grid-hall { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 500px; margin-top: 20px; }
         .card-hall { background: #FFF; padding: 25px 10px; border-radius: 15px; border: 1px solid #EAE2D1; text-align: center; cursor: pointer; box-shadow: 0 4px 0 #EAE2D1; font-weight: bold; color: var(--wood); }
 
-        /* 主程式容器 */
+        /* 主容器 */
         .app-container { display: none; flex: 1; overflow: hidden; flex-direction: row; }
-        
-        /* 左側/上方：商品列表 */
         .list-area { flex: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; background: #FFF; }
         .prod-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
         .prod-card { background: #FFF; border: 1px solid #EEE; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
@@ -30,25 +27,21 @@
         .prod-limit { font-size: 11px; color: var(--caramel); margin-bottom: 5px; font-weight: bold; min-height: 16px; } 
         .prod-price { color: var(--caramel); font-weight: bold; font-size: 16px; margin-bottom: 8px; }
         
-        /* 數量控制組 */
         .qty-ctrl { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
         .qty-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #DDD; background: #FFF; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .qty-num { font-weight: bold; min-width: 25px; font-size: 16px; }
         
-        /* 按鈕樣式 */
         .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-submit { background: var(--caramel); color: #FFF; border: none; padding: 16px; border-radius: 12px; width: 100%; font-weight: bold; font-size: 18px; cursor: pointer; }
 
-        /* 右側/下方：購物車與下單區 */
+        /* 購物車 */
         .cart-area { width: 320px; background: #FFF; border-left: 2px solid #F5F5F5; display: flex; flex-direction: column; }
         .cart-header { padding: 15px; border-bottom: 1px solid #EEE; font-weight: bold; font-size: 18px; }
         #cart-items { flex: 1; overflow-y: auto; padding: 10px 15px; }
         .cart-footer { padding: 15px; background: #FFF; border-top: 1px solid #EEE; padding-bottom: calc(15px + env(safe-area-inset-bottom)); }
 
-        /* 規格按鈕 */
         .spec-btn { border: 1px solid #DDD; padding: 4px 8px; border-radius: 6px; margin: 2px; font-size: 12px; background: #FFF; cursor: pointer; }
 
-        /* 手機版 RWD 修正 */
         @media (max-width: 768px) {
             .app-container { flex-direction: column; }
             .list-area { flex: 2; }
@@ -56,15 +49,23 @@
             .prod-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
-        /* 彈窗系統 */
+        /* 彈窗 */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 15px; }
         .modal-box { background: var(--rice); padding: 25px; border-radius: 20px; width: 100%; max-width: 450px; max-height: 85vh; overflow-y: auto; }
         .input-std { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #DDD; border-radius: 10px; font-size: 16px; }
 
-        /* 後台管理介面 */
+        /* 後台 */
         #admin-panel { position: fixed; inset: 0; background: #F8F9FA; z-index: 4000; display: none; flex-direction: column; }
         .admin-header { background: var(--wood); color: #FFF; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .admin-order-card { background: #FFF; border: 1px solid #EEE; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        
+        .admin-item-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #F9F9F9; }
+        .item-tag { font-size: 10px; padding: 2px 5px; border-radius: 4px; margin-left: 5px; cursor: pointer; border: 1px solid #DDD; }
+        .tag-shipped { background: #E8F5E9; color: #2E7D32; border-color: #2E7D32; }
+
+        .admin-note-area { margin-top: 10px; border-top: 1px dashed #DDD; padding-top: 10px; }
+        .note-input { width: 100%; padding: 8px; border: 1px solid #EEE; border-radius: 5px; font-size: 13px; margin-top: 5px; }
+        .tag-btn { font-size: 12px; padding: 3px 8px; margin-right: 5px; border: 1px solid #DDD; border-radius: 4px; background: #F9F9F9; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -149,7 +150,11 @@
         renderHall(); 
         if(currentEvent) openShop(currentEvent); 
     });
-    db.ref('orders').on('value', snap => { orders = snap.val() || {}; });
+    
+    db.ref('orders').on('value', snap => { 
+        orders = snap.val() || {}; 
+        if(document.getElementById('admin-panel').style.display === 'flex') renderAdminOrders();
+    });
 
     function renderHall() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
@@ -197,7 +202,7 @@
         const p = products[pid];
         const qty = quantities[pid] || 1;
         if (p.s && !curS[pid]) return alert("請選擇規格！");
-        for(let i=0; i<qty; i++) cart.push({...p, sel: curS[pid] || "一般", pid: pid});
+        for(let i=0; i<qty; i++) cart.push({...p, sel: curS[pid] || "一般", pid: pid, status: ""});
         renderCart();
     }
 
@@ -217,23 +222,12 @@
         const n = document.getElementById('nick').value.trim();
         const btn = document.getElementById('submit-btn');
         if (!n || cart.length === 0) return alert("暱稱或購物車不能為空！");
-        
         btn.disabled = true;
         btn.innerText = "提交中...";
-
         db.ref('orders').push({ 
-            nick: n, 
-            items: cart, 
-            total: cart.reduce((a,b)=>a+b.p,0), 
-            time: Date.now(), 
-            forceWin: false 
+            nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), forceWin: false, adminNote: ""
         }).then(() => { 
-            alert("訂單已提交成功！"); 
-            location.reload(); 
-        }).catch(err => {
-            alert("提交失敗，請檢查網路");
-            btn.disabled = false;
-            btn.innerText = "確認提交訂單";
+            alert("訂單已提交成功！"); location.reload(); 
         });
     }
 
@@ -253,8 +247,12 @@
         resArea.innerHTML = userOrders.map(([key, o]) => `
             <div style="background:#FFF; padding:12px; margin-bottom:10px; border-radius:10px; border:1px solid #EEE;">
                 <div style="font-size:11px; color:#999;">${new Date(o.time).toLocaleString()}</div>
-                ${o.items.map(it => `<div style="display:flex; justify-content:space-between; margin-top:5px;"><span>${it.n}(${it.sel})</span><b style="color:${it.isWin?'green':'orange'}">${it.isWin?'正取':'候補'}</b></div>`).join('')}
+                ${o.items.map(it => `<div style="display:flex; justify-content:space-between; margin-top:5px;">
+                    <span>${it.n}(${it.sel}) ${it.status ? `<b style="color:blue">[${it.status}]</b>` : ''}</span>
+                    <b style="color:${it.isWin?'green':'orange'}">${it.isWin?'正取':'候補'}</b>
+                </div>`).join('')}
                 <div style="text-align:right; border-top:1px dashed #EEE; margin-top:8px; padding-top:5px; font-weight:bold; color:var(--caramel);">總金額: $${o.total}</div>
+                ${o.adminNote ? `<div style="font-size:12px; color:#666; background:#f0f0f0; padding:5px; margin-top:5px; border-radius:4px;">園長備註: ${o.adminNote}</div>` : ''}
             </div>`).join('');
     }
 
@@ -268,19 +266,58 @@
             <span>合併訂單工具</span><button onclick="mergeSelected()" style="padding:5px 10px; border:none; border-radius:4px; font-weight:bold;">執行合併</button>
         </div>`;
         html += sorted.map(([k, o]) => {
-            const list = o.items.map(it => { 
+            const list = o.items.map((it, idx) => { 
                 const sk = `${it.pid}_${it.sel}`; pc[sk] = (pc[sk] || 0) + 1; 
                 const win = o.forceWin || pc[sk] <= ((products[it.pid]||{}).limit || 999);
-                return `<li>${it.n}(${it.sel}) <small style="color:${win?'green':'orange'}">${win?'正取':'候補'}</small></li>`;
+                return `<div class="admin-item-row">
+                    <span>${it.n}(${it.sel}) <small style="color:${win?'green':'orange'}">${win?'正取':'候補'}</small></span>
+                    <div>
+                        <span class="item-tag ${it.status==='已出貨'?'tag-shipped':''}" onclick="setItemStatus('${k}', ${idx}, '已出貨')">📦出貨</span>
+                        <span class="item-tag" onclick="setItemStatus('${k}', ${idx}, '')">✕</span>
+                    </div>
+                </div>`;
             }).join('');
             return `<div class="admin-order-card">
                 <input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> <b>${o.nick}</b> ($${o.total})
-                <ul>${list}</ul>
-                <button onclick="db.ref('orders/${k}').update({forceWin:!o.forceWin})">⭐ 狀態切換</button>
-                <button onclick="if(confirm('刪除？')) db.ref('orders/${k}').remove()" style="color:red; margin-left:10px;">刪除</button>
+                <div style="margin:10px 0;">${list}</div>
+                <div style="display:flex; gap:5px; margin-bottom:10px;">
+                    <button onclick="toggleForceWin('${k}', ${o.forceWin})" style="flex:1; background:${o.forceWin?'#606C38':'#FFF'}; color:${o.forceWin?'#FFF':'#333'}; padding:5px; border:1px solid #DDD; border-radius:5px; font-size:12px;">⭐ 強制正取</button>
+                    <button onclick="if(confirm('刪除？')) db.ref('orders/${k}').remove()" style="flex:1; color:red; background:#FFF; padding:5px; border:1px solid red; border-radius:5px; font-size:12px;">🗑️ 刪除</button>
+                </div>
+                <div class="admin-note-area">
+                    <button class="tag-btn" onclick="addTag('${k}', '✅已收錢')">✅已收錢</button>
+                    <button class="tag-btn" onclick="addTag('${k}', '💰已付訂')">💰已付訂</button>
+                    <input class="note-input" id="note-${k}" placeholder="整筆訂單備註（Enter儲存）" value="${o.adminNote || ''}" onkeydown="if(event.key==='Enter') saveNote('${k}')">
+                </div>
             </div>`;
         }).join('');
         main.innerHTML = html;
+    }
+
+    function setItemStatus(orderKey, itemIdx, status) {
+        const order = orders[orderKey];
+        order.items[itemIdx].status = status;
+        db.ref(`orders/${orderKey}/items`).set(order.items);
+    }
+
+    function toggleForceWin(orderKey, currentVal) {
+        db.ref(`orders/${orderKey}`).update({ forceWin: !currentVal });
+    }
+
+    function saveNote(orderKey) {
+        const val = document.getElementById(`note-${orderKey}`).value;
+        db.ref(`orders/${orderKey}`).update({ adminNote: val }).then(() => {
+            const el = document.getElementById(`note-${orderKey}`);
+            el.style.background = '#e8f5e9'; setTimeout(() => el.style.background = '#FFF', 500);
+        });
+    }
+
+    function addTag(orderKey, tag) {
+        const input = document.getElementById(`note-${orderKey}`);
+        if(!input.value.includes(tag)) {
+            input.value = input.value ? input.value + " " + tag : tag;
+            saveNote(orderKey);
+        }
     }
 
     function renderAdminProds() {
@@ -322,12 +359,15 @@
         if(checks.length < 2) return alert("請選兩筆以上");
         const nicks = checks.map(el => el.getAttribute('data-nick'));
         if(new Set(nicks).size > 1) return alert("限同一人訂單");
-        let items = [], total = 0, keys = checks.map(el => el.value);
-        keys.forEach(k => { items = items.concat(orders[k].items); total += orders[k].total; });
-        db.ref('orders').push({ nick: nicks[0], items: items, total: total, time: orders[keys[0]].time, forceWin: false })
+        let items = [], total = 0, keys = checks.map(el => el.value), notes = [];
+        keys.forEach(k => { 
+            items = items.concat(orders[k].items); 
+            total += orders[k].total; 
+            if(orders[k].adminNote) notes.push(orders[k].adminNote);
+        });
+        db.ref('orders').push({ nick: nicks[0], items: items, total: total, time: orders[keys[0]].time, forceWin: false, adminNote: notes.join(" | ") })
           .then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); alert("合併成功"); });
     }
 </script>
 </body>
 </html>
-
