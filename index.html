@@ -20,12 +20,9 @@
         .prod-name { font-weight: bold; font-size: 15px; margin-bottom: 3px; color: #333; }
         .prod-limit { font-size: 11px; color: #BC6C25; margin-bottom: 5px; font-weight: bold; height: 16px; } 
         .prod-price { color: var(--caramel); font-weight: bold; font-size: 16px; margin-bottom: 8px; }
-        
-        /* 數量選擇器樣式 */
-        .qty-ctrl { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; }
-        .qty-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--matcha); background: #FFF; color: var(--matcha); font-weight: bold; cursor: pointer; }
-        .qty-num { font-weight: bold; min-width: 20px; }
-
+        .qty-ctrl { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
+        .qty-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #DDD; background: #FFF; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .qty-num { font-weight: bold; min-width: 20px; font-size: 15px; }
         .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
         .cart-area { width: 320px; background: #FFF; border-left: 2px solid #F5F5F5; display: flex; flex-direction: column; padding: 15px; }
         #cart-items { flex: 1; overflow-y: auto; border-top: 1px solid #EEE; margin-top: 10px; }
@@ -69,7 +66,7 @@
         <div style="padding-top:15px; border-top:1px solid #EEE;">
             <p style="font-size:18px;">總計: <b style="color:var(--caramel);">$ <span id="cart-total">0</span></b></p>
             <input id="nick" class="input-std" placeholder="您的 LINE 暱稱">
-            <button class="btn-add" style="background:var(--caramel); padding:15px; font-size:16px; width:100%;" onclick="submitOrder()">確認下單</button>
+            <button class="btn-add" id="submit-btn" style="background:var(--caramel); padding:15px; font-size:16px; width:100%;" onclick="submitOrder()">確認下單</button>
             <button onclick="location.reload()" style="background:none; border:none; color:#999; width:100%; margin-top:15px; cursor:pointer;">← 返回目錄</button>
         </div>
     </div>
@@ -112,15 +109,21 @@
     const db = firebase.database();
 
     let products = [], orders = {}, cart = [], curS = {}, currentEvent = "";
-    let quantities = {}; // 紀錄每個商品的選擇數量
+    let quantities = {};
+    window.adminTab = 'orders';
 
+    // 即時監聽：確保後台修改完，前台立即更新
     db.ref('products').on('value', snap => { 
         products = snap.val() || []; 
         renderHall(); 
         if(currentEvent) openShop(currentEvent);
-        if(document.getElementById('admin-panel').style.display==='flex') renderAdminProds(); 
+        if(document.getElementById('admin-panel').style.display==='flex' && window.adminTab==='prods') renderAdminProds();
     });
-    db.ref('orders').on('value', snap => { orders = snap.val() || {}; if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); });
+
+    db.ref('orders').on('value', snap => { 
+        orders = snap.val() || {}; 
+        if(document.getElementById('admin-panel').style.display==='flex' && window.adminTab==='orders') renderAdminOrders();
+    });
 
     function renderHall() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
@@ -134,65 +137,60 @@
         const list = products.filter(p => p.e === e);
         document.getElementById('prod-list').innerHTML = list.map(p => {
             const pid = products.findIndex(pr => pr.n === p.n && pr.e === p.e);
-            quantities[pid] = 1; // 預設數量 1
+            if(!quantities[pid]) quantities[pid] = 1;
             const limitText = (p.limit && p.limit < 999) ? `限購 ${p.limit} 份` : ''; 
-            return `
-                <div class="prod-card">
-                    <div class="prod-name">${p.n}</div>
-                    <div class="prod-limit">${limitText}</div>
-                    <div class="prod-price">$${p.p}</div>
-                    <div style="min-height:35px; margin-bottom:8px;">
-                        ${p.s ? p.s.split(',').map(v=>`<button class="spec-btn" id="s-${pid}-${v}" onclick="setS(${pid},'${v}')" style="border:1px solid #DDD; padding:3px 6px; border-radius:4px; margin:2px; font-size:12px; background:#FFF;">${v}</button>`).join('') : ''}
-                    </div>
-                    <div class="qty-ctrl">
-                        <button class="qty-btn" onclick="updateQty(${pid}, -1)">-</button>
-                        <span class="qty-num" id="q-${pid}">1</span>
-                        <button class="qty-btn" onclick="updateQty(${pid}, 1)">+</button>
-                    </div>
-                    <button class="btn-add" onclick="addToCart(${pid})">加入</button>
-                </div>`;
+            return `<div class="prod-card">
+                <div class="prod-name">${p.n}</div>
+                <div class="prod-limit">${limitText}</div>
+                <div class="prod-price">$${p.p}</div>
+                <div style="min-height:35px; margin-bottom:8px;">
+                    ${p.s ? p.s.split(',').map(v=>`<button class="spec-btn" id="s-${pid}-${v}" onclick="setS(${pid},'${v}')" style="border:1px solid #DDD; padding:3px 6px; border-radius:4px; margin:2px; font-size:12px; background:#FFF;">${v}</button>`).join('') : ''}
+                </div>
+                <div class="qty-ctrl">
+                    <button class="qty-btn" onclick="updateQty(${pid}, -1)">-</button>
+                    <span class="qty-num" id="q-${pid}">${quantities[pid]}</span>
+                    <button class="qty-btn" onclick="updateQty(${pid}, 1)">+</button>
+                </div>
+                <button class="btn-add" onclick="addToCart(${pid})">加入</button>
+            </div>`;
         }).join('');
     }
 
     function updateQty(pid, delta) {
         let q = quantities[pid] || 1;
-        q += delta;
-        if (q < 1) q = 1;
+        q = Math.max(1, q + delta);
         quantities[pid] = q;
         document.getElementById(`q-${pid}`).innerText = q;
     }
 
     function setS(pid, v) {
         curS[pid] = v;
-        document.querySelectorAll(`[id^="s-${pid}-"]`).forEach(b => { b.style.borderColor = '#DDD'; b.style.color = '#333'; });
-        const active = document.getElementById(`s-${pid}-${v}`);
-        if(active) { active.style.borderColor = 'var(--matcha)'; active.style.color = 'var(--matcha)'; }
+        document.querySelectorAll(`[id^="s-${pid}-"]`).forEach(b => b.style.borderColor = '#DDD');
+        document.getElementById(`s-${pid}-${v}`).style.borderColor = 'var(--matcha)';
     }
 
     function addToCart(pid) {
         const p = products[pid];
         const qty = quantities[pid] || 1;
         if (p.s && !curS[pid]) return alert("請選規格！");
-        // 依照數量加入購物車
-        for(let i=0; i<qty; i++) {
-            cart.push({...p, sel: curS[pid] || "一般", pid: pid});
-        }
+        for(let i=0; i<qty; i++) cart.push({...p, sel: curS[pid] || "一般", pid: pid});
         renderCart();
     }
 
     function renderCart() {
         let t = 0;
-        document.getElementById('cart-items').innerHTML = cart.map((it, i) => { 
-            t += it.p; 
-            return `<div style="padding:10px 0; border-bottom:1px solid #F5F5F5; display:flex; justify-content:space-between; align-items:center;"><span>${it.n}(${it.sel})</span><span onclick="cart.splice(${i},1);renderCart()" style="color:red; cursor:pointer; font-weight:bold;">✕</span></div>`; 
-        }).join('');
+        document.getElementById('cart-items').innerHTML = cart.map((it, i) => { t += it.p; return `<div style="padding:10px 0; border-bottom:1px solid #F5F5F5; display:flex; justify-content:space-between; align-items:center;"><span>${it.n}(${it.sel})</span><span onclick="cart.splice(${i},1);renderCart()" style="color:red; cursor:pointer; font-weight:bold;">✕</span></div>`; }).join('');
         document.getElementById('cart-total').innerText = t;
     }
 
     function submitOrder() {
-        const n = document.getElementById('nick').value;
+        const n = document.getElementById('nick').value.trim();
+        const btn = document.getElementById('submit-btn');
         if (!n || cart.length === 0) return alert("請填寫暱稱及商品");
-        db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), forceWin: false }).then(() => { alert("訂單已提交！"); location.reload(); });
+        btn.disabled = true; btn.innerText = "提交中...";
+        db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), forceWin: false })
+          .then(() => { alert("訂單已提交！"); location.reload(); })
+          .catch(() => { alert("提交失敗"); btn.disabled = false; btn.innerText = "確認下單"; });
     }
 
     function performSearch() {
@@ -200,7 +198,7 @@
         if(!n) return alert("請輸入暱稱");
         const resArea = document.getElementById('search-results-area');
         const userOrders = Object.entries(orders).filter(([k, o]) => o.nick === n).sort((a,b) => b[1].time - a[1].time);
-        if(userOrders.length === 0) { resArea.innerHTML = "<p style='text-align:center; color:#999;'>查無資料</p>"; return; }
+        if(userOrders.length === 0) { resArea.innerHTML = "<p style='text-align:center;'>查無資料</p>"; return; }
         let pc = {};
         Object.values(orders).sort((a,b) => a.time - b.time).forEach(o => o.items.forEach(it => { const sk = `${it.pid}_${it.sel}`; pc[sk] = (pc[sk] || 0) + 1; it.isWin = o.forceWin || pc[sk] <= ((products[it.pid]||{}).limit || 999); }));
         resArea.innerHTML = userOrders.map(([key, o]) => `<div style="background:#FFF; padding:12px; margin-top:10px; border-radius:10px; border:1px solid #EEE;"><div style="font-size:11px; color:#999;">${new Date(o.time).toLocaleString()}</div>${o.items.map(it => `<div style="display:flex; justify-content:space-between; margin-top:5px;"><span>${it.n}(${it.sel})</span><b style="color:${it.isWin?'#2D6A4F':'#D4A373'}">${it.isWin?'正取':'候補'}</b></div>`).join('')}<div style="text-align:right; border-top:1px dashed #EEE; margin-top:8px; padding-top:5px; font-weight:bold; color:var(--caramel);">總額: $${o.total}</div></div>`).join('');
@@ -213,25 +211,25 @@
         const main = document.getElementById('admin-main');
         const sorted = Object.entries(orders).sort((a,b) => a[1].time - b[1].time);
         let pc = {};
-        let html = `<div style="background:var(--wood); color:#FFF; padding:10px; margin-bottom:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;"><span>勾選合併</span><button onclick="mergeSelectedOrders()" style="padding:5px 12px; border-radius:5px; border:none; background:#FFF; font-weight:bold;">執行合併</button></div>`;
+        let html = `<div style="background:var(--wood); color:#FFF; padding:10px; margin-bottom:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;"><span>勾選合併訂單</span><button onclick="mergeSelectedOrders()" style="padding:5px 12px; border-radius:5px; border:none; background:#FFF; font-weight:bold;">執行合併</button></div>`;
         html += sorted.map(([key, o]) => {
-            const items = o.items.map(it => { const sk = `${it.pid}_${it.sel}`; pc[sk] = (pc[sk] || 0) + 1; const win = o.forceWin || pc[sk] <= ((products[it.pid]||{}).limit || 999); return `<li style="font-size:13px;">${it.n}(${it.sel}) <span style="color:${win?'green':'#BC6C25'}">[${win?'正取':'候補'}]</span></li>`; }).join('');
-            return `<div class="admin-order-card"><div style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="merge-check" value="${key}" data-nick="${o.nick}" style="width:20px; height:20px;"><b>${o.nick}</b> <span style="flex:1; text-align:right; font-weight:bold; color:var(--caramel);">$${o.total}</span></div><ul style="padding-left:18px; margin:10px 0; border-bottom:1px solid #F9F9F9;">${items}</ul><div class="btn-admin-row"><button class="btn-admin" style="background:#666" onclick="db.ref('orders/${key}').update({forceWin:!o.forceWin})">⭐ 狀態</button><button class="btn-admin" style="background:#E74C3C" onclick="if(confirm('刪除？')) db.ref('orders/${key}').remove()">刪除</button></div></div>`;
+            const items = o.items.map(it => { const sk = `${it.pid}_${it.sel}`; pc[sk] = (pc[sk] || 0) + 1; const win = o.forceWin || pc[sk] <= ((products[it.pid]||{}).limit || 999); return `<li>${it.n}(${it.sel}) <small style="color:${win?'green':'orange'}">[${win?'正取':'候補'}]</small></li>`; }).join('');
+            return `<div class="admin-order-card"><div style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="merge-check" value="${key}" data-nick="${o.nick}"><b>${o.nick}</b> <span style="flex:1; text-align:right; color:var(--caramel);">$${o.total}</span></div><ul>${items}</ul><div class="btn-admin-row"><button class="btn-admin" style="background:#666" onclick="db.ref('orders/${key}').update({forceWin:!o.forceWin})">⭐ 狀態</button><button class="btn-admin" style="background:#E74C3C" onclick="if(confirm('刪除？')) db.ref('orders/${key}').remove()">刪除</button></div></div>`;
         }).join('');
         main.innerHTML = html;
     }
 
     function renderAdminProds() {
         const main = document.getElementById('admin-main');
-        main.innerHTML = `<button class="btn-add" style="margin-bottom:20px; padding:15px; width:100%; font-size:16px;" onclick="openAddProd()">＋ 上架新商品</button>` + 
+        main.innerHTML = `<button class="btn-add" style="margin-bottom:20px; width:100%;" onclick="openAddProd()">＋ 上架新商品</button>` + 
         products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between; align-items:center;"><div><b>[${p.e}] ${p.n}</b><br><small>價: $${p.p} | 限購: ${p.limit||999}</small></div><button onclick="openEditProd(${i})" style="background:#666; color:#FFF; border:none; padding:8px 15px; border-radius:6px;">修改</button></div>`).join('');
     }
 
     function openEditProd(idx) {
         const p = products[idx];
-        document.getElementById('modal-title').innerText = "修改商品內容";
+        document.getElementById('modal-title').innerText = "修改商品";
         document.getElementById('modal-body').innerHTML = `分類：<input id="p-e" class="input-std" value="${p.e}">名稱：<input id="p-n" class="input-std" value="${p.n}">價格：<input id="p-p" type="number" class="input-std" value="${p.p}">限購：<input id="p-l" type="number" class="input-std" value="${p.limit||999}">規格：<input id="p-s" class="input-std" value="${p.s||''}">`;
-        document.getElementById('modal-delete-area').innerHTML = `<button onclick="confirmDeleteProd(${idx})" style="width:100%; padding:12px; background:#E74C3C; color:#FFF; border:none; margin-top:40px; border-radius:8px; font-weight:bold;">🗑️ 徹底刪除商品</button>`;
+        document.getElementById('modal-delete-area').innerHTML = `<button onclick="confirmDeleteProd(${idx})" style="width:100%; padding:12px; background:#E74C3C; color:#FFF; border:none; margin-top:40px; border-radius:8px;">🗑️ 徹底刪除商品</button>`;
         document.getElementById('edit-modal').style.display='flex';
         document.getElementById('modal-save').onclick = () => {
             products[idx] = { e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value) || 999, s: document.getElementById('p-s').value };
@@ -258,10 +256,10 @@
         const nicks = selected.map(el => el.getAttribute('data-nick'));
         if (new Set(nicks).size > 1) return alert("不同客人的訂單不能合併！");
         const keys = selected.map(el => el.value);
-        let mergedItems = [];
-        let total = 0;
+        let mergedItems = []; let total = 0;
         keys.forEach(k => { mergedItems = mergedItems.concat(orders[k].items); total += orders[k].total; });
-        db.ref('orders').push({ nick: nicks[0], items: mergedItems, total: total, time: orders[keys[0]].time, forceWin: false }).then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); alert("合併成功！"); });
+        db.ref('orders').push({ nick: nicks[0], items: mergedItems, total: total, time: orders[keys[0]].time, forceWin: false })
+          .then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); alert("合併成功！"); });
     }
 </script>
 </body>
