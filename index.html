@@ -55,7 +55,7 @@
     <h1 style="color:var(--matcha); margin-bottom:5px;">33 日本動物園</h1>
     <div id="hall-grid" class="grid-hall"></div>
     <button onclick="document.getElementById('search-modal').style.display='flex'" style="background:var(--caramel); color:#FFF; border:none; padding:15px 40px; border-radius:30px; margin-top:30px; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.1);">🔍 查詢我的訂單</button>
-    <div onclick="adminLogin()" style="margin-top:50px; color:#CCC; cursor:pointer; font-size:10px;">園長登入管理</div>
+    <div onclick="adminLogin()" style="margin-top:50px; color:#CCC; cursor:pointer; font-size:10px;">登入管理</div>
 </div>
 
 <div class="app-container" id="main-app">
@@ -121,7 +121,6 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 關鍵變數：cart 在全域環境中，保證跨活動不重置
     let products = [], orders = {}, cart = [], curS = {}, currentEvent = "";
 
     db.ref('products').on('value', snap => { 
@@ -134,7 +133,6 @@
         if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); 
     });
 
-    // 目錄邏輯
     function renderHall() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
         document.getElementById('hall-grid').innerHTML = evts.map(e => `<div class="card-hall" onclick="openShop('${e}')">${e}</div>`).join('');
@@ -194,7 +192,6 @@
           .then(() => { alert("訂單已整筆成功提交囉！"); cart = []; location.reload(); });
     }
 
-    /* 園長後台管理邏輯 - 勿刪減 */
     function adminLogin() { if(prompt("密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; renderAdminOrders(); } }
 
     function renderAdminOrders() {
@@ -208,9 +205,10 @@
                 const win = it.fWin || pc[sk] <= ((products[it.pid]||{}).limit || 999);
                 return `<div class="admin-item-row">
                     <input type="checkbox" class="item-check-${k}" value="${idx}">
-                    <span class="item-text"><small style="color:#999;">[${it.e}]</small> ${it.n}(${it.sel}) <small style="color:${win?'green':'orange'}">${win?'正取':'候補'}</small></span>
+                    <span class="item-text"><small style="color:#999;">[${it.e}]</small> ${it.n}(${it.sel}) <span onclick="editItemPrice('${k}', ${idx}, ${it.p})" style="color:var(--caramel); cursor:pointer; font-weight:bold;">$${it.p}</span> <small style="color:${win?'green':'orange'}">${win?'正取':'候補'}</small></span>
                     ${it.fWin?'<span class="tag-win-info">⭐正取</span>':''}
                     ${it.status==='已出貨'?'<span class="tag-shipped-info">📦已出貨</span>':''}
+                    <button onclick="deleteSingleItem('${k}', ${idx})" style="border:none; background:none; color:#CCC; cursor:pointer; font-size:12px;">✕</button>
                 </div>`;
             }).join('');
             return `<div class="admin-order-card">
@@ -228,7 +226,7 @@
                     <button class="tag-btn" onclick="addNoteTag('${k}', '✅已收錢')">✅已收錢</button>
                     <button class="tag-btn" onclick="addNoteTag('${k}', '💰已付訂')">💰已付訂</button>
                     <button class="tag-btn" style="background:#E3F2FD;" onclick="addItemToOrd('${k}')">＋ 手動加商品</button>
-                    <button onclick="if(confirm('確定刪除此訂單？')) db.ref('orders/${k}').remove()" style="margin-left:auto; border:none; background:none; color:red; cursor:pointer;">🗑️ 刪除</button>
+                    <button onclick="if(confirm('確定刪除此整筆訂單？')) db.ref('orders/${k}').remove()" style="margin-left:auto; border:none; background:none; color:red; cursor:pointer;">🗑️ 刪除整筆</button>
                 </div>
                 <input class="input-std" style="height:35px; margin:0; font-size:14px;" id="note-${k}" value="${o.adminNote||''}" placeholder="輸入備註後按 Enter 儲存" onkeydown="if(event.key==='Enter') saveNote('${k}')">
             </div>`;
@@ -236,7 +234,24 @@
         main.innerHTML = html + `<div style="height:100px;"></div>`;
     }
 
-    // 統計與匯出邏輯
+    function deleteSingleItem(k, idx) {
+        if(!confirm('確定要刪除這項商品嗎？')) return;
+        const o = orders[k];
+        o.items.splice(idx, 1);
+        o.total = o.items.reduce((a, b) => a + b.p, 0);
+        db.ref(`orders/${k}`).update({ items: o.items, total: o.total });
+    }
+
+    function editItemPrice(k, idx, oldPrice) {
+        const newP = prompt("請輸入此單項商品的新金額：", oldPrice);
+        if(newP !== null) {
+            const o = orders[k];
+            o.items[idx].p = parseInt(newP);
+            o.total = o.items.reduce((a, b) => a + b.p, 0);
+            db.ref(`orders/${k}`).update({ items: o.items, total: o.total });
+        }
+    }
+
     function exportSummary() {
         let stats = {};
         Object.values(orders).forEach(o => {
@@ -277,7 +292,6 @@
         };
     }
 
-    // 各種輔助功能 - 勿遺漏
     function batchUpd(k, attr, val) {
         const checks = document.querySelectorAll(`.item-check-${k}:checked`);
         if(checks.length===0) return alert("請先勾選商品前方框");
@@ -308,9 +322,11 @@
     function addItemToOrd(k) {
         const n = prompt("手動新增商品名稱：");
         if(n) {
+            const p = prompt("請輸入手動新增商品的金額：", "0");
             const o = orders[k];
-            o.items.push({ e: "園長追加", n: n, sel: "一般", p: 0, status: "", fWin: true });
-            db.ref(`orders/${k}/items`).set(o.items);
+            o.items.push({ e: "園長追加", n: n, sel: "一般", p: parseInt(p || 0), status: "", fWin: true });
+            o.total = o.items.reduce((a, b) => a + b.p, 0);
+            db.ref(`orders/${k}`).update({ items: o.items, total: o.total });
         }
     }
 
