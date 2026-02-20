@@ -55,7 +55,7 @@
     <h1 style="color:var(--matcha); margin-bottom:5px;">33 日本動物園</h1>
     <div id="hall-grid" class="grid-hall"></div>
     <button onclick="document.getElementById('search-modal').style.display='flex'" style="background:var(--caramel); color:#FFF; border:none; padding:15px 40px; border-radius:30px; margin-top:30px; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.1);">🔍 查詢我的訂單</button>
-    <div onclick="adminLogin()" style="margin-top:50px; color:#CCC; cursor:pointer; font-size:10px;">登入管理</div>
+    <div onclick="adminLogin()" style="margin-top:50px; color:#CCC; cursor:pointer; font-size:10px;">園長登入管理</div>
 </div>
 
 <div class="app-container" id="main-app">
@@ -205,10 +205,10 @@
                 const win = it.fWin || pc[sk] <= ((products[it.pid]||{}).limit || 999);
                 return `<div class="admin-item-row">
                     <input type="checkbox" class="item-check-${k}" value="${idx}">
-                    <span class="item-text"><small style="color:#999;">[${it.e}]</small> ${it.n}(${it.sel}) <span onclick="editItemPrice('${k}', ${idx}, ${it.p})" style="color:var(--caramel); cursor:pointer; font-weight:bold;">$${it.p}</span> <small style="color:${win?'green':'orange'}">${win?'正取':'候補'}</small></span>
+                    <span class="item-text"><small style="color:#999;">[${it.e}]</small> ${it.n}(${it.sel}) <span onclick="editItemPrice('${k}', ${idx}, ${it.p})" style="color:var(--caramel); cursor:pointer; font-weight:bold; border-bottom:1px solid;">$${it.p}</span> <small style="color:${win?'green':'orange'}">${win?'正取':'候補'}</small></span>
                     ${it.fWin?'<span class="tag-win-info">⭐正取</span>':''}
                     ${it.status==='已出貨'?'<span class="tag-shipped-info">📦已出貨</span>':''}
-                    <button onclick="deleteSingleItem('${k}', ${idx})" style="border:none; background:none; color:#CCC; cursor:pointer; font-size:12px;">✕</button>
+                    <button onclick="deleteSingleItem('${k}', ${idx})" style="border:none; background:none; color:#AAA; cursor:pointer; font-size:16px;">✕</button>
                 </div>`;
             }).join('');
             return `<div class="admin-order-card">
@@ -235,20 +235,20 @@
     }
 
     function deleteSingleItem(k, idx) {
-        if(!confirm('確定要刪除這項商品嗎？')) return;
-        const o = orders[k];
+        if(!confirm('確定要從此訂單刪除該項商品嗎？')) return;
+        let o = orders[k];
         o.items.splice(idx, 1);
         o.total = o.items.reduce((a, b) => a + b.p, 0);
-        db.ref(`orders/${k}`).update({ items: o.items, total: o.total });
+        db.ref(`orders/${k}`).set(o);
     }
 
     function editItemPrice(k, idx, oldPrice) {
         const newP = prompt("請輸入此單項商品的新金額：", oldPrice);
-        if(newP !== null) {
-            const o = orders[k];
+        if(newP !== null && newP !== "") {
+            let o = orders[k];
             o.items[idx].p = parseInt(newP);
-            o.total = o.items.reduce((a, b) => a + b.p, 0);
-            db.ref(`orders/${k}`).update({ items: o.items, total: o.total });
+            o.total = o.items.reduce((a, b) => a + (parseInt(b.p)||0), 0);
+            db.ref(`orders/${k}`).set(o);
         }
     }
 
@@ -295,14 +295,14 @@
     function batchUpd(k, attr, val) {
         const checks = document.querySelectorAll(`.item-check-${k}:checked`);
         if(checks.length===0) return alert("請先勾選商品前方框");
-        const o = orders[k];
+        let o = orders[k];
         checks.forEach(c => { const i = c.value; if(attr==='reset') { o.items[i].fWin=false; o.items[i].status=""; } else { o.items[i][attr] = val; } });
-        db.ref(`orders/${k}/items`).set(o.items);
+        db.ref(`orders/${k}`).set(o);
     }
 
     function editTotal(k, old) {
         const v = prompt("請輸入新的訂單總金額：", old);
-        if(v!==null) db.ref(`orders/${k}`).update({ total: parseInt(v) });
+        if(v!==null && v!=="") db.ref(`orders/${k}`).update({ total: parseInt(v) });
     }
 
     function addNoteTag(k, tag) {
@@ -316,17 +316,21 @@
 
     function saveNote(k) {
         const v = document.getElementById(`note-${k}`).value;
-        db.ref(`orders/${k}`).update({ adminNote: v }).then(()=>alert("備註存好囉！"));
+        db.ref(`orders/${k}`).update({ adminNote: v }).then(() => {
+            alert("備註已儲存！");
+            renderAdminOrders();
+        });
     }
 
     function addItemToOrd(k) {
         const n = prompt("手動新增商品名稱：");
         if(n) {
-            const p = prompt("請輸入手動新增商品的金額：", "0");
-            const o = orders[k];
+            const p = prompt("請輸入金額：", "0");
+            let o = orders[k];
+            if(!o.items) o.items = [];
             o.items.push({ e: "園長追加", n: n, sel: "一般", p: parseInt(p || 0), status: "", fWin: true });
-            o.total = o.items.reduce((a, b) => a + b.p, 0);
-            db.ref(`orders/${k}`).update({ items: o.items, total: o.total });
+            o.total = o.items.reduce((a, b) => a + (parseInt(b.p)||0), 0);
+            db.ref(`orders/${k}`).set(o);
         }
     }
 
@@ -371,10 +375,23 @@
         if(checks.length < 2) return alert("請至少選取兩筆以上同一人的訂單進行合併");
         const nicks = checks.map(el => el.getAttribute('data-nick'));
         if(new Set(nicks).size > 1) return alert("不同客人的訂單不能合併唷！");
-        let items = [], total = 0, keys = checks.map(el => el.value);
-        keys.forEach(k => { items = items.concat(orders[k].items); total += orders[k].total; });
-        db.ref('orders').push({ nick: nicks[0], items: items, total: total, time: Date.now(), adminNote: "系統已合併訂單" })
-          .then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); alert("合併完成！"); });
+        let items = [], total = 0, keys = checks.map(el => el.value), notes = [];
+        keys.forEach(k => { 
+            items = items.concat(orders[k].items); 
+            total += (parseInt(orders[k].total) || 0);
+            if(orders[k].adminNote) notes.push(orders[k].adminNote);
+        });
+        db.ref('orders').push({ 
+            nick: nicks[0], 
+            items: items, 
+            total: total, 
+            time: Date.now(), 
+            adminNote: notes.join(" | ") + " (系統合併)" 
+        })
+        .then(() => { 
+            keys.forEach(k => db.ref(`orders/${k}`).remove()); 
+            alert("合併完成！已自動將舊備註整合。"); 
+        });
     }
 
     function performSearch() {
