@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>33日本動物園</title>
+    <title>33日本動物園 - 園長管理系統</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
@@ -12,47 +12,37 @@
         html, body { height: 100%; margin: 0; overflow: hidden; }
         body { background: var(--rice); font-family: 'Noto Sans TC', sans-serif; display: flex; flex-direction: column; }
         
-        /* 大廳 */
+        /* 大廳與主介面 */
         .hall { position: fixed; inset: 0; background: var(--rice); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow-y: auto; padding: 20px; }
         .grid-hall { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 500px; margin-top: 20px; }
         .card-hall { background: #FFF; padding: 25px 10px; border-radius: 15px; border: 1px solid #EAE2D1; text-align: center; cursor: pointer; box-shadow: 0 4px 0 #EAE2D1; }
-
-        /* 主容器 */
         .app-container { display: none; flex: 1; height: 100vh; overflow: hidden; flex-direction: row; }
         .list-area { flex: 1; overflow-y: auto; padding: 15px; background: #FFF; height: 100%; }
-        
-        /* 商品網格 */
         .prod-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
         .prod-card { background: #FFF; border: 1px solid #EEE; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; text-align: center; }
-        .prod-name { font-weight: bold; font-size: 14px; margin-bottom: 5px; height: 36px; overflow: hidden; }
         .prod-price { color: var(--caramel); font-weight: bold; margin-bottom: 8px; }
-        .spec-wrap { min-height: 35px; margin-bottom: 8px; }
-        .spec-btn { border: 1px solid #DDD; padding: 2px 6px; border-radius: 4px; margin: 2px; background: #FFF; cursor: pointer; font-size: 11px; }
-        .spec-btn.active { border-color: var(--matcha); color: var(--matcha); background: #f0f4e8; }
         .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 12px; }
 
         /* 購物車區 */
         .cart-area { width: 300px; background: #FFF; border-left: 1px solid #EEE; display: flex; flex-direction: column; padding: 15px; }
         #cart-items { flex: 1; overflow-y: auto; border-top: 1px solid #F5F5F5; font-size: 13px; }
 
-        /* 彈窗 */
+        /* 彈窗樣式 */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
-        .modal-box { background: var(--rice); padding: 25px; border-radius: 15px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; position: relative; }
-        .input-std { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #DDD; border-radius: 8px; font-size: 16px; }
+        .modal-box { background: var(--rice); padding: 25px; border-radius: 15px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; position: relative; }
+        .input-std { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #DDD; border-radius: 8px; font-size: 16px; }
 
-        /* 後台 */
+        /* 後台樣式 */
         .admin-header { background: var(--wood); color: #FFF; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .admin-nav { padding: 10px; background: #EEE; display: flex; gap: 10px; overflow-x: auto; }
         .admin-order-card { background: #FFF; border: 1px solid #EEE; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
         .admin-merge-bar { background: var(--wood); color: #FFF; padding: 10px; position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-radius: 5px; }
         .btn-admin { padding: 8px; border: none; border-radius: 5px; color: #FFF; cursor: pointer; font-weight: bold; flex: 1; font-size: 13px; }
 
-        @media (max-width: 768px) { 
-            .app-container { flex-direction: column; } 
-            .list-area { height: 60%; flex: none; }
-            .prod-grid { grid-template-columns: repeat(2, 1fr); }
-            .cart-area { width: 100%; height: 40%; border-left: none; border-top: 1px solid #EEE; } 
-        }
+        /* 刪除專用按鈕樣式 */
+        .btn-delete-safe { width: 100%; padding: 12px; background: #E74C3C; color: #FFF; border: none; margin-top: 40px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+        @media (max-width: 768px) { .app-container { flex-direction: column; } .list-area { height: 60%; flex: none; } .prod-grid { grid-template-columns: repeat(2, 1fr); } .cart-area { width: 100%; height: 40%; } }
     </style>
 </head>
 <body>
@@ -69,10 +59,7 @@
         <h2 style="color:var(--matcha); margin-top:0;">訂單查詢</h2>
         <input id="search-nick" class="input-std" placeholder="輸入 LINE 暱稱">
         <div id="search-results-area"></div>
-        <div style="display:flex; gap:10px; margin-top:20px;">
-            <button class="btn-add" style="flex:1; background:var(--matcha)" onclick="performSearch()">搜尋</button>
-            <button class="btn-add" style="flex:1; background:#999;" onclick="closeSearch()">關閉</button>
-        </div>
+        <div style="display:flex; gap:10px; margin-top:20px;"><button class="btn-add" style="flex:1; background:var(--matcha)" onclick="performSearch()">搜尋</button><button class="btn-add" style="background:#999;" onclick="document.getElementById('search-modal').style.display='none'">關閉</button></div>
     </div>
 </div>
 
@@ -92,22 +79,19 @@
 
 <div id="admin-panel" style="position:fixed; inset:0; background:#F8F9FA; z-index:999; display:none; flex-direction:column;">
     <div class="admin-header"><b>園長 33 後台</b> <button onclick="document.getElementById('admin-panel').style.display='none'">關閉</button></div>
-    <div class="admin-nav">
-        <button onclick="renderAdminOrders()" style="flex:1; padding:10px;">訂單管理</button>
-        <button onclick="renderAdminProds()" style="flex:1; padding:10px;">商品維護</button>
-        <button onclick="exportCSV()" style="flex:1; padding:10px;">匯出 CSV</button>
-    </div>
+    <div class="admin-nav"><button onclick="renderAdminOrders()">訂單管理</button><button onclick="renderAdminProds()">商品維護</button><button onclick="exportCSV()">匯出 CSV</button></div>
     <div id="admin-main" style="flex:1; overflow-y:auto; padding:15px;"></div>
 </div>
 
 <div id="edit-modal" class="modal">
     <div class="modal-box">
-        <h3 id="modal-title">編輯/加單</h3>
+        <h3 id="modal-title"></h3>
         <div id="modal-body"></div>
         <div style="display:flex; gap:10px; margin-top:20px;">
             <button class="btn-add" id="modal-save">儲存修改</button>
             <button class="btn-add" style="background:#999;" onclick="closeModal()">取消</button>
         </div>
+        <div id="modal-delete-area"></div>
     </div>
 </div>
 
@@ -126,7 +110,7 @@
 
     let products = [], orders = {}, cart = [], curS = {};
 
-    db.ref('products').on('value', snap => { products = snap.val() || []; renderHall(); });
+    db.ref('products').on('value', snap => { products = snap.val() || []; renderHall(); if(document.getElementById('admin-panel').style.display==='flex' && document.querySelector('.btn-add[onclick="openAddProd()"]')) renderAdminProds(); });
     db.ref('orders').on('value', snap => { orders = snap.val() || {}; if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); });
 
     function renderHall() {
@@ -175,24 +159,10 @@
         if(!n) return alert("請輸入暱稱");
         const resArea = document.getElementById('search-results-area');
         const userOrders = Object.entries(orders).filter(([k, o]) => o.nick === n).sort((a,b) => b[1].time - a[1].time);
-        
         let pc = {};
-        const allSorted = Object.values(orders).sort((a,b) => a.time - b.time);
-        allSorted.forEach(o => o.items.forEach(it => { 
-            const sk = `${it.pid}_${it.sel}`; pc[sk] = (pc[sk] || 0) + 1; 
-            it.isWin = o.forceWin || pc[sk] <= ((products[it.pid]||{}).limit || 999); 
-        }));
-
-        resArea.innerHTML = userOrders.map(([key, o]) => `
-            <div style="background:#FFF; padding:12px; margin-top:10px; border-radius:10px; border:1px solid #EEE;">
-                <div style="font-size:11px; color:#999;">${new Date(o.time).toLocaleString()}</div>
-                ${o.items.map(it => `<div style="display:flex; justify-content:space-between; margin-top:5px;"><span>${it.n}(${it.sel})</span><b style="color:${it.isWin?'#2D6A4F':'#D4A373'}">${it.isWin?'正取':'候補'}</b></div>`).join('')}
-                <div style="text-align:right; border-top:1px dashed #EEE; margin-top:8px; padding-top:5px; font-weight:bold; color:var(--caramel);">總額: $${o.total}</div>
-            </div>
-        `).join('');
+        Object.values(orders).sort((a,b) => a.time - b.time).forEach(o => o.items.forEach(it => { const sk = `${it.pid}_${it.sel}`; pc[sk] = (pc[sk] || 0) + 1; it.isWin = o.forceWin || pc[sk] <= ((products[it.pid]||{}).limit || 999); }));
+        resArea.innerHTML = userOrders.map(([key, o]) => `<div style="background:#FFF; padding:12px; margin-top:10px; border-radius:10px; border:1px solid #EEE;"><div style="font-size:11px; color:#999;">${new Date(o.time).toLocaleString()}</div>${o.items.map(it => `<div style="display:flex; justify-content:space-between; margin-top:5px;"><span>${it.n}(${it.sel})</span><b style="color:${it.isWin?'#2D6A4F':'#D4A373'}">${it.isWin?'正取':'候補'}</b></div>`).join('')}<div style="text-align:right; border-top:1px dashed #EEE; margin-top:8px; padding-top:5px; font-weight:bold; color:var(--caramel);">總額: $${o.total}</div></div>`).join('');
     }
-
-    function closeSearch() { document.getElementById('search-modal').style.display='none'; }
 
     function adminLogin() { if(prompt("管理密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; renderAdminOrders(); } }
 
@@ -200,28 +170,14 @@
         const main = document.getElementById('admin-main');
         const sorted = Object.entries(orders).sort((a,b) => a[1].time - b[1].time);
         let pc = {};
-        
-        let html = `<div class="admin-merge-bar"><span>勾選合併訂單</span><button onclick="mergeSelectedOrders()" style="padding:5px 10px;">合併選中</button></div>`;
-        
+        let html = `<div class="admin-merge-bar"><span>勾選進行合併</span><button onclick="mergeSelectedOrders()">合併選中</button></div>`;
         html += sorted.map(([key, o]) => {
             const items = o.items.map(it => {
                 const sk = `${it.pid}_${it.sel}`; pc[sk] = (pc[sk] || 0) + 1;
                 const win = o.forceWin || pc[sk] <= ((products[it.pid]||{}).limit || 999);
                 return `<li style="font-size:12px;">${it.n}(${it.sel}) <span style="color:${win?'green':'orange'}">[${win?'正取':'候補'}]</span></li>`;
             }).join('');
-            return `
-                <div class="admin-order-card">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <input type="checkbox" class="merge-check" value="${key}" data-nick="${o.nick}">
-                        <b>${o.nick}</b> <span style="flex:1; text-align:right; font-weight:bold;">$${o.total}</span>
-                    </div>
-                    <ul style="padding-left:15px; margin:8px 0;">${items}</ul>
-                    <div style="display:flex; gap:5px;">
-                        <button class="btn-admin" style="background:var(--matcha)" onclick="openEditOrder('${key}')">編輯/加單</button>
-                        <button class="btn-admin" style="background:#666" onclick="db.ref('orders/${key}').update({forceWin:!o.forceWin})">⭐ 狀態</button>
-                        <button class="btn-admin" style="background:#E74C3C" onclick="db.ref('orders/${key}').remove()">刪除</button>
-                    </div>
-                </div>`;
+            return `<div class="admin-order-card"><div style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="merge-check" value="${key}" data-nick="${o.nick}"><b>${o.nick}</b> <span style="flex:1; text-align:right; font-weight:bold;">$${o.total}</span></div><ul style="padding-left:15px; margin:8px 0;">${items}</ul><div style="display:flex; gap:5px;"><button class="btn-admin" style="background:var(--matcha)" onclick="openEditOrder('${key}')">編輯/加單</button><button class="btn-admin" style="background:#666" onclick="db.ref('orders/${key}').update({forceWin:!o.forceWin})">⭐ 狀態</button><button class="btn-admin" style="background:#E74C3C" onclick="db.ref('orders/${key}').remove()">刪除</button></div></div>`;
         }).join('');
         main.innerHTML = html;
     }
@@ -229,116 +185,79 @@
     function openEditOrder(key) {
         const o = JSON.parse(JSON.stringify(orders[key]));
         document.getElementById('modal-title').innerText = "編輯訂單 - " + o.nick;
-        
+        document.getElementById('modal-delete-area').innerHTML = ""; // 訂單編輯不放商品刪除鈕
         const refreshUI = () => {
             let currentTotal = o.items.reduce((a,b) => a + (b.p || 0), 0);
-            document.getElementById('edit-items-list').innerHTML = o.items.map((it, i) => `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; background:#F5F5F5; padding:5px; border-radius:4px;">
-                    <span style="font-size:12px;">${it.n}(${it.sel}) - $${it.p}</span>
-                    <button onclick="window.removeTemp(${i})" style="color:red; background:none; border:none;">✕</button>
-                </div>
-            `).join('');
+            document.getElementById('edit-items-list').innerHTML = o.items.map((it, i) => `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; background:#F5F5F5; padding:5px; border-radius:4px;"><span style="font-size:12px;">${it.n}(${it.sel}) - $${it.p}</span><button onclick="window.removeTemp(${i})" style="color:red; background:none; border:none;">✕</button></div>`).join('');
             document.getElementById('ed-total').value = currentTotal;
         };
-
         window.removeTemp = (i) => { o.items.splice(i, 1); refreshUI(); };
         window.addTemp = () => {
             const pIdx = document.getElementById('add-p-idx').value;
-            const pSel = document.getElementById('add-p-sel').value || '一般';
-            const prod = products[pIdx];
-            o.items.push({...prod, sel: pSel, pid: parseInt(pIdx)});
+            o.items.push({...products[pIdx], sel: document.getElementById('add-p-sel').value || '一般', pid: parseInt(pIdx)});
             refreshUI();
         };
-
-        document.getElementById('modal-body').innerHTML = `
-            暱稱：<input id="ed-nick" class="input-std" value="${o.nick}">
-            <div id="edit-items-list" style="margin:10px 0;"></div>
-            <div style="border:1px dashed #CCC; padding:10px; border-radius:8px;">
-                <b>＋ 手動加單</b>
-                <select id="add-p-idx" class="input-std">${products.map((p,i)=>`<option value="${i}">${p.n} ($${p.p})</option>`).join('')}</select>
-                <input id="add-p-sel" class="input-std" placeholder="規格 (如: M)">
-                <button class="btn-add" onclick="window.addTemp()">加入品項</button>
-            </div>
-            總金額：<input id="ed-total" type="number" class="input-std">
-        `;
-        
+        document.getElementById('modal-body').innerHTML = `暱稱：<input id="ed-nick" class="input-std" value="${o.nick}"><div id="edit-items-list"></div><div style="border:1px dashed #CCC; padding:10px; border-radius:8px; margin-top:10px;"><b>＋ 手動加單</b><select id="add-p-idx" class="input-std">${products.map((p,i)=>`<option value="${i}">${p.n} ($${p.p})</option>`).join('')}</select><input id="add-p-sel" class="input-std" placeholder="規格"><button class="btn-add" onclick="window.addTemp()">加入品項</button></div>總金額：<input id="ed-total" type="number" class="input-std">`;
         refreshUI();
         document.getElementById('edit-modal').style.display='flex';
-        document.getElementById('modal-save').onclick = () => {
-            db.ref('orders/'+key).update({
-                nick: document.getElementById('ed-nick').value,
-                items: o.items,
-                total: parseInt(document.getElementById('ed-total').value) || 0
-            }).then(() => closeModal());
-        };
-    }
-
-    function mergeSelectedOrders() {
-        const checks = document.querySelectorAll('.merge-check:checked');
-        if(checks.length < 2) return alert("請勾選至少兩筆");
-        const keys = Array.from(checks).map(c => c.value);
-        const nicks = Array.from(checks).map(c => c.dataset.nick);
-        if(new Set(nicks).size > 1) return alert("不同人的訂單不能合併！");
-        
-        if(confirm("確定合併這 " + keys.length + " 筆訂單？")){
-            let items = [], total = 0;
-            keys.forEach(k => { items = items.concat(orders[k].items); total += orders[k].total; });
-            db.ref('orders').push({ nick: nicks[0], items: items, total: total, time: Date.now(), forceWin: false }).then(() => {
-                keys.forEach(k => db.ref('orders/'+k).remove());
-                alert("合併完成！");
-            });
-        }
+        document.getElementById('modal-save').onclick = () => { db.ref('orders/'+key).update({ nick: document.getElementById('ed-nick').value, items: o.items, total: parseInt(document.getElementById('ed-total').value) || 0 }).then(() => closeModal()); };
     }
 
     function renderAdminProds() {
         const main = document.getElementById('admin-main');
-        main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; padding:10px;" onclick="openAddProd()">＋ 上架新商品</button>` + 
-        products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between; align-items:center;"><div><b>[${p.e}] ${p.n}</b><br><small>$${p.p}</small></div><button onclick="openEditProd(${i})" style="background:#666; color:#FFF; border:none; padding:5px 10px; border-radius:4px;">修改</button></div>`).join('');
+        main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; padding:12px; font-size:14px;" onclick="openAddProd()">＋ 上架新商品</button>` + 
+        products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between; align-items:center;"><div><b>[${p.e}] ${p.n}</b><br><small>$${p.p}</small></div><button onclick="openEditProd(${i})" style="background:#666; color:#FFF; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">修改</button></div>`).join('');
     }
 
     function openAddProd() {
         document.getElementById('modal-title').innerText = "上架商品";
-        document.getElementById('modal-body').innerHTML = `
-            分類：<input id="p-e" class="input-std" placeholder="例如: 日本超市">
-            名稱：<input id="p-n" class="input-std"> 價格：<input id="p-p" type="number" class="input-std">
-            限購：<input id="p-l" type="number" class="input-std" placeholder="無限輸入 999">
-            規格：<input id="p-s" class="input-std" placeholder="如: M,L (逗號隔開)">
-        `;
+        document.getElementById('modal-delete-area').innerHTML = ""; 
+        document.getElementById('modal-body').innerHTML = `分類：<input id="p-e" class="input-std">名稱：<input id="p-n" class="input-std">價格：<input id="p-p" type="number" class="input-std">限購：<input id="p-l" type="number" class="input-std" value="999">規格：<input id="p-s" class="input-std" placeholder="M,L">`;
         document.getElementById('edit-modal').style.display='flex';
         document.getElementById('modal-save').onclick = () => {
-            products.push({ e:document.getElementById('p-e').value, n:document.getElementById('p-n').value, p:parseInt(document.getElementById('p-p').value), limit:parseInt(document.getElementById('p-l').value)||999, s:document.getElementById('p-s').value });
-            db.ref('products').set(products).then(()=>closeModal());
+            const newP = { e:document.getElementById('p-e').value, n:document.getElementById('p-n').value, p:parseInt(document.getElementById('p-p').value), limit:parseInt(document.getElementById('p-l').value), s:document.getElementById('p-s').value };
+            products.push(newP); db.ref('products').set(products).then(()=>closeModal());
         };
     }
 
+    // 🏆 重點修正：商品修改與刪除分離
     function openEditProd(idx) {
         const p = products[idx];
-        document.getElementById('modal-title').innerText = "修改商品";
-        document.getElementById('modal-body').innerHTML = `
-            分類：<input id="p-e" class="input-std" value="${p.e}"> 
-            名稱：<input id="p-n" class="input-std" value="${p.n}">
-            價格：<input id="p-p" type="number" class="input-std" value="${p.p}"> 
-            限購：<input id="p-l" type="number" class="input-std" value="${p.limit||999}">
-            規格：<input id="p-s" class="input-std" value="${p.s||''}">
-            <button onclick="if(confirm('刪除？')){products.splice(${idx},1); db.ref('products').set(products); closeModal();}" style="width:100%; padding:10px; background:red; color:#FFF; border:none; margin-top:10px; border-radius:8px;">🗑️ 刪除此商品</button>
-        `;
+        document.getElementById('modal-title').innerText = "修改商品內容";
+        document.getElementById('modal-body').innerHTML = `分類：<input id="p-e" class="input-std" value="${p.e}">名稱：<input id="p-n" class="input-std" value="${p.n}">價格：<input id="p-p" type="number" class="input-std" value="${p.p}">限購：<input id="p-l" type="number" class="input-std" value="${p.limit||999}">規格：<input id="p-s" class="input-std" value="${p.s||''}">`;
+        
+        // 將刪除按鈕放到最下面
+        document.getElementById('modal-delete-area').innerHTML = `<button class="btn-delete-safe" onclick="confirmDeleteProd(${idx})">🗑️ 刪除此商品 (危險操作)</button>`;
+        
         document.getElementById('edit-modal').style.display='flex';
         document.getElementById('modal-save').onclick = () => {
             products[idx] = { e:document.getElementById('p-e').value, n:document.getElementById('p-n').value, p:parseInt(document.getElementById('p-p').value), limit:parseInt(document.getElementById('p-l').value), s:document.getElementById('p-s').value };
-            db.ref('products').set(products).then(()=>closeModal());
+            db.ref('products').set(products).then(() => { closeModal(); });
         };
     }
 
+    function confirmDeleteProd(idx) {
+        if(confirm('確定要刪除「' + products[idx].n + '」嗎？這會讓客人看不到此商品。')) {
+            products.splice(idx, 1);
+            db.ref('products').set(products).then(() => { closeModal(); });
+        }
+    }
+
+    function mergeSelectedOrders() {
+        const checks = document.querySelectorAll('.merge-check:checked');
+        if(checks.length < 2) return alert("請勾選兩筆以上");
+        const keys = Array.from(checks).map(c => c.value);
+        if(new Set(Array.from(checks).map(c => c.dataset.nick)).size > 1) return alert("不能合併不同人的訂單！");
+        if(confirm("合併後不可撤回，確定嗎？")){
+            let items = [], total = 0;
+            keys.forEach(k => { items = items.concat(orders[k].items); total += orders[k].total; });
+            db.ref('orders').push({ nick: orders[keys[0]].nick, items: items, total: total, time: Date.now(), forceWin: false }).then(() => { keys.forEach(k => db.ref('orders/'+k).remove()); alert("已合併成功！"); });
+        }
+    }
+
     function exportCSV() {
-        let csv = "\uFEFF姓名,商品,規格,狀態,金額,下單時間\n";
-        let pc = {};
-        Object.entries(orders).sort((a,b)=>a[1].time-b[1].time).forEach(([k,o])=>{
-            o.items.forEach(it=>{
-                const sk = `${it.pid}_${it.sel}`; pc[sk]=(pc[sk]||0)+1;
-                const isW = o.forceWin || pc[sk] <= ((products[it.pid]||{}).limit || 999);
-                csv += `${o.nick},${it.n},${it.sel},${isW?'正取':'候補'},${it.p},${new Date(o.time).toLocaleString()}\n`;
-            });
-        });
+        let csv = "\uFEFF姓名,商品,規格,狀態,金額,時間\n"; let pc = {};
+        Object.entries(orders).sort((a,b)=>a[1].time-b[1].time).forEach(([k,o])=>{ o.items.forEach(it=>{ const sk = `${it.pid}_${it.sel}`; pc[sk]=(pc[sk]||0)+1; const isW = o.forceWin || pc[sk] <= ((products[it.pid]||{}).limit || 999); csv += `${o.nick},${it.n},${it.sel},${isW?'正取':'候補'},${it.p},${new Date(o.time).toLocaleString()}\n`; }); });
         const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download="33動物園報表.csv"; a.click();
     }
 
