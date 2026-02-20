@@ -14,35 +14,61 @@
         
         /* 大廳 */
         .hall { position: fixed; inset: 0; background: var(--rice); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow-y: auto; padding: 20px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 500px; margin-top: 20px; }
-        .card { background: #FFF; padding: 25px 10px; border-radius: 15px; border: 2px solid #EAE2D1; text-align: center; cursor: pointer; box-shadow: 0 4px 0 #EAE2D1; }
+        .grid-hall { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 500px; margin-top: 20px; }
+        .card-hall { background: #FFF; padding: 25px 10px; border-radius: 15px; border: 1px solid #EAE2D1; text-align: center; cursor: pointer; box-shadow: 0 4px 0 #EAE2D1; }
 
         /* 主容器 */
         .app-container { display: none; flex: 1; height: 100vh; overflow: hidden; flex-direction: row; }
-        .list-area { flex: 1; overflow-y: auto; padding: 15px; background: #FAF7F2; height: 100%; }
-        .cart-area { width: 350px; background: #FFF; border-left: 2px solid #EEE; display: flex; flex-direction: column; height: 100%; padding: 15px; }
-        #cart-items { flex: 1; overflow-y: auto; margin: 10px 0; border: 1px solid #F5F5F5; padding: 10px; font-size: 14px; background: #FFFEFA; }
-
-        /* 商品卡片與按鈕優化 */
-        .prod-card { background: #FFF; border-radius: 12px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: left; }
-        .btn { background: var(--matcha); color: #FFF; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; display: block; }
-        /* 縮短後的加入購物車按鈕 */
-        .btn-add-cart { width: 80%; max-width: 300px; margin: 10px auto 0; padding: 10px; }
         
-        .spec-btn { border: 1px solid #DDD; padding: 6px 12px; border-radius: 6px; margin: 3px; background: #FFF; cursor: pointer; }
-        .spec-btn.active { background: var(--matcha); color: #FFF; border-color: var(--matcha); }
+        /* 左側商品區：改為網格佈局 */
+        .list-area { flex: 1; overflow-y: auto; padding: 15px; background: #FFF; height: 100%; }
+        .prod-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); /* 電腦版固定 3 欄 */
+            gap: 12px; 
+        }
 
-        /* 後台 */
-        #admin-panel { position: fixed; inset: 0; background: #FFF; z-index: 999; display: none; flex-direction: column; }
-        .admin-content { flex: 1; overflow-y: auto; padding: 15px; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 10px; }
-        .modal-box { background: #FFF; padding: 20px; border-radius: 15px; width: 100%; max-width: 450px; max-height: 85vh; overflow-y: auto; }
-        .input-std { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #DDD; border-radius: 8px; font-size: 16px; }
+        /* 商品方塊卡片 */
+        .prod-card { 
+            background: #FFF; 
+            border: 1px solid #EEE; 
+            border-radius: 10px; 
+            padding: 12px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between;
+            text-align: center;
+        }
+        .prod-name { font-weight: bold; font-size: 15px; margin-bottom: 5px; height: 40px; display: flex; align-items: center; justify-content: center; }
+        .prod-price { color: var(--caramel); font-weight: bold; font-size: 16px; margin-bottom: 8px; }
+        .prod-limit { font-size: 11px; color: #999; margin-bottom: 8px; }
+        
+        /* 規格與按鈕 */
+        .spec-wrap { min-height: 40px; margin-bottom: 10px; }
+        .spec-btn { border: 1px solid #DDD; padding: 3px 8px; border-radius: 4px; margin: 2px; background: #FFF; cursor: pointer; font-size: 12px; }
+        .spec-btn.active { border-color: var(--matcha); color: var(--matcha); background: #f0f4e8; }
+        .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; font-size: 13px; }
 
+        /* 右側購物車 */
+        .cart-area { width: 320px; background: #FFF; border-left: 1px solid #EEE; display: flex; flex-direction: column; height: 100%; padding: 15px; }
+        #cart-items { flex: 1; overflow-y: auto; border-top: 1px solid #F5F5F5; font-size: 13px; }
+
+        /* 後台樣式維持 */
+        .order-card { background: #FFF; border-radius: 10px; padding: 15px; margin-bottom: 12px; border: 1px solid #EEE; }
+        .order-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-top: 10px; }
+        .btn-s { padding: 8px; border-radius: 5px; border: none; color: #FFF; font-size: 12px; cursor: pointer; }
+
+        /* 彈窗 */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 10px; }
+        .modal-box { background: #FFF; padding: 20px; border-radius: 12px; width: 100%; max-width: 450px; max-height: 85vh; overflow-y: auto; }
+        .input-std { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #DDD; border-radius: 6px; }
+
+        /* 手機版 RWD 調整 */
         @media (max-width: 768px) { 
             .app-container { flex-direction: column; } 
-            .list-area { height: 55%; flex: none; }
-            .cart-area { width: 100%; height: 45%; border-left: none; border-top: 2px solid #EEE; flex: none; } 
+            .list-area { height: 60%; flex: none; }
+            .prod-grid { grid-template-columns: repeat(2, 1fr); } /* 手機版改為 2 欄 */
+            .cart-area { width: 100%; height: 40%; border-left: none; border-top: 1px solid #EEE; } 
         }
     </style>
 </head>
@@ -50,45 +76,47 @@
 
 <div id="hall-screen" class="hall">
     <h1 style="color:var(--matcha)">33 日本動物園</h1>
-    <div id="hall-grid" class="grid"></div>
-    <button class="btn" style="width:200px; margin-top:30px; background:var(--caramel)" onclick="openSearch()">🔍 查詢我的訂單</button>
-    <div onclick="adminLogin()" style="margin-top:40px; color:#DDD; cursor:pointer; font-size:10px;">ADMIN</div>
+    <div id="hall-grid" class="grid-hall"></div>
+    <button onclick="openSearch()" style="background:var(--caramel); color:#FFF; border:none; padding:12px 30px; border-radius:10px; margin-top:30px; cursor:pointer;">🔍 查詢我的訂單</button>
+    <div onclick="adminLogin()" style="margin-top:40px; color:#EEE; cursor:pointer; font-size:10px;">ADMIN</div>
 </div>
 
 <div class="app-container" id="main-app">
-    <div class="list-area" id="prod-list"></div>
+    <div class="list-area">
+        <div id="prod-list" class="prod-grid"></div>
+    </div>
     <div class="cart-area">
-        <h3>🛒 購物明細</h3>
+        <h3 style="margin:0">🛒 購物明細</h3>
         <div id="cart-items"></div>
-        <div style="padding-top:5px;">
-            <p>總金額: <b style="color:var(--caramel)">$ <span id="cart-total">0</span></b></p>
+        <div style="padding-top:10px;">
+            <p style="margin:5px 0;">總金額: <b style="color:var(--caramel); font-size:1.1em;">$ <span id="cart-total">0</span></b></p>
             <input id="nick" class="input-std" placeholder="您的 LINE 暱稱">
-            <button class="btn" style="background:var(--caramel)" onclick="submitOrder()">確認提交訂單</button>
-            <button onclick="location.reload()" style="background:none; border:none; color:#999; width:100%; margin-top:10px;">返回大廳</button>
+            <button class="btn-add" style="background:var(--caramel); padding:12px;" onclick="submitOrder()">確認提交訂單</button>
+            <button onclick="location.reload()" style="background:none; border:none; color:#999; width:100%; margin-top:10px; cursor:pointer;">← 返回大廳</button>
         </div>
     </div>
 </div>
 
-<div id="admin-panel">
-    <div style="background:var(--wood); color:#FFF; padding:15px; display:flex; justify-content:space-between; align-items:center;">
+<div id="admin-panel" style="position:fixed; inset:0; background:#F8F9FA; z-index:999; display:none; flex-direction:column;">
+    <div style="background:var(--wood); color:#FFF; padding:15px; display:flex; justify-content:space-between;">
         <b>園長 33 後台</b>
-        <button onclick="document.getElementById('admin-panel').style.display='none'" style="background:none; border:1px solid #FFF; color:#FFF; padding:5px 10px; border-radius:5px;">關閉</button>
+        <button onclick="document.getElementById('admin-panel').style.display='none'" style="background:none; border:1px solid #FFF; color:#FFF; padding:2px 10px; border-radius:4px;">關閉</button>
     </div>
-    <div style="padding:10px; display:flex; gap:10px; background:#F0F0F0; overflow-x:auto;">
-        <button class="btn" style="width:auto; white-space:nowrap;" onclick="renderAdminOrders()">📋 訂單管理</button>
-        <button class="btn" style="width:auto; white-space:nowrap;" onclick="renderAdminProds()">📦 商品維護</button>
-        <button class="btn" style="width:auto; white-space:nowrap; background:var(--caramel)" onclick="exportCSV()">📥 匯出 CSV</button>
+    <div style="padding:10px; background:#EEE; display:flex; gap:10px; overflow-x:auto;">
+        <button onclick="renderAdminOrders()" style="padding:8px 15px; border-radius:5px; border:none; background:var(--matcha); color:#FFF; white-space:nowrap;">訂單管理</button>
+        <button onclick="renderAdminProds()" style="padding:8px 15px; border-radius:5px; border:none; background:var(--matcha); color:#FFF; white-space:nowrap;">商品維護</button>
+        <button onclick="exportCSV()" style="padding:8px 15px; border-radius:5px; border:none; background:var(--caramel); color:#FFF; white-space:nowrap;">匯出 CSV</button>
     </div>
-    <div id="admin-main" class="admin-content"></div>
+    <div id="admin-main" style="flex:1; overflow-y:auto; padding:15px;"></div>
 </div>
 
 <div id="edit-modal" class="modal">
     <div class="modal-box">
-        <h3 id="modal-title">編輯項目</h3>
+        <h3 id="modal-title" style="margin:0 0 15px 0;">編輯</h3>
         <div id="modal-body"></div>
         <div style="display:flex; gap:10px; margin-top:20px;">
-            <button class="btn" id="modal-save">儲存更改</button>
-            <button class="btn" style="background:#999" onclick="closeModal()">取消</button>
+            <button class="btn-add" style="flex:1;" id="modal-save">儲存</button>
+            <button class="btn-add" style="flex:1; background:#999;" onclick="closeModal()">取消</button>
         </div>
     </div>
 </div>
@@ -113,7 +141,7 @@
 
     function renderHall() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
-        document.getElementById('hall-grid').innerHTML = evts.map(e => `<div class="card" onclick="openShop('${e}')"><b>${e}</b></div>`).join('');
+        document.getElementById('hall-grid').innerHTML = evts.map(e => `<div class="card-hall" onclick="openShop('${e}')"><b>${e}</b></div>`).join('');
     }
 
     function openShop(e) {
@@ -124,14 +152,13 @@
             const pid = products.findIndex(pr => pr.n === p.n && pr.e === p.e);
             return `
                 <div class="prod-card">
-                    <div style="display:flex; justify-content:space-between;">
-                        <b>${p.n}</b> <b style="color:var(--caramel)">$${p.p}</b>
-                    </div>
-                    <div style="font-size:12px; color:#888; margin:5px 0;">限購量：${p.limit || '無限制'}</div>
-                    <div style="margin:10px 0;">
+                    <div class="prod-name">${p.n}</div>
+                    <div class="prod-price">$${p.p}</div>
+                    <div class="prod-limit">限購：${p.limit || '無'}</div>
+                    <div class="spec-wrap">
                         ${p.s ? p.s.split(',').map(v=>`<button class="spec-btn" id="s-${pid}-${v}" onclick="setS(${pid},'${v}')">${v}</button>`).join('') : ''}
                     </div>
-                    <button class="btn btn-add-cart" onclick="addToCart(${pid})">加入購物車</button>
+                    <button class="btn-add" onclick="addToCart(${pid})">加入</button>
                 </div>
             `;
         }).join('');
@@ -139,72 +166,68 @@
 
     function setS(pid, v) {
         curS[pid] = v;
-        const btns = document.querySelectorAll(`[id^="s-${pid}-"]`);
-        btns.forEach(b => b.classList.remove('active'));
+        document.querySelectorAll(`[id^="s-${pid}-"]`).forEach(b => b.classList.remove('active'));
         document.getElementById(`s-${pid}-${v}`).classList.add('active');
     }
 
     function addToCart(pid) {
         const p = products[pid];
-        if (p.s && !curS[pid]) return alert("請先選擇成員或規格！");
+        if (p.s && !curS[pid]) return alert("請先選規格！");
         cart.push({...p, sel: curS[pid] || "一般", pid: pid});
         renderCart();
     }
 
     function renderCart() {
         let t = 0;
-        const itemsDiv = document.getElementById('cart-items');
-        itemsDiv.innerHTML = cart.map((it, i) => {
+        document.getElementById('cart-items').innerHTML = cart.map((it, i) => {
             t += it.p;
-            return `<div style="padding:10px 0; border-bottom:1px solid #F5F5F5; display:flex; justify-content:space-between;">
+            return `<div style="padding:8px 0; border-bottom:1px solid #F9F9F9; display:flex; justify-content:space-between;">
                 <span>${it.n}(${it.sel})</span>
-                <span>$${it.p} <span onclick="cart.splice(${i},1);renderCart()" style="color:red; cursor:pointer; margin-left:5px;">✕</span></span>
+                <span onclick="cart.splice(${i},1);renderCart()" style="color:red; cursor:pointer;">✕</span>
             </div>`;
         }).join('');
         document.getElementById('cart-total').innerText = t;
-        itemsDiv.scrollTop = itemsDiv.scrollHeight;
     }
 
     function submitOrder() {
         const n = document.getElementById('nick').value;
-        if (!n || cart.length === 0) return alert("請填寫暱稱並挑選商品！");
+        if (!n || cart.length === 0) return alert("請填寫暱稱及商品");
         db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), forceWin: false });
         alert("訂單已提交！"); location.reload();
     }
 
     function openSearch() {
-        const n = prompt("輸入暱稱查詢：");
+        const n = prompt("輸入暱稱：");
         if(!n) return;
         const res = Object.values(orders).filter(o => o.nick === n);
-        if(res.length === 0) return alert("無記錄");
+        if(res.length === 0) return alert("無資料");
         let m = `【${n} 的訂單】\n`;
         res.forEach(o => m += `\n$${o.total} - ${new Date(o.time).toLocaleString()}`);
         alert(m);
     }
 
-    function adminLogin() { if(prompt("密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; renderAdminOrders(); } }
+    function adminLogin() { if(prompt("管理者密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; renderAdminOrders(); } }
 
     function renderAdminOrders() {
         const main = document.getElementById('admin-main');
-        let prodCounts = {};
+        let pc = {};
         const sorted = Object.entries(orders).sort((a,b) => a[1].time - b[1].time);
         main.innerHTML = sorted.map(([key, o]) => {
-            const itemsHtml = o.items.map(it => {
+            const items = o.items.map(it => {
                 const p = products[it.pid] || {};
-                const limit = p.limit || 999;
                 const sk = `${it.pid}_${it.sel}`;
-                prodCounts[sk] = (prodCounts[sk] || 0) + 1;
-                const isW = o.forceWin || prodCounts[sk] <= limit;
-                return `<div>• ${it.n}(${it.sel}) <span style="font-size:11px; font-weight:bold; color:${isW?'green':'orange'}">[${isW?'正取':'候補'}]</span></div>`;
+                pc[sk] = (pc[sk] || 0) + 1;
+                const win = o.forceWin || pc[sk] <= (p.limit || 999);
+                return `<li>${it.n}(${it.sel}) <span style="color:${win?'green':'orange'}">[${win?'正取':'候補'}]</span></li>`;
             }).join('');
             return `
-                <div class="prod-card" style="border-left:5px solid var(--matcha)">
+                <div class="order-card">
                     <div style="display:flex; justify-content:space-between"><b>${o.nick}</b> <b>$${o.total}</b></div>
-                    <div style="font-size:13px; margin:10px 0;">${itemsHtml}</div>
-                    <div style="display:flex; gap:5px;">
-                        <button class="btn" style="padding:5px; font-size:12px;" onclick="openEditOrder('${key}')">編輯/新增商品</button>
-                        <button class="btn" style="padding:5px; font-size:12px; background:#666;" onclick="db.ref('orders/${key}').update({forceWin:!o.forceWin})">⭐ 狀態</button>
-                        <button class="btn" style="padding:5px; font-size:12px; background:#E74C3C;" onclick="if(confirm('刪除？')) db.ref('orders/${key}').remove()">刪除</button>
+                    <ul style="padding-left:15px; font-size:12px; margin:8px 0;">${items}</ul>
+                    <div class="order-btns">
+                        <button class="btn-s" style="background:var(--matcha)" onclick="openEditOrder('${key}')">編輯/加單</button>
+                        <button class="btn-s" style="background:#666" onclick="db.ref('orders/${key}').update({forceWin:!o.forceWin})">⭐ 狀態</button>
+                        <button class="btn-s" style="background:#E74C3C" onclick="if(confirm('刪除？')) db.ref('orders/${key}').remove()">刪除</button>
                     </div>
                 </div>
             `;
@@ -213,59 +236,41 @@
 
     function openEditOrder(key) {
         const o = orders[key];
-        document.getElementById('modal-title').innerText = "編輯訂單詳情";
-        const renderItemsList = () => {
-            return o.items.map((it, idx) => `
-                <div style="border-bottom:1px solid #EEE; padding:8px 0; display:flex; gap:5px; align-items:center;">
-                    <span style="font-size:12px; flex:1;">${it.n}</span>
-                    <input id="ed-it-s-${idx}" style="width:100px; padding:4px;" value="${it.sel}">
-                    <button onclick="o.items.splice(${idx},1); refreshEditBody('${key}')" style="color:red; background:none; border:none;">✕</button>
-                </div>
-            `).join('');
-        };
-
-        window.refreshEditBody = (k) => {
-            document.getElementById('ed-items-list').innerHTML = renderItemsList();
-        };
-
-        window.addItemToOrder = () => {
-            const pIdx = prompt("請輸入商品編號 (0~" + (products.length-1) + "):");
-            if (products[pIdx]) {
-                const spec = prompt("規格 (例如: M, L, 特):", "一般");
-                o.items.push({...products[pIdx], sel: spec || "一般", pid: parseInt(pIdx)});
-                refreshEditBody(key);
-                alert("已新增 " + products[pIdx].n);
-            } else { alert("編號錯誤"); }
-        };
+        document.getElementById('modal-title').innerText = "編輯/手動加單";
+        const renderList = () => o.items.map((it, i) => `
+            <div style="display:flex; gap:5px; margin-bottom:5px; align-items:center;">
+                <span style="flex:1; font-size:12px;">${it.n}</span>
+                <input id="edit-sel-${i}" style="width:60px; padding:3px;" value="${it.sel}">
+                <button onclick="o.items.splice(${i},1); openEditOrder('${key}')" style="color:red; background:none; border:none;">✕</button>
+            </div>
+        `).join('');
 
         document.getElementById('modal-body').innerHTML = `
-            訂購人：<input id="ed-nick" class="input-std" value="${o.nick}">
-            品項編輯：
-            <div id="ed-items-list" style="background:#F9F9F9; padding:10px; border-radius:8px;">${renderItemsList()}</div>
-            <button class="btn" style="background:var(--wood); margin-top:10px; font-size:12px; padding:8px;" onclick="addItemToOrder()">＋ 新增商品到此訂單</button>
+            暱稱：<input id="ed-nick" class="input-std" value="${o.nick}">
+            <div style="background:#F9F9F9; padding:8px; border-radius:5px;">${renderList()}</div>
+            <div style="border:1px dashed #CCC; padding:10px; margin-top:10px;">
+                <b>＋ 幫客人加商品</b>
+                <select id="add-p-idx" class="input-std">${products.map((p,i)=>`<option value="${i}">${p.n}</option>`).join('')}</select>
+                <input id="add-p-sel" class="input-std" placeholder="規格">
+                <button class="btn-add" onclick="const idx=document.getElementById('add-p-idx').value; o.items.push({...products[idx], sel:document.getElementById('add-p-sel').value||'一般', pid:parseInt(idx)}); openEditOrder('${key}')">加入</button>
+            </div>
             總金額：<input id="ed-total" type="number" class="input-std" value="${o.total}">
         `;
         document.getElementById('edit-modal').style.display = 'flex';
         document.getElementById('modal-save').onclick = () => {
-            const items = [];
-            const rows = document.getElementById('ed-items-list').children;
-            for(let i=0; i<o.items.length; i++) {
-                const selVal = document.getElementById(`ed-it-s-${i}`) ? document.getElementById(`ed-it-s-${i}`).value : o.items[i].sel;
-                items.push({...o.items[i], sel: selVal});
-            }
-            db.ref('orders/'+key).update({ nick: document.getElementById('ed-nick').value, total: parseInt(document.getElementById('ed-total').value), items: items });
+            o.items.forEach((it, i) => { if(document.getElementById(`edit-sel-${i}`)) it.sel = document.getElementById(`edit-sel-${i}`).value; });
+            db.ref('orders/'+key).update({ nick: document.getElementById('ed-nick').value, total: parseInt(document.getElementById('ed-total').value), items: o.items });
             closeModal(); renderAdminOrders();
         };
     }
 
     function renderAdminProds() {
         const main = document.getElementById('admin-main');
-        main.innerHTML = `<button class="btn" style="margin-bottom:20px;" onclick="openAddProd()">＋ 新增商品</button>
-        <div style="font-size:11px; color:red; margin-bottom:10px;">*編輯訂單新增商品時，請參考下方的商品編號</div>`;
+        main.innerHTML = `<button class="btn-add" style="margin-bottom:15px;" onclick="openAddProd()">＋ 上架新商品</button>`;
         main.innerHTML += products.map((p, i) => `
-            <div class="prod-card" style="display:flex; justify-content:space-between; align-items:center;">
-                <div><b>#${i} [${p.e}] ${p.n}</b><br><small>$${p.p}</small></div>
-                <button class="btn" style="width:auto; padding:5px 15px;" onclick="openEditProd(${i})">修改</button>
+            <div class="order-card" style="display:flex; justify-content:space-between; align-items:center;">
+                <div><b>[${p.e}] ${p.n}</b><br><small>$${p.p}</small></div>
+                <button class="btn-s" style="background:#666; width:auto; padding:5px 10px;" onclick="openEditProd(${i})">修改</button>
             </div>
         `).join('');
     }
@@ -275,15 +280,15 @@
         document.getElementById('modal-title').innerText = "上架商品";
         document.getElementById('modal-body').innerHTML = `
             分類：<select id="p-e" class="input-std">${cats.map(c => `<option value="${c}">${c}</option>`).join('')}<option value="new">+ 新分類</option></select>
-            <input id="p-e-new" class="input-std" style="display:none" placeholder="新分類">
-            名稱：<input id="p-n" class="input-std">價格：<input id="p-p" type="number" class="input-std">
-            限購：<input id="p-l" type="number" class="input-std">規格：<input id="p-s" class="input-std" placeholder="M,L">
+            <input id="p-e-new" class="input-std" style="display:none" placeholder="新名稱">
+            名稱：<input id="p-n" class="input-std"> 價格：<input id="p-p" type="number" class="input-std">
+            規格：<input id="p-s" class="input-std" placeholder="M,L (逗號隔開)">
         `;
         document.getElementById('p-e').onchange = (e) => document.getElementById('p-e-new').style.display = (e.target.value==='new'?'block':'none');
         document.getElementById('edit-modal').style.display = 'flex';
         document.getElementById('modal-save').onclick = () => {
             const e = document.getElementById('p-e').value==='new'?document.getElementById('p-e-new').value:document.getElementById('p-e').value;
-            products.push({ e, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value)||999, s: document.getElementById('p-s').value });
+            products.push({ e, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), s: document.getElementById('p-s').value });
             db.ref('products').set(products); closeModal(); renderAdminProds();
         };
     }
@@ -292,14 +297,13 @@
         const p = products[idx];
         document.getElementById('modal-title').innerText = "修改商品";
         document.getElementById('modal-body').innerHTML = `
-            分類：<input id="p-e" class="input-std" value="${p.e}">名稱：<input id="p-n" class="input-std" value="${p.n}">
-            價格：<input id="p-p" type="number" class="input-std" value="${p.p}">限購：<input id="p-l" type="number" class="input-std" value="${p.limit||''}">
-            規格：<input id="p-s" class="input-std" value="${p.s||''}">
-            <button class="btn" style="background:red; margin-top:10px;" onclick="if(confirm('刪除？')){products.splice(${idx},1); db.ref('products').set(products); closeModal(); renderAdminProds();}">🗑️ 下架</button>
+            分類：<input id="p-e" class="input-std" value="${p.e}"> 名稱：<input id="p-n" class="input-std" value="${p.n}">
+            價格：<input id="p-p" type="number" class="input-std" value="${p.p}"> 規格：<input id="p-s" class="input-std" value="${p.s||''}">
+            <button class="btn-s" style="background:red; width:100%; margin-top:10px;" onclick="if(confirm('下架？')){products.splice(idx,1); db.ref('products').set(products); closeModal(); renderAdminProds();}">🗑️ 下架</button>
         `;
         document.getElementById('edit-modal').style.display = 'flex';
         document.getElementById('modal-save').onclick = () => {
-            products[idx] = { e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value)||999, s: document.getElementById('p-s').value };
+            products[idx] = { e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), s: document.getElementById('p-s').value };
             db.ref('products').set(products); closeModal(); renderAdminProds();
         };
     }
@@ -312,13 +316,12 @@
         Object.entries(orders).sort((a,b)=>a[1].time-b[1].time).forEach(([k,o])=>{
             o.items.forEach(it=>{
                 const lim = (products[it.pid]||{}).limit || 999;
-                const sk = `${it.pid}_${it.sel}`;
-                pc[sk]=(pc[sk]||0)+1;
+                const sk = `${it.pid}_${it.sel}`; pc[sk]=(pc[sk]||0)+1;
                 const isW = o.forceWin || pc[sk] <= lim;
                 csv += `${o.nick},${it.n},${it.sel},${isW?'正取':'候補'},${it.p}\n`;
             });
         });
-        const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download="33日本動物園.csv"; a.click();
+        const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download="33日本動物園報表.csv"; a.click();
     }
 </script>
 </body>
