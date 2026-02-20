@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>33日本動物園</title>
+    <title>33日本動物園 - 園長管理系統</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
@@ -20,6 +20,12 @@
         .prod-name { font-weight: bold; font-size: 15px; margin-bottom: 3px; color: #333; }
         .prod-limit { font-size: 11px; color: #BC6C25; margin-bottom: 5px; font-weight: bold; height: 16px; } 
         .prod-price { color: var(--caramel); font-weight: bold; font-size: 16px; margin-bottom: 8px; }
+        
+        /* 數量選擇器樣式 */
+        .qty-ctrl { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; }
+        .qty-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--matcha); background: #FFF; color: var(--matcha); font-weight: bold; cursor: pointer; }
+        .qty-num { font-weight: bold; min-width: 20px; }
+
         .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
         .cart-area { width: 320px; background: #FFF; border-left: 2px solid #F5F5F5; display: flex; flex-direction: column; padding: 15px; }
         #cart-items { flex: 1; overflow-y: auto; border-top: 1px solid #EEE; margin-top: 10px; }
@@ -106,20 +112,15 @@
     const db = firebase.database();
 
     let products = [], orders = {}, cart = [], curS = {}, currentEvent = "";
-    window.adminTab = 'orders';
+    let quantities = {}; // 紀錄每個商品的選擇數量
 
-    // 🏆 即時刷新邏輯核心：當數據變動，判斷目前在哪個畫面並刷新
     db.ref('products').on('value', snap => { 
         products = snap.val() || []; 
         renderHall(); 
         if(currentEvent) openShop(currentEvent);
-        if(document.getElementById('admin-panel').style.display==='flex' && window.adminTab==='prods') renderAdminProds(); 
+        if(document.getElementById('admin-panel').style.display==='flex') renderAdminProds(); 
     });
-
-    db.ref('orders').on('value', snap => { 
-        orders = snap.val() || {}; 
-        if(document.getElementById('admin-panel').style.display==='flex' && window.adminTab==='orders') renderAdminOrders(); 
-    });
+    db.ref('orders').on('value', snap => { orders = snap.val() || {}; if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); });
 
     function renderHall() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
@@ -133,9 +134,32 @@
         const list = products.filter(p => p.e === e);
         document.getElementById('prod-list').innerHTML = list.map(p => {
             const pid = products.findIndex(pr => pr.n === p.n && pr.e === p.e);
+            quantities[pid] = 1; // 預設數量 1
             const limitText = (p.limit && p.limit < 999) ? `限購 ${p.limit} 份` : ''; 
-            return `<div class="prod-card"><div class="prod-name">${p.n}</div><div class="prod-limit">${limitText}</div><div class="prod-price">$${p.p}</div><div style="min-height:35px; margin-bottom:8px;">${p.s ? p.s.split(',').map(v=>`<button class="spec-btn" style="border:1px solid #DDD; padding:3px 6px; border-radius:4px; margin:2px; font-size:12px; background:#FFF;" id="s-${pid}-${v}" onclick="setS(${pid},'${v}')">${v}</button>`).join('') : ''}</div><button class="btn-add" onclick="addToCart(${pid})">加入</button></div>`;
+            return `
+                <div class="prod-card">
+                    <div class="prod-name">${p.n}</div>
+                    <div class="prod-limit">${limitText}</div>
+                    <div class="prod-price">$${p.p}</div>
+                    <div style="min-height:35px; margin-bottom:8px;">
+                        ${p.s ? p.s.split(',').map(v=>`<button class="spec-btn" id="s-${pid}-${v}" onclick="setS(${pid},'${v}')" style="border:1px solid #DDD; padding:3px 6px; border-radius:4px; margin:2px; font-size:12px; background:#FFF;">${v}</button>`).join('') : ''}
+                    </div>
+                    <div class="qty-ctrl">
+                        <button class="qty-btn" onclick="updateQty(${pid}, -1)">-</button>
+                        <span class="qty-num" id="q-${pid}">1</span>
+                        <button class="qty-btn" onclick="updateQty(${pid}, 1)">+</button>
+                    </div>
+                    <button class="btn-add" onclick="addToCart(${pid})">加入</button>
+                </div>`;
         }).join('');
+    }
+
+    function updateQty(pid, delta) {
+        let q = quantities[pid] || 1;
+        q += delta;
+        if (q < 1) q = 1;
+        quantities[pid] = q;
+        document.getElementById(`q-${pid}`).innerText = q;
     }
 
     function setS(pid, v) {
@@ -147,14 +171,21 @@
 
     function addToCart(pid) {
         const p = products[pid];
+        const qty = quantities[pid] || 1;
         if (p.s && !curS[pid]) return alert("請選規格！");
-        cart.push({...p, sel: curS[pid] || "一般", pid: pid});
+        // 依照數量加入購物車
+        for(let i=0; i<qty; i++) {
+            cart.push({...p, sel: curS[pid] || "一般", pid: pid});
+        }
         renderCart();
     }
 
     function renderCart() {
         let t = 0;
-        document.getElementById('cart-items').innerHTML = cart.map((it, i) => { t += it.p; return `<div style="padding:10px 0; border-bottom:1px solid #F5F5F5; display:flex; justify-content:space-between; align-items:center;"><span>${it.n}(${it.sel})</span><span onclick="cart.splice(${i},1);renderCart()" style="color:red; cursor:pointer;">✕</span></div>`; }).join('');
+        document.getElementById('cart-items').innerHTML = cart.map((it, i) => { 
+            t += it.p; 
+            return `<div style="padding:10px 0; border-bottom:1px solid #F5F5F5; display:flex; justify-content:space-between; align-items:center;"><span>${it.n}(${it.sel})</span><span onclick="cart.splice(${i},1);renderCart()" style="color:red; cursor:pointer; font-weight:bold;">✕</span></div>`; 
+        }).join('');
         document.getElementById('cart-total').innerText = t;
     }
 
@@ -185,7 +216,7 @@
         let html = `<div style="background:var(--wood); color:#FFF; padding:10px; margin-bottom:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;"><span>勾選合併</span><button onclick="mergeSelectedOrders()" style="padding:5px 12px; border-radius:5px; border:none; background:#FFF; font-weight:bold;">執行合併</button></div>`;
         html += sorted.map(([key, o]) => {
             const items = o.items.map(it => { const sk = `${it.pid}_${it.sel}`; pc[sk] = (pc[sk] || 0) + 1; const win = o.forceWin || pc[sk] <= ((products[it.pid]||{}).limit || 999); return `<li style="font-size:13px;">${it.n}(${it.sel}) <span style="color:${win?'green':'#BC6C25'}">[${win?'正取':'候補'}]</span></li>`; }).join('');
-            return `<div class="admin-order-card"><div style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="merge-check" value="${key}" data-nick="${o.nick}" style="width:20px; height:20px;"><b>${o.nick}</b> <span style="flex:1; text-align:right; font-weight:bold; color:var(--caramel);">$${o.total}</span></div><ul style="padding-left:18px; margin:10px 0; border-bottom:1px solid #F9F9F9;">${items}</ul><div class="btn-admin-row"><button class="btn-admin" style="background:var(--matcha)" onclick="alert('請手動調整資料庫或期待下次更新')">編輯/加單</button><button class="btn-admin" style="background:#666" onclick="db.ref('orders/${key}').update({forceWin:!o.forceWin})">⭐ 狀態</button><button class="btn-admin" style="background:#E74C3C" onclick="if(confirm('刪除？')) db.ref('orders/${key}').remove()">刪除</button></div></div>`;
+            return `<div class="admin-order-card"><div style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="merge-check" value="${key}" data-nick="${o.nick}" style="width:20px; height:20px;"><b>${o.nick}</b> <span style="flex:1; text-align:right; font-weight:bold; color:var(--caramel);">$${o.total}</span></div><ul style="padding-left:18px; margin:10px 0; border-bottom:1px solid #F9F9F9;">${items}</ul><div class="btn-admin-row"><button class="btn-admin" style="background:#666" onclick="db.ref('orders/${key}').update({forceWin:!o.forceWin})">⭐ 狀態</button><button class="btn-admin" style="background:#E74C3C" onclick="if(confirm('刪除？')) db.ref('orders/${key}').remove()">刪除</button></div></div>`;
         }).join('');
         main.innerHTML = html;
     }
@@ -221,19 +252,16 @@
 
     function confirmDeleteProd(idx) { if(confirm('確定要刪除？')) { products.splice(idx, 1); db.ref('products').set(products).then(() => closeModal()); } }
     function closeModal() { document.getElementById('edit-modal').style.display='none'; }
-    
     function mergeSelectedOrders() {
         const selected = Array.from(document.querySelectorAll('.merge-check:checked'));
         if (selected.length < 2) return alert("請至少選擇兩筆訂單！");
         const nicks = selected.map(el => el.getAttribute('data-nick'));
         if (new Set(nicks).size > 1) return alert("不同客人的訂單不能合併！");
-        if (!confirm(`確定合併 ${selected.length} 筆訂單？`)) return;
         const keys = selected.map(el => el.value);
         let mergedItems = [];
         let total = 0;
         keys.forEach(k => { mergedItems = mergedItems.concat(orders[k].items); total += orders[k].total; });
-        db.ref('orders').push({ nick: nicks[0], items: mergedItems, total: total, time: orders[keys[0]].time, forceWin: false })
-          .then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); alert("合併成功！"); });
+        db.ref('orders').push({ nick: nicks[0], items: mergedItems, total: total, time: orders[keys[0]].time, forceWin: false }).then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); alert("合併成功！"); });
     }
 </script>
 </body>
