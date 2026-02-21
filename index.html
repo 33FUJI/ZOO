@@ -43,7 +43,7 @@
         #admin-panel { position: fixed; inset: 0; background: #F8F9FA; z-index: 4000; display: none; flex-direction: column; }
         .admin-header { background: var(--wood); color: #FFF; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .admin-nav { padding: 10px; background: #EEE; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #DDD; }
-        .admin-order-card { background: #FFF; border: 1px solid #EEE; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
+        .admin-order-card { background: #FFF; border: 1px solid #EEE; border-radius: 12px; padding: 15px; margin-bottom: 15px; position: relative; }
         .admin-item-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #F9F9F9; gap: 8px; font-size: 14px; }
         .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
         .status-label { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; background: #F0F0F0; padding: 8px; border-radius: 8px; font-weight: bold; font-size: 13px; border: 1px solid #DDD; }
@@ -51,6 +51,7 @@
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 15px; }
         .modal-box { background: var(--rice); padding: 25px; border-radius: 20px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
         .input-std { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #DDD; border-radius: 10px; font-size: 15px; }
+        .del-order-btn { background: #FF4D4D; color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -212,67 +213,54 @@
                 const sk = `${it.pid}_${it.sel}`; 
                 const limit = (products[it.pid]||{}).limit || 999;
                 let wins = 0, waits = [];
-                
                 it.idxs.forEach(originalIdx => {
                     const item = o.items[originalIdx];
-                    if(item.fWin) {
-                        wins++;
-                    } else {
+                    if(item.fWin) wins++;
+                    else {
                         globalCounter[sk] = (globalCounter[sk] || 0) + 1;
-                        if(globalCounter[sk] <= limit) wins++; 
-                        else waits.push(globalCounter[sk] - limit);
+                        if(globalCounter[sk] <= limit) wins++; else waits.push(globalCounter[sk] - limit);
                     }
                 });
-
-                let st = "";
-                if(wins > 0) st += `<span style="color:green; font-weight:bold;">正取x${wins} </span>`;
+                let st = wins > 0 ? `<span style="color:green; font-weight:bold;">正取x${wins} </span>` : "";
                 if(waits.length > 0) st += `<span style="color:orange;">(候補第 ${waits.join(',')} 順位)</span>`;
-
-                return `<div class="admin-item-row">
-                    <input type="checkbox" class="item-check-${k}" value="${it.idxs.join(',')}">
-                    <span class="item-text ${o.items[it.idxs[0]].ship?'shipped-item':''}" onclick="toggleSingleShip('${k}', [${it.idxs}])">
-                        <b>${it.n}(${it.sel}) x ${it.qty}</b> $${it.p*it.qty} ${st}
-                    </span>
-                    <button onclick="editSingleItem('${k}', [${it.idxs}])" style="background:none; border:none; color:blue;">✎</button>
-                    <button class="fwin-btn" onclick="batchFWin('${k}', [${it.idxs}])">強正</button>
-                    <button onclick="deleteItems('${k}', [${it.idxs}])" style="color:#DDD; background:none; border:none;">✕</button>
-                </div>`
+                return `<div class="admin-item-row"><input type="checkbox" class="item-check-${k}" value="${it.idxs.join(',')}"><span class="item-text ${o.items[it.idxs[0]].ship?'shipped-item':''}" onclick="toggleSingleShip('${k}', [${it.idxs}])"><b>${it.n}(${it.sel}) x ${it.qty}</b> $${it.p*it.qty} ${st}</span><button onclick="editSingleItem('${k}', [${it.idxs}])" style="background:none; border:none; color:blue;">✎</button><button class="fwin-btn" onclick="batchFWin('${k}', [${it.idxs}])">強正</button><button onclick="deleteItems('${k}', [${it.idxs}])" style="color:#DDD; background:none; border:none;">✕</button></div>`
             }).join('');
 
             const bal = (o.total || 0) - (o.deposit || 0) - (o.paid || 0);
-            return `<div class="admin-order-card">
-                <div style="display:flex; justify-content:space-between;">
-                    <span><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> <b onclick="editNick('${k}','${o.nick}')">${o.nick} ✎</b></span>
-                    <span style="font-size:12px;">${new Date(o.time).toLocaleDateString()}</span>
-                </div>
-                <div style="border-top:1px solid #F0F0F0; padding:5px 0;">${itemsHtml}</div>
-                <div class="status-labels" style="display:flex; gap:10px; margin:10px 0;">
-                    <label class="status-label" style="${o.isPaid?'background:#E8F5E9;':''}"><input type="checkbox" ${o.isPaid?'checked':''} onchange="toggleStatus('${k}', 'isPaid', this.checked)"> 已付</label>
-                    <label class="status-label" style="${o.isDep?'background:#FFF3E0;':''}"><input type="checkbox" ${o.isDep?'checked':''} onchange="toggleStatus('${k}', 'isDep', this.checked)"> 訂金</label>
-                </div>
-                <div style="background:#F9F9F9; padding:10px; border-radius:8px; font-size:13px;">
-                    <div style="display:flex; justify-content:space-between;"><span onclick="editTotal('${k}',${o.total})" style="cursor:pointer;">總額: $${o.total} ✎</span><span style="color:${bal<=0?'green':'red'}">${bal<=0?'已清':'餘:'+bal}</span></div>
-                    <div style="display:flex; justify-content:space-between;"><span onclick="editDeposit('${k}',${o.deposit||0})" style="cursor:pointer;">訂金: $${o.deposit||0} ✎</span><span onclick="editPaid('${k}',${o.paid||0})" style="cursor:pointer;">尾款: $${o.paid||0} ✎</span></div>
-                </div>
-                <input class="input-std" style="height:35px; font-size:12px;" id="note-${k}" value="${o.adminNote||''}" placeholder="備註按 Enter" onkeydown="if(event.key==='Enter') saveNote('${k}')">
-                <button class="btn-add" style="width:100%; margin-top:5px; background:#EEE; color:#666;" onclick="addItemToOrd('${k}')">＋ 加商品</button>
-            </div>`}).join('');
+            return `<div class="admin-order-card"><div style="display:flex; justify-content:space-between; align-items:center;"><span><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> <b onclick="editNick('${k}','${o.nick}')">${o.nick} ✎</b></span><div><span style="font-size:12px; color:#999; margin-right:10px;">${new Date(o.time).toLocaleDateString()}</span><button class="del-order-btn" onclick="deleteEntireOrder('${k}')">刪除整筆</button></div></div><div style="border-top:1px solid #F0F0F0; padding:5px 0;">${itemsHtml}</div><div class="status-labels" style="display:flex; gap:10px; margin:10px 0;"><label class="status-label" style="${o.isPaid?'background:#E8F5E9;':''}"><input type="checkbox" ${o.isPaid?'checked':''} onchange="togglePayStatus('${k}', this.checked)"> 已付</label><label class="status-label" style="${o.isDep?'background:#FFF3E0;':''}"><input type="checkbox" ${o.isDep?'checked':''} onchange="toggleStatus('${k}', 'isDep', this.checked)"> 訂金</label></div><div style="background:#F9F9F9; padding:10px; border-radius:8px; font-size:13px;"><div style="display:flex; justify-content:space-between;"><span onclick="editTotal('${k}',${o.total})" style="cursor:pointer;">總額: $${o.total} ✎</span><span style="color:${bal<=0?'green':'red'}">${bal<=0?'已清':'餘:'+bal}</span></div><div style="display:flex; justify-content:space-between;"><span onclick="editDeposit('${k}',${o.deposit||0})" style="cursor:pointer;">訂金: $${o.deposit||0} ✎</span><span onclick="editPaid('${k}',${o.paid||0})" style="cursor:pointer;">尾款: $${o.paid||0} ✎</span></div></div><input class="input-std" style="height:35px; font-size:12px;" id="note-${k}" value="${o.adminNote||''}" placeholder="備註按 Enter" onkeydown="if(event.key==='Enter') saveNote('${k}')"><button class="btn-add" style="width:100%; margin-top:5px; background:#EEE; color:#666;" onclick="addItemToOrd('${k}')">＋ 加商品</button></div>`}).join('');
     }
 
     function toggleStatus(k, f, v) { db.ref(`orders/${k}`).update({ [f]: v }); }
+
+    // 優化已付邏輯：支援留尾數需求
+    function togglePayStatus(k, v) {
+        let o = orders[k];
+        if(v) {
+            if(confirm("是否要自動填入剩餘金額（全額清空）？\n按『確定』：全額清空\n按『取消』：保留勾選，稍後手動輸入尾款金額（如留20元）")) {
+                let remain = (o.total || 0) - (o.deposit || 0);
+                db.ref(`orders/${k}`).update({ isPaid: true, paid: remain });
+            } else {
+                db.ref(`orders/${k}`).update({ isPaid: true }); // 僅勾選標記，不改動金額
+            }
+        } else {
+            db.ref(`orders/${k}`).update({ isPaid: false });
+        }
+    }
+
+    function deleteEntireOrder(k) {
+        if(confirm("確定要刪除這整筆訂單嗎？")) {
+            db.ref(`orders/${k}`).remove().then(() => alert("訂單已刪除"));
+        }
+    }
+
     function toggleSingleShip(k, idxs) { let o = orders[k]; const ns = !o.items[idxs[0]].ship; idxs.forEach(i => o.items[i].ship = ns); db.ref(`orders/${k}`).set(o); }
     
-    // 修正單項金額編輯邏輯
     function editSingleItem(k, idxs) {
-        const o = orders[k];
-        const it = o.items[idxs[0]];
+        const o = orders[k]; const it = o.items[idxs[0]];
         const newN = prompt("編輯名稱：", it.n);
         const newP = prompt("編輯單項金額：", it.p);
         if(newN !== null && newP !== null) {
-            idxs.forEach(i => {
-                o.items[i].n = newN;
-                o.items[i].p = parseInt(newP);
-            });
+            idxs.forEach(i => { o.items[i].n = newN; o.items[i].p = parseInt(newP); });
             o.total = o.items.reduce((a, b) => a + (b.p || 0), 0);
             db.ref(`orders/${k}`).set(o).then(() => renderAdminOrders());
         }
@@ -314,7 +302,7 @@
         document.getElementById('modal-title').innerText = "上架";
         document.getElementById('modal-body').innerHTML = `活動：<input id="p-e" class="input-std">名稱：<input id="p-n" class="input-std">價格：<input id="p-p" type="number" class="input-std">限購：<input id="p-l" type="number" class="input-std" value="999">規格：<input id="p-s" class="input-std" placeholder="規格1,規格2">`;
         document.getElementById('edit-modal').style.display='flex';
-        document.getElementById('modal-save').onclick = () => { products.push({ e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value }); db.ref('products').set(products).then(()=>document.getElementById('edit-modal').style.display='none'); };
+        document.getElementById('modal-save').onclick = () => { products.push({ e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value }; db.ref('products').set(products).then(()=>document.getElementById('edit-modal').style.display='none'); };
     }
 
     function performSearch() {
@@ -322,23 +310,19 @@
         const resArea = document.getElementById('search-results-area'); if(!n) return;
         const allSorted = Object.entries(orders).sort((a,b) => a[1].time - b[1].time);
         let globalCounter = {}; let userResults = [];
-        
         allSorted.forEach(([k, o]) => {
             let userMatch = o.nick.toLowerCase() === n; 
             let orderSumm = {};
             (o.items || []).forEach(it => { 
                 let sk = `${it.pid}_${it.sel}`; 
                 let limit = (products[it.pid] || {}).limit || 999;
-                
                 let win = false, waitNum = 0;
-                if(it.fWin) {
-                    win = true; 
-                } else {
+                if(it.fWin) win = true; 
+                else {
                     globalCounter[sk] = (globalCounter[sk] || 0) + 1;
                     if(globalCounter[sk] <= limit) win = true;
                     else waitNum = globalCounter[sk] - limit;
                 }
-                
                 if(userMatch) { 
                     if(!orderSumm[sk]) orderSumm[sk] = { ...it, details: [] }; 
                     orderSumm[sk].details.push({ isWin: win, seq: waitNum, isShip: it.ship });
@@ -346,21 +330,7 @@
             }); 
             if(userMatch) userResults.push({ o, summ: Object.values(orderSumm) });
         });
-
-        resArea.innerHTML = userResults.length ? userResults.reverse().map(res => `
-            <div style="background:#FFF; padding:15px; border-radius:12px; margin-bottom:10px; border-left: 5px solid var(--matcha);">
-                ${res.summ.map(it => {
-                    const statusText = it.details.map(d => {
-                        let txt = d.isWin ? '<b style="color:green;">[正取]</b>' : `<b style="color:orange;">[候補第 ${d.seq} 順位]</b>`;
-                        if(d.isShip) txt += ' <small style="color:#999;">(已出貨)</small>';
-                        return txt;
-                    }).join('、');
-                    return `<div>• ${it.n}(${it.sel}) x ${it.details.length} <br> &nbsp;&nbsp;狀態：${statusText}</div>`;
-                }).join('')}
-                <div style="text-align:right; margin-top:8px; border-top:1px dashed #EEE; padding-top:5px; font-size:13px;">
-                    總計: $${res.o.total} | 尚欠: <span style="color:red;">$${(res.o.total||0)-(res.o.deposit||0)-(res.o.paid||0)}</span>
-                </div>
-            </div>`).join('') : '<p style="text-align:center; color:#999;">查無訂單</p>';
+        resArea.innerHTML = userResults.length ? userResults.reverse().map(res => `<div style="background:#FFF; padding:15px; border-radius:12px; margin-bottom:10px; border-left: 5px solid var(--matcha);">${res.summ.map(it => { const statusText = it.details.map(d => { let txt = d.isWin ? '<b style="color:green;">[正取]</b>' : `<b style="color:orange;">[候補第 ${d.seq} 順位]</b>`; if(d.isShip) txt += ' <small style="color:#999;">(已出貨)</small>'; return txt; }).join('、'); return `<div>• ${it.n}(${it.sel}) x ${it.details.length} <br> &nbsp;&nbsp;狀態：${statusText}</div>`; }).join('')}<div style="text-align:right; margin-top:8px; border-top:1px dashed #EEE; padding-top:5px; font-size:13px;">總計: $${res.o.total} | 尚欠: <span style="color:red;">$${(res.o.total||0)-(res.o.deposit||0)-(res.o.paid||0)}</span></div></div>`).join('') : '<p style="text-align:center; color:#999;">查無訂單</p>';
     }
 
     function askExport(type) {
