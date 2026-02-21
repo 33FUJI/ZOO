@@ -70,7 +70,7 @@
         .shipped-item { color: #BBB !important; text-decoration: line-through; }
         .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
         .status-label { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; background: #F0F0F0; padding: 8px; border-radius: 8px; font-weight: bold; font-size: 13px; border: 1px solid #DDD; }
-        .fwin-btn { font-size: 11px; border: 1px solid var(--caramel); color: var(--caramel); background: none; padding: 3px 6px; border-radius: 5px; }
+        .fwin-btn { font-size: 11px; border: 1px solid var(--caramel); color: var(--caramel); background: none; padding: 3px 6px; border-radius: 5px; cursor: pointer; }
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 15px; }
         .modal-box { background: var(--rice); padding: 25px; border-radius: 20px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
         .input-std { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #DDD; border-radius: 10px; font-size: 15px; }
@@ -213,17 +213,56 @@
     function renderAdminOrders() {
         const main = document.getElementById('admin-main');
         const sorted = Object.entries(orders).sort((a,b) => a[1].time - b[1].time);
-        let globalCounter = {};
+        let globalCounter = {}; 
+        
         main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%; background:var(--caramel);" onclick="mergeSelected()">🔗 執行併單</button>` + sorted.map(([k, o]) => {
-            let orderSumm = {}; (o.items || []).forEach((it, idx) => { let sk = `${it.pid}_${it.sel}`; if(!orderSumm[sk]) orderSumm[sk] = { ...it, idxs: [], qty: 0 }; orderSumm[sk].idxs.push(idx); orderSumm[sk].qty++; });
+            let orderSumm = {}; 
+            (o.items || []).forEach((it, idx) => { 
+                let sk = `${it.pid}_${it.sel}`; 
+                if(!orderSumm[sk]) orderSumm[sk] = { ...it, idxs: [], qty: 0 }; 
+                orderSumm[sk].idxs.push(idx); 
+                orderSumm[sk].qty++; 
+            });
+
             const itemsHtml = Object.values(orderSumm).map(it => {
-                const sk = `${it.pid}_${it.sel}`; const limit = (products[it.pid]||{}).limit || 999;
-                let wins = 0, waits = []; it.idxs.forEach(originalIdx => { globalCounter[sk] = (globalCounter[sk] || 0) + 1; if(o.items[originalIdx].fWin || globalCounter[sk] <= limit) wins++; else waits.push(globalCounter[sk] - limit); });
-                let st = (wins > 0) ? `<span style="color:green; font-weight:bold;">正取x${wins} </span>` : ""; if(waits.length > 0) st += `<span style="color:orange;">(候補 ${waits.join(',')})</span>`;
-                return `<div class="admin-item-row"><input type="checkbox" class="item-check-${k}" value="${it.idxs.join(',')}"><span class="item-text ${o.items[it.idxs[0]].ship?'shipped-item':''}" onclick="toggleSingleShip('${k}', [${it.idxs}])"><b>${it.n}(${it.sel}) x ${it.qty}</b> $${it.p*it.qty} ${st}</span><button onclick="editSingleItem('${k}', ${it.idxs[0]})" style="background:none; border:none; color:blue;">✎</button><button class="fwin-btn" onclick="batchFWin('${k}', [${it.idxs}])">強正</button><button onclick="deleteItems('${k}', [${it.idxs}])" style="color:#DDD; background:none; border:none;">✕</button></div>`}).join('');
+                const sk = `${it.pid}_${it.sel}`; 
+                const limit = (products[it.pid]||{}).limit || 999;
+                let wins = 0, manualWins = 0, waits = [];
+                
+                // 重點：正取遞補核心計算
+                it.idxs.forEach(originalIdx => {
+                    const item = o.items[originalIdx];
+                    if(item.fWin) {
+                        manualWins++; // 手動強正，不佔用配額
+                    } else {
+                        globalCounter[sk] = (globalCounter[sk] || 0) + 1;
+                        if(globalCounter[sk] <= limit) wins++; // 名額內正取
+                        else waits.push(globalCounter[sk] - limit); // 候補序號
+                    }
+                });
+
+                let st = "";
+                if(wins > 0) st += `<span style="color:green; font-weight:bold;">正取x${wins} </span>`;
+                if(manualWins > 0) st += `<span style="color:purple; font-weight:bold;">強正x${manualWins} </span>`;
+                if(waits.length > 0) st += `<span style="color:orange;">(候補 ${waits.join(',')})</span>`;
+
+                return `<div class="admin-item-row">
+                    <input type="checkbox" class="item-check-${k}" value="${it.idxs.join(',')}">
+                    <span class="item-text ${o.items[it.idxs[0]].ship?'shipped-item':''}" onclick="toggleSingleShip('${k}', [${it.idxs}])">
+                        <b>${it.n}(${it.sel}) x ${it.qty}</b> $${it.p*it.qty} ${st}
+                    </span>
+                    <button onclick="editSingleItem('${k}', ${it.idxs[0]})" style="background:none; border:none; color:blue;">✎</button>
+                    <button class="fwin-btn" onclick="batchFWin('${k}', [${it.idxs}])">強正</button>
+                    <button onclick="deleteItems('${k}', [${it.idxs}])" style="color:#DDD; background:none; border:none;">✕</button>
+                </div>`
+            }).join('');
+
             const bal = (o.total || 0) - (o.deposit || 0) - (o.paid || 0);
             return `<div class="admin-order-card">
-                <div style="display:flex; justify-content:space-between;"><span><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> <b onclick="editNick('${k}','${o.nick}')">${o.nick} ✎</b></span><span style="font-size:12px;">${new Date(o.time).toLocaleDateString()}</span></div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> <b onclick="editNick('${k}','${o.nick}')">${o.nick} ✎</b></span>
+                    <span style="font-size:12px;">${new Date(o.time).toLocaleDateString()}</span>
+                </div>
                 <div style="border-top:1px solid #F0F0F0; padding:5px 0;">${itemsHtml}</div>
                 <div class="status-labels" style="display:flex; gap:10px; margin:10px 0;">
                     <label class="status-label" style="${o.isPaid?'background:#E8F5E9;':''}"><input type="checkbox" ${o.isPaid?'checked':''} onchange="toggleStatus('${k}', 'isPaid', this.checked)"> 已付</label>
@@ -241,14 +280,14 @@
     function toggleStatus(k, f, v) { db.ref(`orders/${k}`).update({ [f]: v }); }
     function toggleSingleShip(k, idxs) { let o = orders[k]; const ns = !o.items[idxs[0]].ship; idxs.forEach(i => o.items[i].ship = ns); db.ref(`orders/${k}`).set(o); }
     function editSingleItem(k, idx) { const o = orders[k]; const it = o.items[idx]; const newN = prompt("名稱：", it.n); const newP = prompt("單價：", it.p); if(newN&&newP){ o.items.forEach(i => { if(i.pid==it.pid&&i.sel==it.sel){ i.n=newN; i.p=parseInt(newP); } }); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o); } }
-    function batchFWin(k, idxs) { let o = orders[k]; idxs.forEach(i => o.items[i].fWin = true); db.ref(`orders/${k}`).set(o); }
-    function deleteItems(k, idxs) { if(confirm('刪除？')){ let o = orders[k]; idxs.sort((a,b)=>b-a).forEach(i => o.items.splice(i,1)); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o); } }
+    function batchFWin(k, idxs) { let o = orders[k]; idxs.forEach(i => o.items[i].fWin = true); db.ref(`orders/${k}`).set(o).then(() => renderAdminOrders()); }
+    function deleteItems(k, idxs) { if(confirm('刪除？')){ let o = orders[k]; idxs.sort((a,b)=>b-a).forEach(i => o.items.splice(i,1)); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o).then(() => renderAdminOrders()); } }
     function editNick(k, old) { const v = prompt("姓名：", old); if(v) db.ref(`orders/${k}`).update({ nick: v }); }
     function editTotal(k, old) { const v = prompt("總額：", old); if(v) db.ref(`orders/${k}`).update({ total: parseInt(v) }); }
     function editDeposit(k, old) { const v = prompt("訂金：", old); if(v!==null) db.ref(`orders/${k}`).update({ deposit: parseInt(v) }); }
     function editPaid(k, old) { const v = prompt("尾款：", old); if(v!==null) db.ref(`orders/${k}`).update({ paid: parseInt(v) }); }
     function saveNote(k) { const v = document.getElementById(`note-${k}`).value; db.ref(`orders/${k}`).update({ adminNote: v }).then(()=>alert("存")); }
-    function addItemToOrd(k) { const n = prompt("商品："); const p = prompt("金額：","0"); if(n){ let o = orders[k]; o.items.push({ e: "手動", n: n, sel: "一般", p: parseInt(p||0), pid: "manual", fWin: true, ship: false }); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o); } }
+    function addItemToOrd(k) { const n = prompt("商品："); const p = prompt("金額：","0"); if(n){ let o = orders[k]; o.items.push({ e: "手動", n: n, sel: "一般", p: parseInt(p||0), pid: "manual", fWin: true, ship: false }); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o).then(() => renderAdminOrders()); } }
 
     function mergeSelected() {
         const checks = Array.from(document.querySelectorAll('.merge-check:checked'));
@@ -285,11 +324,30 @@
         const resArea = document.getElementById('search-results-area'); if(!n) return;
         const allSorted = Object.entries(orders).sort((a,b) => a[1].time - b[1].time);
         let globalCounter = {}; let userResults = [];
+        
         allSorted.forEach(([k, o]) => {
-            let userMatch = o.nick.toLowerCase() === n; let orderSumm = {};
-            (o.items || []).forEach(it => { let sk = `${it.pid}_${it.sel}`; globalCounter[sk] = (globalCounter[sk] || 0) + 1; let limit = (products[it.pid] || {}).limit || 999;
-                if(userMatch) { if(!orderSumm[sk]) orderSumm[sk] = { ...it, wins: 0, waits: [] }; if(it.fWin || globalCounter[sk] <= limit) orderSumm[sk].wins++; else orderSumm[sk].waits.push(globalCounter[sk] - limit); }
-            }); if(userMatch) userResults.push({ o, summ: Object.values(orderSumm) });
+            let userMatch = o.nick.toLowerCase() === n; 
+            let orderSumm = {};
+            (o.items || []).forEach(it => { 
+                let sk = `${it.pid}_${it.sel}`; 
+                let limit = (products[it.pid] || {}).limit || 999;
+                
+                let win = false, waitNum = 0;
+                if(it.fWin) {
+                    win = true;
+                } else {
+                    globalCounter[sk] = (globalCounter[sk] || 0) + 1;
+                    if(globalCounter[sk] <= limit) win = true;
+                    else waitNum = globalCounter[sk] - limit;
+                }
+                
+                if(userMatch) { 
+                    if(!orderSumm[sk]) orderSumm[sk] = { ...it, wins: 0, waits: [] }; 
+                    if(win) orderSumm[sk].wins++; 
+                    else orderSumm[sk].waits.push(waitNum); 
+                }
+            }); 
+            if(userMatch) userResults.push({ o, summ: Object.values(orderSumm) });
         });
         resArea.innerHTML = userResults.length ? userResults.reverse().map(res => `<div style="background:#FFF; padding:15px; border-radius:12px; margin-bottom:10px;">${res.summ.map(it => `<div>• ${it.n}(${it.sel}) x ${it.wins + it.waits.length} ${it.ship?'<b>[已出貨]</b>':''}</div>`).join('')}<div style="text-align:right; margin-top:5px;">總計: $${res.o.total} | 尚欠: $${(res.o.total||0)-(res.o.deposit||0)-(res.o.paid||0)}</div></div>`).join('') : '查無訂單';
     }
