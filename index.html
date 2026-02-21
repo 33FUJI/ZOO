@@ -19,36 +19,57 @@
         
         /* 購物主介面 */
         .app-container { display: none; flex: 1; overflow: hidden; flex-direction: row; }
-        .list-area { flex: 1; overflow-y: auto; padding: 15px; background: var(--gray); }
-        .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
-        .prod-card { background: #FFF; border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .cart-area { width: 320px; background: #FFF; border-left: 1px solid #DDD; display: flex; flex-direction: column; }
+        .list-area { flex: 1; overflow-y: auto; padding: 10px; background: var(--gray); -webkit-overflow-scrolling: touch; }
         
-        /* 管理後台面板 */
+        /* 自適應網格：不強制三格，避免小手機跑版 */
+        .prod-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); 
+            gap: 8px; 
+        }
+        
+        .prod-card { 
+            background: #FFF; border-radius: 8px; padding: 8px; 
+            display: flex; flex-direction: column; justify-content: space-between; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-height: 220px; 
+        }
+        
+        .prod-name { font-size: 13px; font-weight: bold; min-height: 38px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.2; overflow: hidden; }
+        .prod-price { color: var(--caramel); font-size: 14px; margin: 4px 0; font-weight: bold; text-align: center; }
+        
+        /* 規格區對齊關鍵：固定高度 */
+        .spec-area { min-height: 50px; margin-bottom: 5px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px; }
+        .qty-area { display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 8px; }
+        .btn-qty { width: 22px; height: 22px; border-radius: 50%; border: 1px solid #DDD; background: #FFF; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        
+        /* 購物車區塊 */
+        .cart-area { width: 320px; background: #FFF; border-left: 1px solid #DDD; display: flex; flex-direction: column; }
+        .cart-bottom { padding: 10px; border-top: 1px solid #EEE; background: #FFF; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+
+        /* 管理面板樣式 */
         #admin-panel { position: fixed; inset: 0; background: #F8F9FA; z-index: 4000; display: none; flex-direction: column; }
         .admin-header { background: var(--wood); color: #FFF; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .admin-nav { padding: 10px; background: #EEE; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #DDD; }
-        .admin-order-card { background: #FFF; border: 1px solid #EEE; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        
-        /* 訂單內元件 */
+        .admin-order-card { background: #FFF; border: 1px solid #EEE; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
         .admin-item-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #F9F9F9; gap: 8px; font-size: 14px; }
         .item-text { flex: 1; cursor: pointer; }
         .shipped-item { color: #BBB !important; text-decoration: line-through; }
         
-        .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .status-labels { display: flex; gap: 10px; margin: 10px 0; }
+        .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; }
         .status-label { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; background: #F0F0F0; padding: 8px; border-radius: 8px; font-weight: bold; font-size: 13px; border: 1px solid #DDD; }
-        .fwin-btn { font-size: 11px; border: 1px solid var(--caramel); color: var(--caramel); background: none; padding: 3px 6px; border-radius: 5px; white-space: nowrap; }
+        .fwin-btn { font-size: 11px; border: 1px solid var(--caramel); color: var(--caramel); background: none; padding: 3px 6px; border-radius: 5px; }
 
-        /* 彈窗隱藏區 */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 15px; }
         .modal-box { background: var(--rice); padding: 25px; border-radius: 20px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
         .input-std { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #DDD; border-radius: 10px; font-size: 15px; }
 
         @media (max-width: 768px) {
             .app-container { flex-direction: column; }
-            .cart-area { width: 100%; flex: 1.3; border-left: none; border-top: 1px solid #EEE; }
-            .prod-grid { grid-template-columns: repeat(2, 1fr); }
+            .cart-area { width: 100%; flex: 1.5; border-left: none; border-top: 1px solid #EEE; }
+            .prod-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 6px; }
+            .prod-card { padding: 6px; min-height: 200px; }
+            .prod-name { font-size: 11px; min-height: 30px; }
+            .btn-add { padding: 10px; font-size: 12px; }
         }
     </style>
 </head>
@@ -57,29 +78,26 @@
 <div id="hall-screen" class="hall">
     <h1 style="color:var(--matcha); margin-bottom:5px;">33 日本動物園</h1>
     <div id="hall-grid" class="grid-hall"></div>
-    <button onclick="document.getElementById('search-modal').style.display='flex'" style="background:var(--caramel); color:#FFF; border:none; padding:15px 40px; border-radius:30px; margin-top:30px; font-weight:bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">🔍 查詢我的訂單</button>
+    <button onclick="document.getElementById('search-modal').style.display='flex'" style="background:var(--caramel); color:#FFF; border:none; padding:15px 40px; border-radius:30px; margin-top:30px; font-weight:bold;">🔍 查詢我的訂單</button>
     <div onclick="adminLogin()" style="margin-top:50px; color:#CCC; cursor:pointer; font-size:11px;">管理登入</div>
 </div>
 
 <div class="app-container" id="main-app">
     <div class="list-area"><div id="prod-list" class="prod-grid"></div></div>
     <div class="cart-area">
-        <div style="padding:15px; font-weight:bold; background:#FDFDFD; border-bottom:1px solid #EEE;">🛒 購物清單</div>
-        <div id="cart-items" style="flex:1; overflow-y:auto; padding:10px 15px;"></div>
-        <div style="padding:15px; border-top:1px solid #EEE;">
-            <p style="display:flex; justify-content:space-between; font-weight:bold; font-size:18px;">總計: <span style="color:var(--caramel);">$ <span id="cart-total">0</span></span></p>
+        <div style="padding:10px; font-weight:bold; background:#FDFDFD; border-bottom:1px solid #EEE;">🛒 購物清單</div>
+        <div id="cart-items" style="flex:1; overflow-y:auto; padding:10px;"></div>
+        <div class="cart-bottom">
+            <p style="display:flex; justify-content:space-between; font-weight:bold; font-size:16px; margin:5px 0;">總計: <span style="color:var(--caramel);">$ <span id="cart-total">0</span></span></p>
             <input id="nick" class="input-std" placeholder="您的 LINE 暱稱">
-            <button class="btn-add" style="width:100%; background:var(--matcha); padding:15px; font-size:16px;" onclick="submitOrder()">確認提交訂單</button>
-            <button onclick="backToHall()" style="width:100%; margin-top:10px; border:none; background:none; color:#999; font-size:14px;">← 返回目錄</button>
+            <button class="btn-add" style="width:100%; background:var(--matcha); padding:14px; font-size:16px; margin-top:5px;" onclick="submitOrder()">確認提交訂單</button>
+            <button onclick="backToHall()" style="width:100%; margin-top:10px; border:none; background:none; color:#999; font-size:12px;">← 返回目錄</button>
         </div>
     </div>
 </div>
 
 <div id="admin-panel">
-    <div class="admin-header">
-        <b>33 園長工作台</b>
-        <button onclick="document.getElementById('admin-panel').style.display='none'" style="background:none; border:1px solid #FFF; color:#FFF; padding:4px 8px; border-radius:5px;">關閉</button>
-    </div>
+    <div class="admin-header"><b>33 園長工作台</b><button onclick="document.getElementById('admin-panel').style.display='none'" style="background:none; border:1px solid #FFF; color:#FFF; padding:4px 8px; border-radius:5px;">關閉</button></div>
     <div class="admin-nav">
         <button class="btn-add" onclick="renderAdminOrders()">訂單管理</button>
         <button class="btn-add" style="background:#888;" onclick="renderAdminProds()">商品維護</button>
@@ -141,16 +159,21 @@
         document.getElementById('prod-list').innerHTML = list.map(p => {
             const rid = products.indexOf(p);
             if(!curQty[rid]) curQty[rid] = 1;
+            const specs = p.s ? p.s.split(',').map(v=>`<button id="s-${rid}-${v}" onclick="selSpec(${rid},'${v}')" style="border:1px solid #DDD; margin:1px; font-size:10px; background:#FFF; border-radius:3px; padding:2px 4px;">${v}</button>`).join('') : '';
             return `<div class="prod-card">
-                <div style="font-weight:bold; min-height:40px;">${p.n}</div>
-                <div style="color:var(--caramel); margin-bottom:5px;">$${p.p}</div>
-                <div style="margin-bottom:8px;">${p.s ? p.s.split(',').map(v=>`<button id="s-${rid}-${v}" onclick="selSpec(${rid},'${v}')" style="border:1px solid #DDD; margin:2px; font-size:11px; background:#FFF; border-radius:4px; padding:3px 6px;">${v}</button>`).join('') : '<small style="color:#CCC">單一規格</small>'}</div>
-                <div style="display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:10px;">
-                    <button style="width:25px; height:25px; border-radius:50%; border:1px solid #DDD;" onclick="updateQty(${rid},-1)">-</button>
-                    <span id="qty-val-${rid}" style="font-weight:bold;">${curQty[rid]}</span>
-                    <button style="width:25px; height:25px; border-radius:50%; border:1px solid #DDD;" onclick="updateQty(${rid},1)">+</button>
+                <div>
+                    <div class="prod-name">${p.n}</div>
+                    <div class="prod-price">$${p.p}</div>
+                    <div class="spec-area">${specs}</div>
                 </div>
-                <button class="btn-add" style="width:100%; font-size:12px; background:var(--wood);" onclick="addToCart(${rid})">加入購物車</button>
+                <div>
+                    <div class="qty-area">
+                        <button class="btn-qty" onclick="updateQty(${rid},-1)">-</button>
+                        <span id="qty-val-${rid}" style="font-weight:bold; font-size:14px;">${curQty[rid]}</span>
+                        <button class="btn-qty" onclick="updateQty(${rid},1)">+</button>
+                    </div>
+                    <button class="btn-add" style="width:100%; background:var(--wood);" onclick="addToCart(${rid})">加入購物車</button>
+                </div>
             </div>`;
         }).join('');
         renderCart();
@@ -170,10 +193,7 @@
         let summ = {}; cart.forEach(it => { let k = `${it.pid}_${it.sel}`; summ[k] = (summ[k]||0)+1; });
         document.getElementById('cart-items').innerHTML = Object.keys(summ).map(k => {
             const [pid, sel] = k.split('_'); const p = products[pid];
-            return `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #EEE; font-size:14px;">
-                <span><b>${p.n}</b> (${sel}) x ${summ[k]}</span>
-                <span onclick="removeFromCart(${pid},'${sel}')" style="color:#CCC; cursor:pointer;">✕</span>
-            </div>`}).join('');
+            return `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #EEE; font-size:13px;"><span><b>${p.n}</b> (${sel}) x ${summ[k]}</span><span onclick="removeFromCart(${pid},'${sel}')" style="color:#CCC; cursor:pointer;">✕</span></div>`}).join('');
         document.getElementById('cart-total').innerText = cart.reduce((a,b)=>a+b.p,0);
     }
 
@@ -191,223 +211,104 @@
         const main = document.getElementById('admin-main');
         const sorted = Object.entries(orders).sort((a,b) => a[1].time - b[1].time);
         let globalCounter = {};
-        
-        main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%; background:var(--caramel);" onclick="mergeSelected()">🔗 執行併單 (勾選下方訂單)</button>` + sorted.map(([k, o]) => {
-            let orderSumm = {};
-            (o.items || []).forEach((it, idx) => {
-                let sk = `${it.pid}_${it.sel}`; if(!orderSumm[sk]) orderSumm[sk] = { ...it, idxs: [], qty: 0 };
-                orderSumm[sk].idxs.push(idx); orderSumm[sk].qty++;
-            });
-
+        main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%; background:var(--caramel);" onclick="mergeSelected()">🔗 執行併單</button>` + sorted.map(([k, o]) => {
+            let orderSumm = {}; (o.items || []).forEach((it, idx) => { let sk = `${it.pid}_${it.sel}`; if(!orderSumm[sk]) orderSumm[sk] = { ...it, idxs: [], qty: 0 }; orderSumm[sk].idxs.push(idx); orderSumm[sk].qty++; });
             const itemsHtml = Object.values(orderSumm).map(it => {
                 const sk = `${it.pid}_${it.sel}`; const limit = (products[it.pid]||{}).limit || 999;
-                let wins = 0, waits = [];
-                it.idxs.forEach(originalIdx => {
-                    const realIt = o.items[originalIdx];
-                    globalCounter[sk] = (globalCounter[sk] || 0) + 1;
-                    if(realIt.fWin || globalCounter[sk] <= limit) wins++; else waits.push(globalCounter[sk] - limit);
-                });
-                let st = (wins > 0) ? `<span style="color:green; font-weight:bold;">正取x${wins} </span>` : "";
-                if(waits.length > 0) st += `<span style="color:orange;">(候補 ${waits.join(',')})</span>`;
-                const isShipped = o.items[it.idxs[0]].ship || false;
-
-                return `<div class="admin-item-row">
-                    <input type="checkbox" class="item-check-${k}" value="${it.idxs.join(',')}">
-                    <span class="item-text ${isShipped ? 'shipped-item' : ''}" onclick="toggleSingleShip('${k}', [${it.idxs}])">
-                        ${isShipped ? '<span class="ship-tag">已出貨</span>' : ''}
-                        <b>${it.n}(${it.sel}) x ${it.qty}</b> <span style="color:var(--caramel);">$${it.p * it.qty}</span> ${st}
-                    </span>
-                    <button onclick="editSingleItem('${k}', ${it.idxs[0]})" style="background:none; border:none; color:blue;">✎</button>
-                    <button class="fwin-btn" onclick="batchFWin('${k}', [${it.idxs}])">強制正取</button>
-                    <button onclick="deleteItems('${k}', [${it.idxs}])" style="color:#DDD; background:none; border:none;">✕</button>
-                </div>`}).join('');
-
-            const balance = (o.total || 0) - (o.deposit || 0) - (o.paid || 0);
-            const clearStatus = o.isPaid || balance <= 0;
-
+                let wins = 0, waits = []; it.idxs.forEach(originalIdx => { globalCounter[sk] = (globalCounter[sk] || 0) + 1; if(o.items[originalIdx].fWin || globalCounter[sk] <= limit) wins++; else waits.push(globalCounter[sk] - limit); });
+                let st = (wins > 0) ? `<span style="color:green; font-weight:bold;">正取x${wins} </span>` : ""; if(waits.length > 0) st += `<span style="color:orange;">(候補 ${waits.join(',')})</span>`;
+                return `<div class="admin-item-row"><input type="checkbox" class="item-check-${k}" value="${it.idxs.join(',')}"><span class="item-text ${o.items[it.idxs[0]].ship?'shipped-item':''}" onclick="toggleSingleShip('${k}', [${it.idxs}])"><b>${it.n}(${it.sel}) x ${it.qty}</b> $${it.p*it.qty} ${st}</span><button onclick="editSingleItem('${k}', ${it.idxs[0]})" style="background:none; border:none; color:blue;">✎</button><button class="fwin-btn" onclick="batchFWin('${k}', [${it.idxs}])">強正</button><button onclick="deleteItems('${k}', [${it.idxs}])" style="color:#DDD; background:none; border:none;">✕</button></div>`}).join('');
+            const bal = (o.total || 0) - (o.deposit || 0) - (o.paid || 0);
             return `<div class="admin-order-card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <span><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> <b onclick="editNick('${k}','${o.nick}')" style="color:var(--matcha); cursor:pointer;">${o.nick} ✎</b></span>
-                    <span style="font-size:12px; color:#999;">${new Date(o.time).toLocaleDateString()}</span>
-                </div>
-                
+                <div style="display:flex; justify-content:space-between;"><span><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> <b onclick="editNick('${k}','${o.nick}')">${o.nick} ✎</b></span><span style="font-size:12px;">${new Date(o.time).toLocaleDateString()}</span></div>
                 <div style="border-top:1px solid #F0F0F0; padding:5px 0;">${itemsHtml}</div>
-
-                <div class="status-labels">
-                    <label class="status-label" style="${o.isPaid?'background:#E8F5E9;color:#2E7D32;border-color:#A5D6A7':''}">
-                        <input type="checkbox" ${o.isPaid?'checked':''} onchange="toggleStatus('${k}', 'isPaid', this.checked)"> 已收錢
-                    </label>
-                    <label class="status-label" style="${o.isDep?'background:#FFF3E0;color:#E65100;border-color:#FFCC80':''}">
-                        <input type="checkbox" ${o.isDep?'checked':''} onchange="toggleStatus('${k}', 'isDep', this.checked)"> 已付訂
-                    </label>
+                <div class="status-labels" style="display:flex; gap:10px; margin:10px 0;">
+                    <label class="status-label" style="${o.isPaid?'background:#E8F5E9;':''}"><input type="checkbox" ${o.isPaid?'checked':''} onchange="toggleStatus('${k}', 'isPaid', this.checked)"> 已付</label>
+                    <label class="status-label" style="${o.isDep?'background:#FFF3E0;':''}"><input type="checkbox" ${o.isDep?'checked':''} onchange="toggleStatus('${k}', 'isDep', this.checked)"> 訂金</label>
                 </div>
-
-                <div style="background:#F9F9F9; padding:10px; border-radius:8px; font-size:13px; line-height:1.6;">
-                    <div style="display:flex; justify-content:space-between;">
-                        <span onclick="editTotal('${k}',${o.total})" style="cursor:pointer;">總額: <b>$${o.total} ✎</b></span>
-                        <span style="color:${clearStatus?'green':'red'}; font-weight:bold;">${clearStatus ? '🎉 已清帳' : '餘額: $' + balance}</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between;">
-                        <span onclick="editDeposit('${k}',${o.deposit||0})" style="cursor:pointer;">訂金: $${o.deposit||0} ✎</span>
-                        <span onclick="editPaid('${k}',${o.paid||0})" style="cursor:pointer;">尾款: $${o.paid||0} ✎</span>
-                    </div>
+                <div style="background:#F9F9F9; padding:10px; border-radius:8px; font-size:13px;">
+                    <div style="display:flex; justify-content:space-between;"><span onclick="editTotal('${k}',${o.total})">總額: $${o.total} ✎</span><span style="color:${bal<=0?'green':'red'}">${bal<=0?'已清':'餘:'+bal}</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span onclick="editDeposit('${k}',${o.deposit||0})">訂金: $${o.deposit||0} ✎</span><span onclick="editPaid('${k}',${o.paid||0})">尾款: $${o.paid||0} ✎</span></div>
                 </div>
-
-                <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button class="btn-add" style="flex:1; font-size:12px; background:#EEE; color:#666;" onclick="addItemToOrd('${k}')">＋ 加商品</button>
-                    <button onclick="if(confirm('確定刪除？')) db.ref('orders/${k}').remove()" style="color:#CCC; background:none; border:none;">🗑️</button>
-                </div>
-                
-                <input class="input-std" style="height:38px; margin-top:8px; font-size:14px; border-color:#EEE;" id="note-${k}" value="${o.adminNote||''}" placeholder="✍️ 備註按 Enter 儲存" onkeydown="if(event.key==='Enter') saveNote('${k}')">
+                <input class="input-std" style="height:35px; font-size:12px;" id="note-${k}" value="${o.adminNote||''}" placeholder="備註按 Enter" onkeydown="if(event.key==='Enter') saveNote('${k}')">
+                <button class="btn-add" style="width:100%; margin-top:5px; background:#EEE; color:#666;" onclick="addItemToOrd('${k}')">＋ 加商品</button>
             </div>`}).join('');
     }
 
-    function toggleStatus(k, field, val) { db.ref(`orders/${k}`).update({ [field]: val }); }
-    function toggleSingleShip(k, idxs) { let o = orders[k]; const nextStatus = !o.items[idxs[0]].ship; idxs.forEach(i => o.items[i].ship = nextStatus); db.ref(`orders/${k}`).set(o); }
-    function editSingleItem(k, idx) { const o = orders[k]; const it = o.items[idx]; const newN = prompt("修改名稱：", it.n); if(!newN) return; const newP = prompt("修改單價：", it.p); if(!newP) return; o.items.forEach(item => { if(item.pid == it.pid && item.sel == it.sel) { item.n = newN; item.p = parseInt(newP); } }); o.total = o.items.reduce((a, b) => a + (parseInt(b.p)||0), 0); db.ref(`orders/${k}`).set(o); }
-    function batchFWin(k, idxs) { let o = orders[k]; idxs.forEach(i => o.items[i].fWin = true); db.ref(`orders/${k}`).set(o); alert("已強制設為正取"); }
-    function deleteItems(k, idxs) { if(!confirm('確定刪除商品？')) return; let o = orders[k]; idxs.sort((a,b)=>b-a).forEach(i => o.items.splice(i,1)); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o); }
-    function editNick(k, old) { const v = prompt("修改姓名：", old); if(v) db.ref(`orders/${k}`).update({ nick: v }); }
-    function editTotal(k, old) { const v = prompt("手動改總額：", old); if(v) db.ref(`orders/${k}`).update({ total: parseInt(v) }); }
-    function editDeposit(k, old) { const v = prompt("訂金金額：", old); if(v !== null) db.ref(`orders/${k}`).update({ deposit: parseInt(v) }); }
-    function editPaid(k, old) { const v = prompt("尾款金額：", old); if(v !== null) db.ref(`orders/${k}`).update({ paid: parseInt(v) }); }
-    function saveNote(k) { const v = document.getElementById(`note-${k}`).value; db.ref(`orders/${k}`).update({ adminNote: v }).then(()=>alert("備註已存")); }
-
-    function addItemToOrd(k) {
-        const n = prompt("商品名稱："); if(!n) return; const p = prompt("金額：", "0"); let o = orders[k]; if(!o.items) o.items = [];
-        o.items.push({ e: "手動追加", n: n, sel: "一般", p: parseInt(p || 0), pid: "manual", fWin: true, ship: false });
-        o.total = o.items.reduce((a, b) => a + (parseInt(b.p)||0), 0); db.ref(`orders/${k}`).set(o);
-    }
+    function toggleStatus(k, f, v) { db.ref(`orders/${k}`).update({ [f]: v }); }
+    function toggleSingleShip(k, idxs) { let o = orders[k]; const ns = !o.items[idxs[0]].ship; idxs.forEach(i => o.items[i].ship = ns); db.ref(`orders/${k}`).set(o); }
+    function editSingleItem(k, idx) { const o = orders[k]; const it = o.items[idx]; const newN = prompt("名稱：", it.n); const newP = prompt("單價：", it.p); if(newN&&newP){ o.items.forEach(i => { if(i.pid==it.pid&&i.sel==it.sel){ i.n=newN; i.p=parseInt(newP); } }); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o); } }
+    function batchFWin(k, idxs) { let o = orders[k]; idxs.forEach(i => o.items[i].fWin = true); db.ref(`orders/${k}`).set(o); }
+    function deleteItems(k, idxs) { if(confirm('刪除？')){ let o = orders[k]; idxs.sort((a,b)=>b-a).forEach(i => o.items.splice(i,1)); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o); } }
+    function editNick(k, old) { const v = prompt("姓名：", old); if(v) db.ref(`orders/${k}`).update({ nick: v }); }
+    function editTotal(k, old) { const v = prompt("總額：", old); if(v) db.ref(`orders/${k}`).update({ total: parseInt(v) }); }
+    function editDeposit(k, old) { const v = prompt("訂金：", old); if(v!==null) db.ref(`orders/${k}`).update({ deposit: parseInt(v) }); }
+    function editPaid(k, old) { const v = prompt("尾款：", old); if(v!==null) db.ref(`orders/${k}`).update({ paid: parseInt(v) }); }
+    function saveNote(k) { const v = document.getElementById(`note-${k}`).value; db.ref(`orders/${k}`).update({ adminNote: v }).then(()=>alert("存")); }
+    function addItemToOrd(k) { const n = prompt("商品："); const p = prompt("金額：","0"); if(n){ let o = orders[k]; o.items.push({ e: "手動", n: n, sel: "一般", p: parseInt(p||0), pid: "manual", fWin: true, ship: false }); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o); } }
 
     function mergeSelected() {
         const checks = Array.from(document.querySelectorAll('.merge-check:checked'));
-        if(checks.length < 2) return alert("請選取同人的多筆訂單");
+        if(checks.length < 2) return alert("選多筆");
         const nicks = checks.map(el => el.getAttribute('data-nick').toLowerCase());
-        if(new Set(nicks).size > 1) return alert("不同人的訂單不能合併");
-        let items = [], total = 0, keys = checks.map(el => el.value);
-        let totalPaid = 0, totalDep = 0, isPaid = false, isDep = false, combinedNote = "";
-        keys.forEach(k => { 
-            const o = orders[k]; 
-            const clonedItems = (o.items || []).map(it => ({ ...it }));
-            items = items.concat(clonedItems); 
-            total += (o.total||0); 
-            totalPaid += (o.paid||0); 
-            totalDep += (o.deposit||0); 
-            if(o.isPaid) isPaid = true;
-            if(o.isDep) isDep = true;
-            if(o.adminNote) combinedNote += (o.adminNote + " ");
-        });
-        db.ref('orders').push({ 
-            nick: checks[0].getAttribute('data-nick'), 
-            items: items, 
-            total: total, 
-            paid: totalPaid, 
-            deposit: totalDep, 
-            isPaid: isPaid, 
-            isDep: isDep, 
-            time: Date.now(), 
-            adminNote: combinedNote + "(已合併)" 
-        }).then(() => { 
-            keys.forEach(k => db.ref(`orders/${k}`).remove()); 
-            alert("併單完成！正取狀態已保留。"); 
-        });
+        if(new Set(nicks).size > 1) return alert("須同人");
+        let items = [], total = 0, keys = checks.map(el => el.value), tp=0, td=0, ip=false, id=false, cn="";
+        keys.forEach(k => { const o = orders[k]; items = items.concat(o.items||[]); total += (o.total||0); tp += (o.paid||0); td += (o.deposit||0); if(o.isPaid) ip=true; if(o.isDep) id=true; if(o.adminNote) cn += o.adminNote+" "; });
+        db.ref('orders').push({ nick: checks[0].getAttribute('data-nick'), items: items, total: total, paid: tp, deposit: td, isPaid: ip, isDep: id, time: Date.now(), adminNote: cn+"(併)" }).then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); });
     }
 
     function renderAdminProds() {
         const main = document.getElementById('admin-main');
-        main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px; padding:15px;" onclick="openAdd()">＋ 上架新商品</button>` + 
-        products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between; align-items:center;">
-            <div><b>[${p.e}]</b> ${p.n} <br><small>$${p.p} / 限購:${p.limit||'無'}</small></div>
-            <button class="btn-add" style="background:#EEE; color:#333;" onclick="openEdit(${i})">編輯</button>
-        </div>`).join('');
+        main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px;" onclick="openAdd()">＋ 上架</button>` + 
+        products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between;"><div><b>[${p.e}]</b> ${p.n} <br><small>$${p.p}</small></div><button class="btn-add" style="background:#EEE; color:#333;" onclick="openEdit(${i})">編輯</button></div>`).join('');
     }
 
     function openEdit(i) {
-        const p = products[i];
-        document.getElementById('modal-title').innerText = "編輯商品";
+        const p = products[i]; document.getElementById('modal-title').innerText = "編輯";
         document.getElementById('modal-body').innerHTML = `活動：<input id="p-e" class="input-std" value="${p.e}">名稱：<input id="p-n" class="input-std" value="${p.n}">價格：<input id="p-p" type="number" class="input-std" value="${p.p}">限購：<input id="p-l" type="number" class="input-std" value="${p.limit||999}">規格：<input id="p-s" class="input-std" value="${p.s||''}">`;
         document.getElementById('edit-modal').style.display='flex';
-        document.getElementById('modal-save').onclick = () => {
-            products[i] = { e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value };
-            db.ref('products').set(products).then(()=>document.getElementById('edit-modal').style.display='none');
-        };
+        document.getElementById('modal-save').onclick = () => { products[i] = { e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value }; db.ref('products').set(products).then(()=>document.getElementById('edit-modal').style.display='none'); };
     }
 
     function openAdd() {
-        document.getElementById('modal-title').innerText = "上架商品";
+        document.getElementById('modal-title').innerText = "上架";
         document.getElementById('modal-body').innerHTML = `活動：<input id="p-e" class="input-std">名稱：<input id="p-n" class="input-std">價格：<input id="p-p" type="number" class="input-std">限購：<input id="p-l" type="number" class="input-std" value="999">規格：<input id="p-s" class="input-std" placeholder="規格1,規格2">`;
         document.getElementById('edit-modal').style.display='flex';
-        document.getElementById('modal-save').onclick = () => {
-            products.push({ e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value });
-            db.ref('products').set(products).then(()=>document.getElementById('edit-modal').style.display='none');
-        };
+        document.getElementById('modal-save').onclick = () => { products.push({ e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value }); db.ref('products').set(products).then(()=>document.getElementById('edit-modal').style.display='none'); };
     }
 
     function performSearch() {
         const n = document.getElementById('search-nick').value.trim().toLowerCase();
-        const resArea = document.getElementById('search-results-area');
-        if(!n) return alert("輸入暱稱");
+        const resArea = document.getElementById('search-results-area'); if(!n) return;
         const allSorted = Object.entries(orders).sort((a,b) => a[1].time - b[1].time);
         let globalCounter = {}; let userResults = [];
         allSorted.forEach(([k, o]) => {
-            let userMatch = o.nick.toLowerCase() === n;
-            let orderSumm = {};
-            (o.items || []).forEach(it => {
-                let sk = `${it.pid}_${it.sel}`; globalCounter[sk] = (globalCounter[sk] || 0) + 1;
-                let limit = (products[it.pid] || {}).limit || 999;
-                if(userMatch) {
-                    if(!orderSumm[sk]) orderSumm[sk] = { ...it, wins: 0, waits: [] };
-                    if(it.fWin || globalCounter[sk] <= limit) orderSumm[sk].wins++; else orderSumm[sk].waits.push(globalCounter[sk] - limit);
-                }
-            });
-            if(userMatch) userResults.push({ o, summ: Object.values(orderSumm) });
+            let userMatch = o.nick.toLowerCase() === n; let orderSumm = {};
+            (o.items || []).forEach(it => { let sk = `${it.pid}_${it.sel}`; globalCounter[sk] = (globalCounter[sk] || 0) + 1; let limit = (products[it.pid] || {}).limit || 999;
+                if(userMatch) { if(!orderSumm[sk]) orderSumm[sk] = { ...it, wins: 0, waits: [] }; if(it.fWin || globalCounter[sk] <= limit) orderSumm[sk].wins++; else orderSumm[sk].waits.push(globalCounter[sk] - limit); }
+            }); if(userMatch) userResults.push({ o, summ: Object.values(orderSumm) });
         });
-        // 修正點：拿掉星星裝飾
-        resArea.innerHTML = userResults.length ? userResults.reverse().map(res => `
-            <div style="background:#FFF; padding:15px; border-radius:12px; margin-bottom:12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-                <div style="color:#999; font-size:11px; margin-bottom:8px;">${new Date(res.o.time).toLocaleString()}</div>
-                ${res.summ.map(it => `<div style="padding:4px 0;">• ${it.n}(${it.sel}) x ${it.wins + it.waits.length} ${it.ship ? '<b style="color:var(--matcha)">[已出貨]</b>' : ''}</div>`).join('')}
-                <div style="text-align:right; font-weight:bold; margin-top:10px; border-top:1px dashed #EEE; padding-top:10px; color:var(--caramel);">
-                    ${res.o.isPaid ? '此單已付清 ' : ''}
-                    <br>總計: $${res.o.total} | 已付訂: $${res.o.deposit||0} | 尚欠: $${(res.o.total||0)-(res.o.deposit||0)-(res.o.paid||0)}
-                </div>
-            </div>`).join('') : '<p style="text-align:center; color:#999;">查無訂單資訊</p>';
+        resArea.innerHTML = userResults.length ? userResults.reverse().map(res => `<div style="background:#FFF; padding:15px; border-radius:12px; margin-bottom:10px;">${res.summ.map(it => `<div>• ${it.n}(${it.sel}) x ${it.wins + it.waits.length} ${it.ship?'<b>[已出貨]</b>':''}</div>`).join('')}<div style="text-align:right; margin-top:5px;">總計: $${res.o.total} | 尚欠: $${(res.o.total||0)-(res.o.deposit||0)-(res.o.paid||0)}</div></div>`).join('') : '查無訂單';
     }
 
     function askExport(type) {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
-        document.getElementById('modal-title').innerText = "匯出選項";
+        document.getElementById('modal-title').innerText = "匯出";
         document.getElementById('modal-body').innerHTML = evts.map(e => `<div><input type="checkbox" class="evt-check" value="${e}" checked> ${e}</div>`).join('');
-        const btn = document.getElementById('modal-save');
-        btn.innerText = "確認匯出";
-        btn.onclick = () => {
+        document.getElementById('edit-modal').style.display = 'flex';
+        document.getElementById('modal-save').onclick = () => {
             const selected = Array.from(document.querySelectorAll('.evt-check:checked')).map(el => el.value);
-            let text = `🌟 33日本動物園 - ${type==='summary'?'採購清單':'場次明細'}\n`;
-            let totalQty = 0;
+            let text = `🌟 33日本動物園 - ${type==='summary'?'採購':'明細'}\n`;
             if(type==='summary') {
                 let s = {}; Object.values(orders).forEach(o => { (o.items||[]).forEach(it => { if(selected.includes(it.e)) { let k = `[${it.e}] ${it.n}(${it.sel})`; s[k] = (s[k]||0)+1; } }); });
-                for(let k in s) { text += `${k} : ${s[k]} 個\n`; totalQty += s[k]; }
-                text += `\n------------------\n📦 總計採購量：${totalQty} 件`;
+                for(let k in s) text += `${k} : ${s[k]} 個\n`;
             } else {
-                Object.values(orders).forEach(o => { 
-                    const fits = (o.items||[]).filter(it => selected.includes(it.e));
-                    if(fits.length) { 
-                        const bal = (o.total||0)-(o.deposit||0)-(o.paid||0);
-                        text += `\n【${o.nick}】(總額:$${o.total}/已付訂:$${o.deposit||0}/尚欠:$${bal})\n`; 
-                        fits.forEach(it => { text += `- ${it.n}(${it.sel}) x 1 ${it.ship?'[已出貨]':''}\n`; totalQty++; }); 
-                    }
-                });
-                text += `\n------------------\n📋 總品項：${totalQty} 件`;
+                Object.values(orders).forEach(o => { const fits = (o.items||[]).filter(it => selected.includes(it.e)); if(fits.length) { text += `\n【${o.nick}】(總額:$${o.total}/尚欠:$${(o.total||0)-(o.deposit||0)-(o.paid||0)})\n`; fits.forEach(it => { text += `- ${it.n}(${it.sel})\n`; }); } });
             }
-            const blob = new Blob([text], { type: "text/plain" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `33日本動物園_${type}.txt`;
-            link.click();
-            navigator.clipboard.writeText(text).then(() => { alert("✅ 下載成功且內容已複製！"); });
+            const blob = new Blob([text], { type: "text/plain" }); const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob); link.download = `export.txt`; link.click();
             document.getElementById('edit-modal').style.display = 'none';
         };
-        document.getElementById('edit-modal').style.display = 'flex';
     }
 </script>
 </body>
