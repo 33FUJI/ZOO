@@ -17,7 +17,7 @@
         .grid-hall { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; width: 100%; max-width: 500px; margin-top: 20px; }
         .card-hall { background: #FFF; padding: 25px 10px; border-radius: 15px; border: 1px solid #EAE2D1; text-align: center; cursor: pointer; box-shadow: 0 4px 0 #EAE2D1; font-weight: bold; color: var(--matcha); font-size: 16px; }
         
-        /* 購物主介面佈局 */
+        /* 購物主介面 */
         .app-container { display: none; flex: 1; overflow: hidden; flex-direction: row; }
         .list-area { flex: 1; overflow-y: auto; padding: 15px; background: var(--gray); -webkit-overflow-scrolling: touch; }
         .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; max-width: 1400px; margin: 0 auto; }
@@ -39,7 +39,7 @@
             .btn-add { padding: 12px; font-size: 14px; }
         }
 
-        /* 管理後台 */
+        /* 管理工作台 */
         #admin-panel { position: fixed; inset: 0; background: #F8F9FA; z-index: 4000; display: none; flex-direction: column; }
         .admin-header { background: var(--wood); color: #FFF; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .admin-nav { padding: 10px; background: #EEE; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #DDD; }
@@ -52,7 +52,10 @@
         .modal-box { background: var(--rice); padding: 25px; border-radius: 20px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
         .input-std { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #DDD; border-radius: 10px; font-size: 15px; }
         .del-order-btn { background: #FF4D4D; color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; }
-        .shipped-item { text-decoration: line-through; color: #999; }
+        
+        /* 修正：移除劃線，改用顏色區分或圖示 */
+        .item-text { cursor: pointer; }
+        .shipped-text { color: #2a9d8f; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -136,7 +139,7 @@
     });
 
     function renderHall() {
-        if (!products.length) return; // 防止資料未載入時報錯
+        if (!products.length) return;
         const evts = [...new Set(products.map(p => p.e))].filter(e => e && e.trim() !== "");
         document.getElementById('hall-grid').innerHTML = evts.map(e => `<div class="card-hall" onclick="openShop('${e}')">${e}</div>`).join('');
     }
@@ -223,9 +226,23 @@
                         if(globalCounter[sk] <= limit) wins++; else waits.push(globalCounter[sk] - limit);
                     }
                 });
+                
                 let st = wins > 0 ? `<span style="color:green; font-weight:bold;">正取x${wins} </span>` : "";
                 if(waits.length > 0) st += `<span style="color:orange;">(候補第 ${waits.join(',')} 順位)</span>`;
-                return `<div class="admin-item-row"><input type="checkbox" class="item-check-${k}" value="${it.idxs.join(',')}"><span class="item-text ${o.items[it.idxs[0]].ship?'shipped-item':''}" onclick="toggleSingleShip('${k}', [${it.idxs}])"><b>${it.n}(${it.sel}) x ${it.qty}</b> $${it.p*it.qty} ${st}</span><button onclick="editSingleItem('${k}', [${it.idxs}])" style="background:none; border:none; color:blue;">✎</button><button class="fwin-btn" onclick="batchFWin('${k}', [${it.idxs}])">強正</button><button onclick="deleteItems('${k}', [${it.idxs}])" style="color:#DDD; background:none; border:none;">✕</button></div>`
+                
+                // 修正：檢查是否已出貨，顯示文字圖示
+                const isAllShip = o.items[it.idxs[0]].ship;
+                const shipLabel = isAllShip ? `<span class="shipped-text"> (🚚已出)</span>` : "";
+
+                return `<div class="admin-item-row">
+                    <input type="checkbox" class="item-check-${k}" value="${it.idxs.join(',')}">
+                    <span class="item-text" onclick="toggleSingleShip('${k}', [${it.idxs}])">
+                        <b>${it.n}(${it.sel}) x ${it.qty}</b> $${it.p*it.qty} ${st}${shipLabel}
+                    </span>
+                    <button onclick="editSingleItem('${k}', [${it.idxs}])" style="background:none; border:none; color:blue;">✎</button>
+                    <button class="fwin-btn" onclick="batchFWin('${k}', [${it.idxs}])">強正</button>
+                    <button onclick="deleteItems('${k}', [${it.idxs}])" style="color:#DDD; background:none; border:none;">✕</button>
+                </div>`
             }).join('');
 
             const bal = (o.total || 0) - (o.deposit || 0) - (o.paid || 0);
@@ -234,24 +251,30 @@
 
     function toggleStatus(k, f, v) { db.ref(`orders/${k}`).update({ [f]: v }); }
 
-    // 優化已付邏輯：支援留尾數需求
     function togglePayStatus(k, v) {
         let o = orders[k];
         if(v) {
-            // 詢問園長要不要自動結清，若要「留 20 元」請點取消
-            if(confirm("是否自動將剩餘金額填入尾款？\n[確定]：自動結清(餘額歸零)\n[取消]：手動輸入尾款(方便留20元)")) {
+            if(confirm("是否自動將剩餘金額填入尾款？\n[確定]：自動結清\n[取消]：手動輸入尾款(留20元)")) {
                 let remain = (o.total || 0) - (o.deposit || 0);
                 db.ref(`orders/${k}`).update({ isPaid: true, paid: remain });
             } else {
-                db.ref(`orders/${k}`).update({ isPaid: true }); // 僅勾選已付，不改動金額
+                db.ref(`orders/${k}`).update({ isPaid: true });
             }
         } else {
             db.ref(`orders/${k}`).update({ isPaid: false });
         }
     }
 
-    function deleteEntireOrder(k) { if(confirm("確定刪除這整筆訂單？")) db.ref(`orders/${k}`).remove(); }
-    function toggleSingleShip(k, idxs) { let o = orders[k]; const ns = !o.items[idxs[0]].ship; idxs.forEach(i => o.items[i].ship = ns); db.ref(`orders/${k}`).set(o); }
+    function deleteEntireOrder(k) { if(confirm("確定刪除整筆訂單？")) db.ref(`orders/${k}`).remove(); }
+    
+    // 修正出貨邏輯：切換狀態但不劃線
+    function toggleSingleShip(k, idxs) { 
+        let o = orders[k]; 
+        const ns = !o.items[idxs[0]].ship; 
+        idxs.forEach(i => o.items[i].ship = ns); 
+        db.ref(`orders/${k}`).set(o); 
+    }
+
     function editSingleItem(k, idxs) { const o = orders[k]; const it = o.items[idxs[0]]; const newN = prompt("編輯名稱：", it.n); const newP = prompt("編輯金額：", it.p); if(newN && newP){ idxs.forEach(i => { o.items[i].n = newN; o.items[i].p = parseInt(newP); }); o.total = o.items.reduce((a, b) => a + (b.p || 0), 0); db.ref(`orders/${k}`).set(o); } }
     function batchFWin(k, idxs) { let o = orders[k]; idxs.forEach(i => o.items[i].fWin = true); db.ref(`orders/${k}`).set(o); }
     function deleteItems(k, idxs) { if(confirm('刪除？')){ let o = orders[k]; idxs.sort((a,b)=>b-a).forEach(i => o.items.splice(i,1)); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o); } }
@@ -317,7 +340,7 @@
             }); 
             if(userMatch) userResults.push({ o, summ: Object.values(orderSumm) });
         });
-        resArea.innerHTML = userResults.length ? userResults.reverse().map(res => `<div style="background:#FFF; padding:15px; border-radius:12px; margin-bottom:10px; border-left: 5px solid var(--matcha);">${res.summ.map(it => { const statusText = it.details.map(d => { let txt = d.isWin ? '<b style="color:green;">[正取]</b>' : `<b style="color:orange;">[候補第 ${d.seq} 順位]</b>`; if(d.isShip) txt += ' <small style="color:#999;">(已出貨)</small>'; return txt; }).join('、'); return `<div>• ${it.n}(${it.sel}) x ${it.details.length} <br> &nbsp;&nbsp;狀態：${statusText}</div>`; }).join('')}<div style="text-align:right; margin-top:8px; border-top:1px dashed #EEE; padding-top:5px; font-size:13px;">總計: $${res.o.total} | 尚欠: <span style="color:red;">$${(res.o.total||0)-(res.o.deposit||0)-(res.o.paid||0)}</span></div></div>`).join('') : '<p style="text-align:center; color:#999;">查無訂單</p>';
+        resArea.innerHTML = userResults.length ? userResults.reverse().map(res => `<div style="background:#FFF; padding:15px; border-radius:12px; margin-bottom:10px; border-left: 5px solid var(--matcha);">${res.summ.map(it => { const statusText = it.details.map(d => { let txt = d.isWin ? '<b style="color:green;">[正取]</b>' : `<b style="color:orange;">[候補第 ${d.seq} 順位]</b>`; if(d.isShip) txt += ' <small style="color:#2a9d8f;">(已出貨)</small>'; return txt; }).join('、'); return `<div>• ${it.n}(${it.sel}) x ${it.details.length} <br> &nbsp;&nbsp;狀態：${statusText}</div>`; }).join('')}<div style="text-align:right; margin-top:8px; border-top:1px dashed #EEE; padding-top:5px; font-size:13px;">總計: $${res.o.total} | 尚欠: <span style="color:red;">$${(res.o.total||0)-(res.o.deposit||0)-(res.o.paid||0)}</span></div></div>`).join('') : '<p style="text-align:center; color:#999;">查無訂單</p>';
     }
 
     function askExport(type) {
@@ -332,7 +355,7 @@
                 let s = {}; Object.values(orders).forEach(o => { (o.items||[]).forEach(it => { if(selected.includes(it.e)) { let k = `[${it.e}] ${it.n}(${it.sel})`; s[k] = (s[k]||0)+1; } }); });
                 for(let k in s) text += `${k} : ${s[k]} 個\n`;
             } else {
-                Object.values(orders).forEach(o => { const fits = (o.items||[]).filter(it => selected.includes(it.e)); if(fits.length) { text += `\n【${o.nick}】(總額:$${o.total}/尚欠:$${(o.total||0)-(o.deposit||0)-(o.paid||0)})\n`; fits.forEach(it => { text += `- ${it.n}(${it.sel})\n`; }); } });
+                Object.values(orders).forEach(o => { const fits = (o.items||[]).filter(it => selected.includes(it.e)); if(fits.length) { text += `\n【${o.nick}】(總額:$${o.total}/尚欠:$${(o.total||0)-(res.o.deposit||0)-(o.paid||0)})\n`; fits.forEach(it => { text += `- ${it.n}(${it.sel})\n`; }); } });
             }
             const blob = new Blob([text], { type: "text/plain" }); const link = document.createElement("a");
             link.href = URL.createObjectURL(blob); link.download = `export.txt`; link.click();
