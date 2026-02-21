@@ -36,6 +36,11 @@
         .modal-box { background: var(--rice); padding: 25px; border-radius: 20px; width: 100%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
         .input-std { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #DDD; border-radius: 10px; font-size: 16px; }
 
+        /* 快速標籤樣式 */
+        .status-labels { display: flex; gap: 10px; margin-top: 8px; font-size: 13px; }
+        .status-label { display: flex; align-items: center; gap: 4px; cursor: pointer; background: #F0F0F0; padding: 4px 8px; border-radius: 5px; }
+        .status-label input { cursor: pointer; }
+
         @media (max-width: 768px) {
             .app-container { flex-direction: column; }
             .cart-area { width: 100%; flex: 1.5; border-left: none; border-top: 2px solid #EEE; }
@@ -171,7 +176,7 @@
 
     function submitOrder() {
         const n = document.getElementById('nick').value.trim(); if(!n || cart.length===0) return alert("輸入暱稱及商品");
-        db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), adminNote: "", paid: 0, deposit: 0 })
+        db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), adminNote: "", paid: 0, deposit: 0, isPaid: false, isDep: false })
           .then(() => { alert("訂單已提交！"); cart = []; location.reload(); });
     }
 
@@ -213,6 +218,7 @@
                 </div>`}).join('');
 
             const balance = (o.total || 0) - (o.deposit || 0) - (o.paid || 0);
+            const clearStatus = o.isPaid || balance <= 0;
 
             return `<div class="admin-order-card">
                 <div style="display:flex; justify-content:space-between; border-bottom:1px dashed #DDD; padding-bottom:5px;">
@@ -220,23 +226,32 @@
                     <b onclick="editTotal('${k}',${o.total})" style="color:var(--caramel); text-decoration:underline; cursor:pointer;">總額:$${o.total} ✎</b>
                 </div>
                 ${itemsHtml}
+                <div class="status-labels">
+                    <label class="status-label" style="${o.isPaid?'background:#E8F5E9;color:#2E7D32':''}">
+                        <input type="checkbox" ${o.isPaid?'checked':''} onchange="toggleStatus('${k}', 'isPaid', this.checked)"> ✅ 已收錢
+                    </label>
+                    <label class="status-label" style="${o.isDep?'background:#FFF3E0;color:#E65100':''}">
+                        <input type="checkbox" ${o.isDep?'checked':''} onchange="toggleStatus('${k}', 'isDep', this.checked)"> ✅ 已付訂
+                    </label>
+                </div>
                 <div style="font-size:13px; background:#F5F5F5; padding:8px; border-radius:5px; margin:10px 0; line-height:1.6;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span onclick="editDeposit('${k}',${o.deposit||0})" style="text-decoration:underline; cursor:pointer; color:#BC6C25;"><b>已收訂金: $${o.deposit||0} ✎</b></span>
                         <span onclick="editPaid('${k}',${o.paid||0})" style="text-decoration:underline; cursor:pointer; color:green;"><b>已收尾款: $${o.paid||0} ✎</b></span>
                     </div>
-                    <div style="margin-top:5px; border-top:1px solid #DDD; padding-top:5px; color:${balance<=0?'green':'red'}; font-weight:bold; text-align:right;">
-                        ${balance <= 0 ? '🎉 已清帳' : '剩餘應付: $' + balance}
+                    <div style="margin-top:5px; border-top:1px solid #DDD; padding-top:5px; color:${clearStatus?'green':'red'}; font-weight:bold; text-align:right;">
+                        ${clearStatus ? '🎉 已清帳' : '剩餘應付: $' + balance}
                     </div>
                 </div>
                 <div style="display:flex; gap:5px;">
                     <button class="btn-add" style="flex:1; font-size:12px; background:#4361EE;" onclick="addItemToOrd('${k}')">＋ 手動加商品</button>
                     <button onclick="if(confirm('刪除整筆？')) db.ref('orders/${k}').remove()" style="color:red; background:none; border:none;">🗑️</button>
                 </div>
-                <input class="input-std" style="height:35px; margin-top:8px; font-size:14px;" id="note-${k}" value="${o.adminNote||''}" placeholder="備註按 Enter" onkeydown="if(event.key==='Enter') saveNote('${k}')">
+                <input class="input-std" style="height:35px; margin-top:8px; font-size:14px;" id="note-${k}" value="${o.adminNote||''}" placeholder="這裡寫備註，按 Enter 儲存" onkeydown="if(event.key==='Enter') saveNote('${k}')">
             </div>`}).join('');
     }
 
+    function toggleStatus(k, field, val) { db.ref(`orders/${k}`).update({ [field]: val }); }
     function toggleSingleShip(k, idxs) { let o = orders[k]; const nextStatus = !o.items[idxs[0]].ship; idxs.forEach(i => o.items[i].ship = nextStatus); db.ref(`orders/${k}`).set(o); }
     function editSingleItem(k, idx) { const o = orders[k]; const it = o.items[idx]; const newN = prompt("修改名稱：", it.n); if(!newN) return; const newP = prompt("修改單價：", it.p); if(!newP) return; o.items.forEach(item => { if(item.pid == it.pid && item.sel == it.sel) { item.n = newN; item.p = parseInt(newP); } }); o.total = o.items.reduce((a, b) => a + (parseInt(b.p)||0), 0); db.ref(`orders/${k}`).set(o); }
     function batchFWin(k, idxs) { let o = orders[k]; idxs.forEach(i => o.items[i].fWin = true); db.ref(`orders/${k}`).set(o); }
@@ -296,9 +311,17 @@
         if(checks.length < 2) return alert("請選取同人的多筆訂單");
         const nicks = checks.map(el => el.getAttribute('data-nick').toLowerCase());
         if(new Set(nicks).size > 1) return alert("不同人的訂單不能合併");
-        let items = [], total = 0, keys = checks.map(el => el.value), totalPaid = 0, totalDep = 0;
-        keys.forEach(k => { const o = orders[k]; items = items.concat(o.items || []); total += (o.total||0); totalPaid += (o.paid||0); totalDep += (o.deposit||0); });
-        db.ref('orders').push({ nick: nicks[0], items: items, total: total, paid: totalPaid, deposit: totalDep, time: Date.now(), adminNote: "(合併訂單)" })
+        let items = [], total = 0, keys = checks.map(el => el.value), totalPaid = 0, totalDep = 0, isPaid = false, isDep = false;
+        keys.forEach(k => { 
+            const o = orders[k]; 
+            items = items.concat(o.items || []); 
+            total += (o.total||0); 
+            totalPaid += (o.paid||0); 
+            totalDep += (o.deposit||0); 
+            if(o.isPaid) isPaid = true;
+            if(o.isDep) isDep = true;
+        });
+        db.ref('orders').push({ nick: nicks[0], items: items, total: total, paid: totalPaid, deposit: totalDep, isPaid: isPaid, isDep: isDep, time: Date.now(), adminNote: "(合併訂單)" })
           .then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); alert("合併完成！"); });
     }
 
@@ -326,6 +349,7 @@
                 <div style="color:#999; font-size:11px;">${new Date(res.o.time).toLocaleString()}</div>
                 ${res.summ.map(it => `<div>- ${it.n}(${it.sel}) x ${it.wins + it.waits.length} ${it.ship ? '<b style="color:blue">[已出貨]</b>' : ''}</div>`).join('')}
                 <div style="text-align:right; font-weight:bold; margin-top:5px; border-top:1px dashed #EEE; padding-top:5px;">
+                    ${res.o.isPaid ? '⭐ 已付清 ' : ''}
                     總計: $${res.o.total} | 訂金: $${res.o.deposit||0} | 尾款: $${res.o.paid||0} | 還差: $${(res.o.total||0)-(res.o.deposit||0)-(res.o.paid||0)}
                 </div>
             </div>`).join('');
