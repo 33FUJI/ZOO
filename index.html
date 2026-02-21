@@ -17,36 +17,50 @@
         .grid-hall { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 500px; margin-top: 20px; }
         .card-hall { background: #FFF; padding: 25px 10px; border-radius: 15px; border: 1px solid #EAE2D1; text-align: center; cursor: pointer; box-shadow: 0 4px 0 #EAE2D1; font-weight: bold; color: var(--matcha); font-size: 16px; }
         
-        /* 購物主介面 */
+        /* 購物主介面佈局 */
         .app-container { display: none; flex: 1; overflow: hidden; flex-direction: row; }
-        .list-area { flex: 1; overflow-y: auto; padding: 10px; background: var(--gray); -webkit-overflow-scrolling: touch; }
+        .list-area { flex: 1; overflow-y: auto; padding: 15px; background: var(--gray); -webkit-overflow-scrolling: touch; }
         
-        /* 自適應網格：不強制三格，避免小手機跑版 */
+        /* 網格系統：電腦版寬大好讀，手機版自適應 */
         .prod-grid { 
             display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); 
-            gap: 8px; 
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
+            gap: 15px; 
+            max-width: 1400px; 
+            margin: 0 auto;
         }
         
         .prod-card { 
-            background: #FFF; border-radius: 8px; padding: 8px; 
+            background: #FFF; border-radius: 12px; padding: 15px; 
             display: flex; flex-direction: column; justify-content: space-between; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); min-height: 220px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); min-height: 280px; 
         }
         
-        .prod-name { font-size: 13px; font-weight: bold; min-height: 38px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.2; overflow: hidden; }
-        .prod-price { color: var(--caramel); font-size: 14px; margin: 4px 0; font-weight: bold; text-align: center; }
+        .prod-name { font-size: 16px; font-weight: bold; min-height: 45px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.4; overflow: hidden; }
+        .prod-price { color: var(--caramel); font-size: 18px; margin: 8px 0; font-weight: bold; text-align: center; }
         
-        /* 規格區對齊關鍵：固定高度 */
-        .spec-area { min-height: 50px; margin-bottom: 5px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px; }
-        .qty-area { display: flex; align-items: center; justify-content: center; gap: 5px; margin-bottom: 8px; }
-        .btn-qty { width: 22px; height: 22px; border-radius: 50%; border: 1px solid #DDD; background: #FFF; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .spec-area { min-height: 60px; margin-bottom: 8px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px; }
+        .qty-area { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; }
+        .btn-qty { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #DDD; background: #FFF; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
         
         /* 購物車區塊 */
-        .cart-area { width: 320px; background: #FFF; border-left: 1px solid #DDD; display: flex; flex-direction: column; }
-        .cart-bottom { padding: 10px; border-top: 1px solid #EEE; background: #FFF; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+        .cart-area { width: 360px; background: #FFF; border-left: 1px solid #DDD; display: flex; flex-direction: column; box-shadow: -2px 0 10px rgba(0,0,0,0.05); }
+        .cart-bottom { padding: 15px; border-top: 1px solid #EEE; background: #FFF; padding-bottom: calc(15px + env(safe-area-inset-bottom)); }
 
-        /* 管理面板樣式 */
+        /* 手機版適應 (螢幕寬度小於 768px) */
+        @media (max-width: 768px) {
+            .app-container { flex-direction: column; }
+            .cart-area { width: 100%; flex: 1.5; border-left: none; border-top: 1px solid #EEE; }
+            .prod-grid { grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 8px; }
+            .prod-card { padding: 8px; min-height: 220px; border-radius: 8px; }
+            .prod-name { font-size: 12px; min-height: 32px; }
+            .prod-price { font-size: 14px; }
+            .spec-area { min-height: 45px; }
+            .btn-qty { width: 24px; height: 24px; font-size: 14px; }
+            .btn-add { padding: 12px; font-size: 14px; }
+        }
+
+        /* 管理面板 & 其他組件 */
         #admin-panel { position: fixed; inset: 0; background: #F8F9FA; z-index: 4000; display: none; flex-direction: column; }
         .admin-header { background: var(--wood); color: #FFF; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .admin-nav { padding: 10px; background: #EEE; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #DDD; }
@@ -54,23 +68,12 @@
         .admin-item-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #F9F9F9; gap: 8px; font-size: 14px; }
         .item-text { flex: 1; cursor: pointer; }
         .shipped-item { color: #BBB !important; text-decoration: line-through; }
-        
-        .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
         .status-label { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; background: #F0F0F0; padding: 8px; border-radius: 8px; font-weight: bold; font-size: 13px; border: 1px solid #DDD; }
         .fwin-btn { font-size: 11px; border: 1px solid var(--caramel); color: var(--caramel); background: none; padding: 3px 6px; border-radius: 5px; }
-
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 15px; }
         .modal-box { background: var(--rice); padding: 25px; border-radius: 20px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
         .input-std { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #DDD; border-radius: 10px; font-size: 15px; }
-
-        @media (max-width: 768px) {
-            .app-container { flex-direction: column; }
-            .cart-area { width: 100%; flex: 1.5; border-left: none; border-top: 1px solid #EEE; }
-            .prod-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 6px; }
-            .prod-card { padding: 6px; min-height: 200px; }
-            .prod-name { font-size: 11px; min-height: 30px; }
-            .btn-add { padding: 10px; font-size: 12px; }
-        }
     </style>
 </head>
 <body>
@@ -85,13 +88,13 @@
 <div class="app-container" id="main-app">
     <div class="list-area"><div id="prod-list" class="prod-grid"></div></div>
     <div class="cart-area">
-        <div style="padding:10px; font-weight:bold; background:#FDFDFD; border-bottom:1px solid #EEE;">🛒 購物清單</div>
+        <div style="padding:15px; font-weight:bold; background:#FDFDFD; border-bottom:1px solid #EEE;">🛒 購物清單</div>
         <div id="cart-items" style="flex:1; overflow-y:auto; padding:10px;"></div>
         <div class="cart-bottom">
-            <p style="display:flex; justify-content:space-between; font-weight:bold; font-size:16px; margin:5px 0;">總計: <span style="color:var(--caramel);">$ <span id="cart-total">0</span></span></p>
+            <p style="display:flex; justify-content:space-between; font-weight:bold; font-size:18px; margin:5px 0;">總計: <span style="color:var(--caramel);">$ <span id="cart-total">0</span></span></p>
             <input id="nick" class="input-std" placeholder="您的 LINE 暱稱">
-            <button class="btn-add" style="width:100%; background:var(--matcha); padding:14px; font-size:16px; margin-top:5px;" onclick="submitOrder()">確認提交訂單</button>
-            <button onclick="backToHall()" style="width:100%; margin-top:10px; border:none; background:none; color:#999; font-size:12px;">← 返回目錄</button>
+            <button class="btn-add" style="width:100%; background:var(--matcha); padding:16px; font-size:18px; margin-top:5px;" onclick="submitOrder()">確認提交訂單</button>
+            <button onclick="backToHall()" style="width:100%; margin-top:10px; border:none; background:none; color:#999; font-size:13px;">← 返回目錄</button>
         </div>
     </div>
 </div>
@@ -159,7 +162,7 @@
         document.getElementById('prod-list').innerHTML = list.map(p => {
             const rid = products.indexOf(p);
             if(!curQty[rid]) curQty[rid] = 1;
-            const specs = p.s ? p.s.split(',').map(v=>`<button id="s-${rid}-${v}" onclick="selSpec(${rid},'${v}')" style="border:1px solid #DDD; margin:1px; font-size:10px; background:#FFF; border-radius:3px; padding:2px 4px;">${v}</button>`).join('') : '';
+            const specs = p.s ? p.s.split(',').map(v=>`<button id="s-${rid}-${v}" onclick="selSpec(${rid},'${v}')" style="border:1px solid #DDD; margin:1px; font-size:11px; background:#FFF; border-radius:4px; padding:3px 6px; cursor:pointer;">${v}</button>`).join('') : '';
             return `<div class="prod-card">
                 <div>
                     <div class="prod-name">${p.n}</div>
@@ -169,7 +172,7 @@
                 <div>
                     <div class="qty-area">
                         <button class="btn-qty" onclick="updateQty(${rid},-1)">-</button>
-                        <span id="qty-val-${rid}" style="font-weight:bold; font-size:14px;">${curQty[rid]}</span>
+                        <span id="qty-val-${rid}" style="font-weight:bold; font-size:16px;">${curQty[rid]}</span>
                         <button class="btn-qty" onclick="updateQty(${rid},1)">+</button>
                     </div>
                     <button class="btn-add" style="width:100%; background:var(--wood);" onclick="addToCart(${rid})">加入購物車</button>
@@ -193,7 +196,7 @@
         let summ = {}; cart.forEach(it => { let k = `${it.pid}_${it.sel}`; summ[k] = (summ[k]||0)+1; });
         document.getElementById('cart-items').innerHTML = Object.keys(summ).map(k => {
             const [pid, sel] = k.split('_'); const p = products[pid];
-            return `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #EEE; font-size:13px;"><span><b>${p.n}</b> (${sel}) x ${summ[k]}</span><span onclick="removeFromCart(${pid},'${sel}')" style="color:#CCC; cursor:pointer;">✕</span></div>`}).join('');
+            return `<div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #EEE; font-size:14px;"><span><b>${p.n}</b> (${sel}) x ${summ[k]}</span><span onclick="removeFromCart(${pid},'${sel}')" style="color:#CCC; cursor:pointer; padding:0 5px;">✕</span></div>`}).join('');
         document.getElementById('cart-total').innerText = cart.reduce((a,b)=>a+b.p,0);
     }
 
@@ -227,8 +230,8 @@
                     <label class="status-label" style="${o.isDep?'background:#FFF3E0;':''}"><input type="checkbox" ${o.isDep?'checked':''} onchange="toggleStatus('${k}', 'isDep', this.checked)"> 訂金</label>
                 </div>
                 <div style="background:#F9F9F9; padding:10px; border-radius:8px; font-size:13px;">
-                    <div style="display:flex; justify-content:space-between;"><span onclick="editTotal('${k}',${o.total})">總額: $${o.total} ✎</span><span style="color:${bal<=0?'green':'red'}">${bal<=0?'已清':'餘:'+bal}</span></div>
-                    <div style="display:flex; justify-content:space-between;"><span onclick="editDeposit('${k}',${o.deposit||0})">訂金: $${o.deposit||0} ✎</span><span onclick="editPaid('${k}',${o.paid||0})">尾款: $${o.paid||0} ✎</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span onclick="editTotal('${k}',${o.total})" style="cursor:pointer;">總額: $${o.total} ✎</span><span style="color:${bal<=0?'green':'red'}">${bal<=0?'已清':'餘:'+bal}</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span onclick="editDeposit('${k}',${o.deposit||0})" style="cursor:pointer;">訂金: $${o.deposit||0} ✎</span><span onclick="editPaid('${k}',${o.paid||0})" style="cursor:pointer;">尾款: $${o.paid||0} ✎</span></div>
                 </div>
                 <input class="input-std" style="height:35px; font-size:12px;" id="note-${k}" value="${o.adminNote||''}" placeholder="備註按 Enter" onkeydown="if(event.key==='Enter') saveNote('${k}')">
                 <button class="btn-add" style="width:100%; margin-top:5px; background:#EEE; color:#666;" onclick="addItemToOrd('${k}')">＋ 加商品</button>
