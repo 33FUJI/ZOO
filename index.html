@@ -12,38 +12,21 @@
         html, body { height: 100%; margin: 0; padding: 0; background: var(--gray); overflow: hidden; color: var(--wood); }
         body { display: flex; flex-direction: column; }
 
-        /* 入口大廳 */
-        .hall { position: fixed; inset: 0; background: var(--rice); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .grid-hall { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 500px; margin-top: 20px; }
+        /* 入口大廳修正 */
+        .hall { position: fixed; inset: 0; background: var(--rice); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        .grid-hall { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; width: 100%; max-width: 500px; margin-top: 20px; }
         .card-hall { background: #FFF; padding: 25px 10px; border-radius: 15px; border: 1px solid #EAE2D1; text-align: center; cursor: pointer; box-shadow: 0 4px 0 #EAE2D1; font-weight: bold; color: var(--matcha); font-size: 16px; }
         
         /* 購物主介面佈局 */
         .app-container { display: none; flex: 1; overflow: hidden; flex-direction: row; }
         .list-area { flex: 1; overflow-y: auto; padding: 15px; background: var(--gray); -webkit-overflow-scrolling: touch; }
-        
-        /* 網格系統：電腦版優化 */
-        .prod-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
-            gap: 15px; 
-            max-width: 1400px; 
-            margin: 0 auto;
-        }
-        
-        .prod-card { 
-            background: #FFF; border-radius: 12px; padding: 15px; 
-            display: flex; flex-direction: column; justify-content: space-between; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08); min-height: 280px; 
-        }
-        
+        .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; max-width: 1400px; margin: 0 auto; }
+        .prod-card { background: #FFF; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.08); min-height: 280px; }
         .prod-name { font-size: 16px; font-weight: bold; min-height: 45px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.4; overflow: hidden; }
         .prod-price { color: var(--caramel); font-size: 18px; margin: 8px 0; font-weight: bold; text-align: center; }
-        
         .spec-area { min-height: 60px; margin-bottom: 8px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px; }
         .qty-area { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; }
         .btn-qty { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #DDD; background: #FFF; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
-        
-        /* 購物車區塊 */
         .cart-area { width: 360px; background: #FFF; border-left: 1px solid #DDD; display: flex; flex-direction: column; box-shadow: -2px 0 10px rgba(0,0,0,0.05); }
         .cart-bottom { padding: 15px; border-top: 1px solid #EEE; background: #FFF; padding-bottom: calc(15px + env(safe-area-inset-bottom)); }
 
@@ -53,9 +36,6 @@
             .prod-grid { grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 8px; }
             .prod-card { padding: 8px; min-height: 220px; border-radius: 8px; }
             .prod-name { font-size: 12px; min-height: 32px; }
-            .prod-price { font-size: 14px; }
-            .spec-area { min-height: 45px; }
-            .btn-qty { width: 24px; height: 24px; font-size: 14px; }
             .btn-add { padding: 12px; font-size: 14px; }
         }
 
@@ -144,12 +124,26 @@
 
     let products = [], orders = {}, cart = [], curS = {}, curQty = {}, currentEvent = "";
 
-    db.ref('products').on('value', snap => { products = snap.val() || []; renderHall(); if(currentEvent) openShop(currentEvent); });
-    db.ref('orders').on('value', snap => { orders = snap.val() || {}; if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); });
+    // 監聽 Firebase 資料
+    db.ref('products').on('value', snap => { 
+        products = snap.val() || []; 
+        renderHall(); 
+        if(currentEvent) openShop(currentEvent); 
+    });
+    db.ref('orders').on('value', snap => { 
+        orders = snap.val() || {}; 
+        if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); 
+    });
 
+    // 修正大廳卡片顯示邏輯
     function renderHall() {
-        const evts = [...new Set(products.map(p => p.e))].filter(e => e);
-        document.getElementById('hall-grid').innerHTML = evts.map(e => `<div class="card-hall" onclick="openShop('${e}')">${e}</div>`).join('');
+        const evts = [...new Set(products.map(p => p.e))].filter(e => e && e.trim() !== "");
+        const hallGrid = document.getElementById('hall-grid');
+        if (evts.length === 0) {
+            hallGrid.innerHTML = '<p style="grid-column:1/-1; color:#999;">目前沒有進行中的活動</p>';
+        } else {
+            hallGrid.innerHTML = evts.map(e => `<div class="card-hall" onclick="openShop('${e}')">${e}</div>`).join('');
+        }
     }
 
     function openShop(e) {
@@ -312,7 +306,7 @@
         document.getElementById('modal-title').innerText = "上架";
         document.getElementById('modal-body').innerHTML = `活動：<input id="p-e" class="input-std">名稱：<input id="p-n" class="input-std">價格：<input id="p-p" type="number" class="input-std">限購：<input id="p-l" type="number" class="input-std" value="999">規格：<input id="p-s" class="input-std" placeholder="規格1,規格2">`;
         document.getElementById('edit-modal').style.display='flex';
-        document.getElementById('modal-save').onclick = () => { products.push({ e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value }; db.ref('products').set(products).then(()=>document.getElementById('edit-modal').style.display='none'); };
+        document.getElementById('modal-save').onclick = () => { products.push({ e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value }); db.ref('products').set(products).then(()=>document.getElementById('edit-modal').style.display='none'); };
     }
 
     function performSearch() {
@@ -330,7 +324,7 @@
                 
                 let win = false, waitNum = 0;
                 if(it.fWin) {
-                    win = true; // 強正的人在查詢時也直接是正取
+                    win = true; 
                 } else {
                     globalCounter[sk] = (globalCounter[sk] || 0) + 1;
                     if(globalCounter[sk] <= limit) win = true;
