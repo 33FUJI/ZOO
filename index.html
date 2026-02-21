@@ -136,6 +136,7 @@
     });
 
     function renderHall() {
+        if (!products.length) return; // 防止資料未載入時報錯
         const evts = [...new Set(products.map(p => p.e))].filter(e => e && e.trim() !== "");
         document.getElementById('hall-grid').innerHTML = evts.map(e => `<div class="card-hall" onclick="openShop('${e}')">${e}</div>`).join('');
     }
@@ -233,21 +234,23 @@
 
     function toggleStatus(k, f, v) { db.ref(`orders/${k}`).update({ [f]: v }); }
 
+    // 優化已付邏輯：支援留尾數需求
     function togglePayStatus(k, v) {
         let o = orders[k];
         if(v) {
-            if(confirm("要自動填滿尾款金額嗎？\n[確定]：自動結清\n[取消]：保留已付標記，稍後手動輸入留20元金額")) {
+            // 詢問園長要不要自動結清，若要「留 20 元」請點取消
+            if(confirm("是否自動將剩餘金額填入尾款？\n[確定]：自動結清(餘額歸零)\n[取消]：手動輸入尾款(方便留20元)")) {
                 let remain = (o.total || 0) - (o.deposit || 0);
                 db.ref(`orders/${k}`).update({ isPaid: true, paid: remain });
             } else {
-                db.ref(`orders/${k}`).update({ isPaid: true });
+                db.ref(`orders/${k}`).update({ isPaid: true }); // 僅勾選已付，不改動金額
             }
         } else {
             db.ref(`orders/${k}`).update({ isPaid: false });
         }
     }
 
-    function deleteEntireOrder(k) { if(confirm("確定刪除整筆訂單？")) db.ref(`orders/${k}`).remove(); }
+    function deleteEntireOrder(k) { if(confirm("確定刪除這整筆訂單？")) db.ref(`orders/${k}`).remove(); }
     function toggleSingleShip(k, idxs) { let o = orders[k]; const ns = !o.items[idxs[0]].ship; idxs.forEach(i => o.items[i].ship = ns); db.ref(`orders/${k}`).set(o); }
     function editSingleItem(k, idxs) { const o = orders[k]; const it = o.items[idxs[0]]; const newN = prompt("編輯名稱：", it.n); const newP = prompt("編輯金額：", it.p); if(newN && newP){ idxs.forEach(i => { o.items[i].n = newN; o.items[i].p = parseInt(newP); }); o.total = o.items.reduce((a, b) => a + (b.p || 0), 0); db.ref(`orders/${k}`).set(o); } }
     function batchFWin(k, idxs) { let o = orders[k]; idxs.forEach(i => o.items[i].fWin = true); db.ref(`orders/${k}`).set(o); }
