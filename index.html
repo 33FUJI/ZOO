@@ -22,24 +22,19 @@
         .prod-card { background: #FFF; border: 1px solid #EEE; border-radius: 12px; padding: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .cart-area { width: 320px; background: #FFF; border-left: 2px solid #F5F5F5; display: flex; flex-direction: column; }
 
-        /* 數量控制 */
         .qty-ctrl { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 0; background: #F8F8F8; padding: 5px; border-radius: 20px; }
         .qty-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #DDD; background: #FFF; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--matcha); }
-        .qty-num { min-width: 30px; text-align: center; font-size: 16px; font-weight: bold; }
-
+        
         /* 後台樣式 */
         #admin-panel { position: fixed; inset: 0; background: #F8F9FA; z-index: 4000; display: none; flex-direction: column; }
         .admin-header { background: var(--wood); color: #FFF; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .admin-order-card { background: #FFF; border: 1px solid #EEE; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .admin-item-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #F9F9F9; gap: 10px; }
-        .item-text { flex: 1; font-size: 14px; }
+        .item-text { flex: 1; font-size: 14px; cursor: pointer; }
         
-        .tag-win-info { background: #FFF9C4; color: #F57F17; font-size: 10px; padding: 2px 5px; border-radius: 4px; margin-left: 4px; }
-        .tag-shipped-info { background: #E8F5E9; color: #2E7D32; font-size: 10px; padding: 2px 5px; border-radius: 4px; margin-left: 4px; }
         .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 15px; }
-        .modal-box { background: var(--rice); padding: 25px; border-radius: 20px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
+        .modal-box { background: var(--rice); padding: 25px; border-radius: 20px; width: 100%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
         .input-std { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #DDD; border-radius: 10px; font-size: 16px; }
 
         @media (max-width: 768px) {
@@ -54,20 +49,20 @@
 <div id="hall-screen" class="hall">
     <h1 style="color:var(--matcha); margin-bottom:5px;">33 日本動物園</h1>
     <div id="hall-grid" class="grid-hall"></div>
-    <button onclick="document.getElementById('search-modal').style.display='flex'" style="background:var(--caramel); color:#FFF; border:none; padding:15px 40px; border-radius:30px; margin-top:30px; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.1);">🔍 查詢我的訂單</button>
+    <button onclick="document.getElementById('search-modal').style.display='flex'" style="background:var(--caramel); color:#FFF; border:none; padding:15px 40px; border-radius:30px; margin-top:30px; font-weight:bold;">🔍 查詢我的訂單</button>
     <div onclick="adminLogin()" style="margin-top:50px; color:#CCC; cursor:pointer; font-size:10px;">登入管理</div>
 </div>
 
 <div class="app-container" id="main-app">
     <div class="list-area"><div id="prod-list" class="prod-grid"></div></div>
     <div class="cart-area">
-        <div class="cart-header" style="padding:15px; font-weight:bold; border-bottom:1px solid #EEE; background:#F9F9F9;">🛒 購物清單</div>
+        <div class="cart-header" style="padding:15px; font-weight:bold; background:#F9F9F9;">🛒 購物清單</div>
         <div id="cart-items" style="flex:1; overflow-y:auto; padding:10px 15px;"></div>
-        <div class="cart-footer" style="padding:15px; border-top:1px solid #EEE; background:#FFF;">
+        <div class="cart-footer" style="padding:15px; border-top:1px solid #EEE;">
             <p style="display:flex; justify-content:space-between; font-weight:bold;">總計: <span style="color:var(--caramel);">$ <span id="cart-total">0</span></span></p>
             <input id="nick" class="input-std" placeholder="您的 LINE 暱稱">
             <button class="btn-add" style="width:100%; background:var(--caramel); padding:15px; font-size:16px;" onclick="submitOrder()">確認提交訂單</button>
-            <button onclick="backToHall()" style="width:100%; margin-top:10px; border:none; background:none; color:#999; cursor:pointer;">← 返回目錄</button>
+            <button onclick="backToHall()" style="width:100%; margin-top:10px; border:none; background:none; color:#999;">← 返回目錄</button>
         </div>
     </div>
 </div>
@@ -81,27 +76,26 @@
         <button class="btn-add" style="flex:1; min-width:80px;" onclick="renderAdminOrders()">訂單管理</button>
         <button class="btn-add" style="flex:1; min-width:80px;" onclick="renderAdminProds()">商品維護</button>
         <button class="btn-add" style="flex:1; min-width:80px; background:#4361EE;" onclick="askExport('summary')">📊 統計採購</button>
-        <button class="btn-add" style="flex:1; min-width:80px; background:#7209B7;" onclick="askExport('detail')">📋 匯出群組明細</button>
+        <button class="btn-add" style="flex:1; min-width:80px; background:#7209B7;" onclick="askExport('detail')">📋 匯出明細</button>
     </div>
     <div id="admin-main" style="flex:1; overflow-y:auto; padding:15px;"></div>
 </div>
 
 <div id="edit-modal" class="modal">
     <div class="modal-box">
-        <h3 id="modal-title">標題</h3>
+        <h3 id="modal-title">編輯</h3>
         <div id="modal-body"></div>
         <div style="display:flex; gap:10px; margin-top:20px;">
-            <button class="btn-add" id="modal-save" style="flex:1;">儲存 / 複製</button>
+            <button class="btn-add" id="modal-save" style="flex:1;">儲存</button>
             <button class="btn-add" style="flex:1; background:#999;" onclick="document.getElementById('edit-modal').style.display='none'">取消</button>
         </div>
-        <div id="modal-delete-area"></div>
     </div>
 </div>
 
 <div id="search-modal" class="modal">
     <div class="modal-box">
         <h2 style="text-align:center; color:var(--matcha);">訂單查詢</h2>
-        <input id="search-nick" class="input-std" placeholder="請輸入您的 LINE 暱稱">
+        <input id="search-nick" class="input-std" placeholder="輸入您的 LINE 暱稱">
         <div id="search-results-area" style="max-height:300px; overflow-y:auto; margin-bottom:15px;"></div>
         <button class="btn-add" style="width:100%;" onclick="performSearch()">搜尋</button>
         <button onclick="document.getElementById('search-modal').style.display='none'" style="width:100%; margin-top:10px; border:none; background:none;">關閉</button>
@@ -123,15 +117,8 @@
 
     let products = [], orders = {}, cart = [], curS = {}, curQty = {}, currentEvent = "";
 
-    db.ref('products').on('value', snap => { 
-        products = snap.val() || []; 
-        renderHall(); 
-        if(currentEvent) openShop(currentEvent); 
-    });
-    db.ref('orders').on('value', snap => { 
-        orders = snap.val() || {}; 
-        if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); 
-    });
+    db.ref('products').on('value', snap => { products = snap.val() || []; renderHall(); if(currentEvent) openShop(currentEvent); });
+    db.ref('orders').on('value', snap => { orders = snap.val() || {}; if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); });
 
     function renderHall() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
@@ -144,79 +131,47 @@
         document.getElementById('main-app').style.display='flex';
         const list = products.filter(p => p.e === e);
         document.getElementById('prod-list').innerHTML = list.map(p => {
-            const realIdx = products.indexOf(p);
-            if(!curQty[realIdx]) curQty[realIdx] = 1;
+            const rid = products.indexOf(p);
+            if(!curQty[rid]) curQty[rid] = 1;
             return `<div class="prod-card">
                 <b>${p.n}</b><br><span style="color:var(--caramel);">$${p.p}</span><br>
-                <div style="margin:5px 0;">
-                    ${p.s ? p.s.split(',').map(v=>`<button id="s-${realIdx}-${v}" onclick="selSpec(${realIdx},'${v}')" style="border:1px solid #DDD; margin:2px; font-size:12px; background:#FFF; border-radius:4px; padding:3px 6px;">${v}</button>`).join('') : ''}
-                </div>
+                <div style="margin:5px 0;">${p.s ? p.s.split(',').map(v=>`<button id="s-${rid}-${v}" onclick="selSpec(${rid},'${v}')" style="border:1px solid #DDD; margin:2px; font-size:12px; background:#FFF; border-radius:4px; padding:3px 6px;">${v}</button>`).join('') : ''}</div>
                 <div class="qty-ctrl">
-                    <button class="qty-btn" onclick="updateQty(${realIdx},-1)">-</button>
-                    <span class="qty-num" id="qty-val-${realIdx}">${curQty[realIdx]}</span>
-                    <button class="qty-btn" onclick="updateQty(${realIdx},1)">+</button>
+                    <button class="qty-btn" onclick="updateQty(${rid},-1)">-</button>
+                    <span id="qty-val-${rid}" style="font-weight:bold; min-width:20px;">${curQty[rid]}</span>
+                    <button class="qty-btn" onclick="updateQty(${rid},1)">+</button>
                 </div>
-                <button class="btn-add" style="width:100%; font-size:13px;" onclick="addToCart(${realIdx})">加入購物車</button>
+                <button class="btn-add" style="width:100%; font-size:13px;" onclick="addToCart(${rid})">加入購物車</button>
             </div>`;
         }).join('');
         renderCart();
     }
 
-    function updateQty(pid, delta) {
-        let v = (curQty[pid] || 1) + delta;
-        if(v < 1) v = 1;
-        curQty[pid] = v;
-        const el = document.getElementById(`qty-val-${pid}`);
-        if(el) el.innerText = v;
-    }
+    function updateQty(rid, d) { let v = (curQty[rid] || 1) + d; if(v < 1) v = 1; curQty[rid] = v; document.getElementById(`qty-val-${rid}`).innerText = v; }
+    function backToHall() { currentEvent = ""; document.getElementById('main-app').style.display='none'; document.getElementById('hall-screen').style.display='flex'; }
+    function selSpec(rid, v) { curS[rid] = v; document.querySelectorAll(`[id^="s-${rid}-"]`).forEach(b => b.style.background = '#FFF'); document.getElementById(`s-${rid}-${v}`).style.background = '#EAE2D1'; }
 
-    function backToHall() { 
-        currentEvent = ""; 
-        document.getElementById('main-app').style.display='none'; 
-        document.getElementById('hall-screen').style.display='flex'; 
-    }
-
-    function selSpec(pid, v) {
-        curS[pid] = v;
-        document.querySelectorAll(`[id^="s-${pid}-"]`).forEach(b => b.style.background = '#FFF');
-        document.getElementById(`s-${pid}-${v}`).style.background = '#EAE2D1';
-    }
-
-    function addToCart(pid) {
-        const p = products[pid];
-        if(p.s && !curS[pid]) return alert("請先選擇規格唷！");
-        const count = curQty[pid] || 1;
-        for(let i=0; i<count; i++) {
-            cart.push({...p, sel: curS[pid] || "一般", pid: pid, status: "", fWin: false});
-        }
+    function addToCart(rid) {
+        const p = products[rid]; if(p.s && !curS[rid]) return alert("請選規格");
+        for(let i=0; i<curQty[rid]; i++) { cart.push({...p, sel: curS[rid] || "一般", pid: rid, fWin: false}); }
         renderCart();
     }
 
     function renderCart() {
-        // 購物車彙整顯示
-        let summary = {};
-        cart.forEach(it => {
-            let key = `${it.pid}_${it.sel}`;
-            if(!summary[key]) summary[key] = {...it, count: 0};
-            summary[key].count++;
-        });
-
-        document.getElementById('cart-items').innerHTML = Object.values(summary).map(it => `
-            <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #EEE; font-size:13px;">
-                <span><small style="color:#999;">[${it.e}]</small> ${it.n}(${it.sel}) x ${it.count}</span>
-                <span onclick="removeFromCart('${it.pid}', '${it.sel}')" style="color:red; cursor:pointer; font-weight:bold; padding:0 5px;">✕</span>
-            </div>`).join('');
+        let summ = {}; cart.forEach(it => { let k = `${it.pid}_${it.sel}`; summ[k] = (summ[k]||0)+1; });
+        document.getElementById('cart-items').innerHTML = Object.keys(summ).map(k => {
+            const [pid, sel] = k.split('_'); const p = products[pid];
+            return `<div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #EEE; font-size:13px;">
+                <span>${p.n}(${sel}) x ${summ[k]}</span>
+                <span onclick="removeFromCart(${pid},'${sel}')" style="color:red; cursor:pointer; font-weight:bold;">✕</span>
+            </div>`}).join('');
         document.getElementById('cart-total').innerText = cart.reduce((a,b)=>a+b.p,0);
     }
 
-    function removeFromCart(pid, sel) {
-        cart = cart.filter(it => !(it.pid == pid && it.sel == sel));
-        renderCart();
-    }
+    function removeFromCart(pid, sel) { cart = cart.filter(it => !(it.pid == pid && it.sel == sel)); renderCart(); }
 
     function submitOrder() {
-        const n = document.getElementById('nick').value.trim();
-        if(!n || cart.length===0) return alert("請輸入暱稱並挑選商品！");
+        const n = document.getElementById('nick').value.trim(); if(!n || cart.length===0) return alert("輸入暱稱及商品");
         db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), adminNote: "", paid: 0 })
           .then(() => { alert("訂單已提交！"); cart = []; location.reload(); });
     }
@@ -226,126 +181,87 @@
     function renderAdminOrders() {
         const main = document.getElementById('admin-main');
         const sorted = Object.entries(orders).sort((a,b) => a[1].time - b[1].time);
-        let globalCounter = {}; // 全局累計，用來判斷自動候補
-
-        let html = `<div style="margin-bottom:10px;"><button class="btn-add" style="font-size:12px; padding:6px 12px;" onclick="mergeSelected()">🔗 合併勾選訂單</button></div>`;
+        let globalCounter = {};
         
-        html += sorted.map(([k, o]) => {
-            // 訂單內品項彙整
-            let orderSummary = {};
-            (o.items || []).forEach((it, originalIdx) => {
-                let key = `${it.pid}_${it.sel}`;
-                if(!orderSummary[key]) orderSummary[key] = { ...it, indices: [], qty: 0 };
-                orderSummary[key].indices.push(originalIdx);
-                orderSummary[key].qty++;
+        main.innerHTML = `<button class="btn-add" style="margin-bottom:10px;" onclick="mergeSelected()">🔗 合併勾選訂單</button>` + sorted.map(([k, o]) => {
+            let orderSumm = {};
+            (o.items || []).forEach((it, idx) => {
+                let sk = `${it.pid}_${it.sel}`; if(!orderSumm[sk]) orderSumm[sk] = { ...it, idxs: [], qty: 0 };
+                orderSumm[sk].idxs.push(idx); orderSumm[sk].qty++;
             });
 
-            const itemsHtml = Object.values(orderSummary).map(it => {
-                const sk = `${it.pid}_${it.sel}`;
-                const limit = (products[it.pid]||{}).limit || 999;
-                
-                // 計算此彙整品項中，哪些是正取，哪些是候補
-                let winCount = 0;
-                let waitList = [];
-                for(let i=0; i<it.qty; i++) {
+            const itemsHtml = Object.values(orderSumm).map(it => {
+                const sk = `${it.pid}_${it.sel}`; const limit = (products[it.pid]||{}).limit || 999;
+                let wins = 0, waits = [];
+                it.idxs.forEach(originalIdx => {
+                    const realIt = o.items[originalIdx];
                     globalCounter[sk] = (globalCounter[sk] || 0) + 1;
-                    // 如果有強制正取 fWin，則不佔用 limit 額度 (此處邏輯依園長習慣)
-                    // 基本邏輯：沒超過限購就是正取
-                    if(it.fWin || globalCounter[sk] <= limit) {
-                        winCount++;
-                    } else {
-                        waitList.push(globalCounter[sk] - limit);
-                    }
-                }
+                    if(realIt.fWin || globalCounter[sk] <= limit) wins++; else waits.push(globalCounter[sk] - limit);
+                });
 
-                let statusInfo = "";
-                if(winCount > 0) statusInfo += `<span style="color:green;">正取x${winCount} </span>`;
-                if(waitList.length > 0) {
-                    statusInfo += `<span style="color:orange;">候補(${waitList.join(',')})</span>`;
-                }
+                let st = ""; 
+                if(wins > 0) st += `<span style="color:green;">正取x${wins} </span>`;
+                if(waits.length > 0) st += `<span style="color:orange;">(候補 ${waits.join(',')})</span>`;
 
                 return `<div class="admin-item-row">
-                    <input type="checkbox" class="item-check-${k}" value="${it.indices.join(',')}">
-                    <span class="item-text"><small style="color:#999;">[${it.e}]</small> <b>${it.n}(${it.sel}) x ${it.qty}</b> $${it.p * it.qty} ${statusInfo}</span>
-                    <button onclick="deleteSummaryItem('${k}', [${it.indices}])" style="border:none; background:none; color:#AAA; cursor:pointer;">✕</button>
-                </div>`;
-            }).join('');
-            
-            const unpaid = (o.total || 0) - (o.paid || 0);
+                    <input type="checkbox" class="item-check-${k}" value="${it.idxs.join(',')}">
+                    <span class="item-text" onclick="editSingleItem('${k}', ${it.idxs[0]})">
+                        <small style="color:#999;">[${it.e}]</small> <b>${it.n}(${it.sel}) x ${it.qty}</b> <span style="color:var(--caramel); border-bottom:1px solid;">$${it.p * it.qty} ✎</span> ${st}
+                    </span>
+                    <button onclick="batchFWin('${k}', [${it.idxs}])" style="font-size:10px; border:1px solid orange; color:orange; background:none; padding:2px 5px; border-radius:4px;">強制正取</button>
+                    <button onclick="deleteItems('${k}', [${it.idxs}])" style="color:#CCC; background:none; border:none; cursor:pointer;">✕</button>
+                </div>`}).join('');
 
             return `<div class="admin-order-card">
-                <div style="display:flex; justify-content:space-between; border-bottom:1px dashed #DDD; padding-bottom:8px;">
-                    <span><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> <b style="color:var(--matcha);">${o.nick}</b></span>
-                    <b style="color:var(--caramel);">$${o.total}</b>
+                <div style="display:flex; justify-content:space-between; border-bottom:1px dashed #DDD; padding-bottom:5px;">
+                    <span><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> <b onclick="editNick('${k}','${o.nick}')" style="color:var(--matcha); text-decoration:underline; cursor:pointer;">${o.nick} ✎</b></span>
+                    <b onclick="editTotal('${k}',${o.total})" style="color:var(--caramel); text-decoration:underline; cursor:pointer;">$${o.total} ✎</b>
                 </div>
-                <div>${itemsHtml}</div>
-                <div style="font-size:13px; background:#f0f0f0; padding:8px; border-radius:5px; margin:10px 0;">
-                    已付: <span onclick="editPaid('${k}', ${o.paid || 0})" style="text-decoration:underline; cursor:pointer;">$${o.paid || 0}</span> | 
-                    未付: <span style="color:red; font-weight:bold;">$${unpaid}</span>
-                </div>
+                ${itemsHtml}
+                <div style="font-size:13px; background:#F5F5F5; padding:8px; border-radius:5px; margin:10px 0;">已付: <span onclick="editPaid('${k}',${o.paid})" style="text-decoration:underline; cursor:pointer;">$${o.paid||0}</span> | 未付: <span style="color:red; font-weight:bold;">$${o.total - (o.paid||0)}</span></div>
                 <div style="display:flex; gap:5px;">
-                    <button class="btn-add" style="flex:1; font-size:12px; background:#4361EE;" onclick="addItemToOrd('${k}')">＋ 加商品</button>
-                    <button onclick="if(confirm('確定刪除整筆？')) db.ref('orders/${k}').remove()" style="border:none; background:none; color:red; cursor:pointer;">🗑️</button>
+                    <button class="btn-add" style="flex:1; font-size:12px; background:#4361EE;" onclick="addItemToOrd('${k}')">＋ 手動加商品</button>
+                    <button onclick="if(confirm('刪除整筆？')) db.ref('orders/${k}').remove()" style="color:red; background:none; border:none;">🗑️</button>
                 </div>
-                <input class="input-std" style="height:35px; margin-top:10px; font-size:14px;" id="note-${k}" value="${o.adminNote||''}" placeholder="備註按 Enter" onkeydown="if(event.key==='Enter') saveNote('${k}')">
-            </div>`;
-        }).join('');
-        main.innerHTML = html + `<div style="height:100px;"></div>`;
+                <input class="input-std" style="height:35px; margin-top:8px; font-size:14px;" id="note-${k}" value="${o.adminNote||''}" placeholder="備註按 Enter" onkeydown="if(event.key==='Enter') saveNote('${k}')">
+            </div>`}).join('');
     }
 
-    function deleteSummaryItem(k, indices) {
-        if(!confirm('確定刪除這些品項？')) return;
-        let o = orders[k];
-        // 從後往前刪除才不會跑位
-        indices.sort((a,b)=>b-a).forEach(idx => o.items.splice(idx, 1));
+    function editSingleItem(k, idx) {
+        const o = orders[k]; const it = o.items[idx];
+        const newN = prompt("修改名稱：", it.n); if(!newN) return;
+        const newP = prompt("修改單價：", it.p); if(!newP) return;
+        // 同品項同步修改
+        o.items.forEach(item => { if(item.pid == it.pid && item.sel == it.sel) { item.n = newN; item.p = parseInt(newP); } });
         o.total = o.items.reduce((a, b) => a + (parseInt(b.p)||0), 0);
         db.ref(`orders/${k}`).set(o);
     }
 
-    function editPaid(k, oldPaid) {
-        const v = prompt("輸入已付金額：", oldPaid);
-        if(v !== null && v !== "") db.ref(`orders/${k}`).update({ paid: parseInt(v) });
+    function batchFWin(k, idxs) {
+        let o = orders[k]; idxs.forEach(i => o.items[i].fWin = true);
+        db.ref(`orders/${k}`).set(o);
     }
 
-    function saveNote(k) {
-        const v = document.getElementById(`note-${k}`).value;
-        db.ref(`orders/${k}`).update({ adminNote: v }).then(() => { alert("備註已存"); renderAdminOrders(); });
-    }
-
-    function mergeSelected() {
-        const checks = Array.from(document.querySelectorAll('.merge-check:checked'));
-        if(checks.length < 2) return alert("請選取同人的多筆訂單");
-        const nicks = checks.map(el => el.getAttribute('data-nick').toLowerCase());
-        if(new Set(nicks).size > 1) return alert("請選取相同暱稱的訂單");
-        
-        let items = [], total = 0, keys = checks.map(el => el.value), totalPaid = 0;
-        keys.forEach(k => {
-            const o = orders[k];
-            items = items.concat(o.items || []);
-            total += (parseInt(o.total) || 0);
-            totalPaid += (parseInt(o.paid) || 0);
-        });
-        db.ref('orders').push({ nick: nicks[0], items: items, total: total, paid: totalPaid, time: Date.now(), adminNote: "(合併訂單)" })
-          .then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); alert("合併成功！"); });
-    }
+    function deleteItems(k, idxs) { if(!confirm('確定刪除？')) return; let o = orders[k]; idxs.sort((a,b)=>b-a).forEach(i => o.items.splice(i,1)); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o); }
+    function editNick(k, old) { const v = prompt("修改姓名：", old); if(v) db.ref(`orders/${k}`).update({ nick: v }); }
+    function editTotal(k, old) { const v = prompt("手動改總額：", old); if(v) db.ref(`orders/${k}`).update({ total: parseInt(v) }); }
+    function editPaid(k, old) { const v = prompt("改已付：", old); if(v!==null) db.ref(`orders/${k}`).update({ paid: parseInt(v) }); }
+    function saveNote(k) { const v = document.getElementById(`note-${k}`).value; db.ref(`orders/${k}`).update({ adminNote: v }).then(()=>alert("備註已存")); }
 
     function addItemToOrd(k) {
-        const n = prompt("商品名稱：");
-        if(n) {
-            const p = prompt("金額：", "0");
-            let o = orders[k];
-            if(!o.items) o.items = [];
-            o.items.push({ e: "園長追加", n: n, sel: "一般", p: parseInt(p || 0), status: "", fWin: true });
-            o.total = o.items.reduce((a, b) => a + (parseInt(b.p)||0), 0);
-            db.ref(`orders/${k}`).set(o);
-        }
+        const n = prompt("商品名稱："); if(!n) return;
+        const p = prompt("金額：", "0"); let o = orders[k];
+        if(!o.items) o.items = [];
+        o.items.push({ e: "手動追加", n: n, sel: "一般", p: parseInt(p || 0), pid: "manual", fWin: true });
+        o.total = o.items.reduce((a, b) => a + (parseInt(b.p)||0), 0);
+        db.ref(`orders/${k}`).set(o);
     }
 
     function renderAdminProds() {
         const main = document.getElementById('admin-main');
-        main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px; padding:15px;" onclick="openAdd()">＋ 上架商品</button>` + 
+        main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px; padding:15px;" onclick="openAdd()">＋ 上架新商品</button>` + 
         products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between; align-items:center;">
-            <div><b style="color:var(--matcha)">[${p.e}]</b> ${p.n} <br><small>$${p.p} / 限購:${p.limit||999}</small></div>
+            <div><b>[${p.e}]</b> ${p.n} <br><small>$${p.p} / 限購:${p.limit||'無'}</small></div>
             <button class="btn-add" style="background:#EEE; color:#333;" onclick="openEdit(${i})">編輯</button>
         </div>`).join('');
     }
@@ -371,114 +287,72 @@
         };
     }
 
-    function askExport(type) {
-        const evts = [...new Set(products.map(p => p.e))].filter(e => e);
-        document.getElementById('modal-title').innerText = "勾選場次匯出";
-        document.getElementById('modal-body').innerHTML = evts.map(e => `<div><input type="checkbox" class="evt-check" value="${e}" checked> ${e}</div>`).join('');
-        document.getElementById('edit-modal').style.display = 'flex';
-        document.getElementById('modal-save').innerText = "確認匯出";
-        document.getElementById('modal-save').onclick = () => {
-            const selected = Array.from(document.querySelectorAll('.evt-check:checked')).map(el => el.value);
-            if(type === 'summary') exportSummary(selected);
-            else exportGroupText(selected);
-        };
-    }
-
-    function exportSummary(selectedEvents) {
-        let stats = {};
-        Object.values(orders).forEach(o => { 
-            (o.items||[]).forEach(it => { 
-                if(selectedEvents.includes(it.e) || it.e === "園長追加") {
-                    const key = `[${it.e}] ${it.n} (${it.sel})`; 
-                    stats[key] = (stats[key] || 0) + 1; 
-                }
-            }); 
-        });
-        let text = "📊 採購統計\n";
-        for (let item in stats) { text += `${item} : ${stats[item]} 件\n`; }
-        showExportModal("採購統計", text);
-    }
-
-    function exportGroupText(selectedEvents) {
-        let text = "📋 訂單明細\n";
-        Object.entries(orders).sort((a,b)=>a[1].time-a[1].time).forEach(([k, o]) => {
-            const filteredItems = (o.items||[]).filter(it => selectedEvents.includes(it.e) || it.e === "園長追加");
-            if(filteredItems.length > 0) {
-                text += `\n【${o.nick}】\n`;
-                // 匯出明細也自動彙整
-                let summ = {};
-                filteredItems.forEach(it => {
-                    let key = `${it.n}(${it.sel})`;
-                    if(!summ[key]) summ[key] = { p: it.p, count: 0 };
-                    summ[key].count++;
-                });
-                for(let key in summ) { text += `- ${key} x ${summ[key].count} ($${summ[key].p * summ[key].count})\n`; }
-                text += `💰 小計: $${filteredItems.reduce((a,b)=>a+b.p, 0)}\n`;
-            }
-        });
-        showExportModal("明細匯出", text);
-    }
-
-    function showExportModal(title, content) {
-        document.getElementById('modal-title').innerText = title;
-        document.getElementById('modal-body').innerHTML = `<textarea id="export-text" style="width:100%; height:300px; padding:10px; font-size:12px; border:1px solid #DDD;">${content}</textarea>`;
-        document.getElementById('edit-modal').style.display = 'flex';
-        document.getElementById('modal-save').innerText = "複製";
-        document.getElementById('modal-save').onclick = () => {
-            const copyText = document.getElementById("export-text");
-            copyText.select();
-            navigator.clipboard.writeText(copyText.value);
-            alert("已複製");
-        };
+    function mergeSelected() {
+        const checks = Array.from(document.querySelectorAll('.merge-check:checked'));
+        if(checks.length < 2) return alert("請選取同人的多筆訂單");
+        const nicks = checks.map(el => el.getAttribute('data-nick').toLowerCase());
+        if(new Set(nicks).size > 1) return alert("不同人的訂單不能合併");
+        let items = [], total = 0, keys = checks.map(el => el.value), totalPaid = 0;
+        keys.forEach(k => { const o = orders[k]; items = items.concat(o.items || []); total += (o.total||0); totalPaid += (o.paid||0); });
+        db.ref('orders').push({ nick: nicks[0], items: items, total: total, paid: totalPaid, time: Date.now(), adminNote: "(合併訂單)" })
+          .then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); alert("合併完成！"); });
     }
 
     function performSearch() {
-        const n = document.getElementById('search-nick').value.trim();
+        const n = document.getElementById('search-nick').value.trim().toLowerCase();
         const resArea = document.getElementById('search-results-area');
-        if(!n) return alert("請輸入暱稱");
+        if(!n) return alert("輸入暱稱");
         
-        const userOrders = Object.entries(orders).filter(([k, o]) => o.nick.toLowerCase() === n.toLowerCase()).sort((a,b)=>b[1].time-a[1].time);
-        if(userOrders.length === 0) { resArea.innerHTML = "<p>找不到紀錄</p>"; return; }
-
-        let globalCounter = {};
         const allSorted = Object.entries(orders).sort((a,b) => a[1].time - b[1].time);
-        
-        // 為了正確計算所有人的候補順序，必須先跑一遍全局計算
-        let userResults = [];
+        let globalCounter = {}; let userResults = [];
+
         allSorted.forEach(([k, o]) => {
-            let userMatch = o.nick.toLowerCase() === n.toLowerCase();
+            let userMatch = o.nick.toLowerCase() === n;
             let orderSumm = {};
             (o.items || []).forEach(it => {
-                let sk = `${it.pid}_${it.sel}`;
-                globalCounter[sk] = (globalCounter[sk] || 0) + 1;
+                let sk = `${it.pid}_${it.sel}`; globalCounter[sk] = (globalCounter[sk] || 0) + 1;
                 let limit = (products[it.pid] || {}).limit || 999;
-                
                 if(userMatch) {
-                    let key = `${it.pid}_${it.sel}`;
-                    if(!orderSumm[key]) orderSumm[key] = { ...it, wins: 0, waits: [] };
-                    if(it.fWin || globalCounter[sk] <= limit) {
-                        orderSumm[key].wins++;
-                    } else {
-                        orderSumm[key].waits.push(globalCounter[sk] - limit);
-                    }
+                    if(!orderSumm[sk]) orderSumm[sk] = { ...it, wins: 0, waits: [] };
+                    if(it.fWin || globalCounter[sk] <= limit) orderSumm[sk].wins++; else orderSumm[sk].waits.push(globalCounter[sk] - limit);
                 }
             });
-            if(userMatch) userResults.push({ k, o, summ: Object.values(orderSumm) });
+            if(userMatch) userResults.push({ o, summ: Object.values(orderSumm) });
         });
 
         resArea.innerHTML = userResults.reverse().map(res => `
-            <div style="background:#FFF; padding:12px; border:1px solid #EEE; margin-bottom:10px; border-radius:10px;">
-                <div style="font-size:11px; color:#999;">${new Date(res.o.time).toLocaleString()}</div>
-                <div style="margin-top:5px;">${res.summ.map(it => {
-                    let st = "";
-                    if(it.wins > 0) st += `<span style="color:green;">(正取x${it.wins})</span>`;
+            <div style="background:#FFF; padding:10px; border:1px solid #EEE; margin-bottom:10px; border-radius:10px; font-size:13px;">
+                <div style="color:#999; font-size:11px;">${new Date(res.o.time).toLocaleString()}</div>
+                ${res.summ.map(it => {
+                    let st = ""; if(it.wins > 0) st += `<span style="color:green;">(正取x${it.wins})</span>`;
                     if(it.waits.length > 0) st += `<span style="color:orange;">(候補 ${it.waits.join(',')})</span>`;
                     return `<div>- ${it.n}(${it.sel}) x ${it.wins + it.waits.length} ${st}</div>`;
-                }).join('')}</div>
-                <div style="text-align:right; font-weight:bold; color:var(--caramel); margin-top:8px; border-top:1px dashed #EEE; padding-top:5px;">
-                    總額: $${res.o.total} / 未付: <span style="color:red;">$${res.o.total - res.o.paid}</span>
-                </div>
+                }).join('')}
+                <div style="text-align:right; font-weight:bold; margin-top:5px; border-top:1px dashed #EEE; padding-top:5px;">總額: $${res.o.total}</div>
             </div>`).join('');
+    }
+
+    function askExport(type) {
+        const evts = [...new Set(products.map(p => p.e))].filter(e => e);
+        document.getElementById('modal-title').innerText = "匯出選項";
+        document.getElementById('modal-body').innerHTML = evts.map(e => `<div><input type="checkbox" class="evt-check" value="${e}" checked> ${e}</div>`).join('');
+        const btn = document.getElementById('modal-save');
+        btn.innerText = "確認匯出";
+        btn.onclick = () => {
+            const selected = Array.from(document.querySelectorAll('.evt-check:checked')).map(el => el.value);
+            let text = "";
+            if(type==='summary') {
+                let s = {}; Object.values(orders).forEach(o => { (o.items||[]).forEach(it => { if(selected.includes(it.e)) { let k = `[${it.e}] ${it.n}(${it.sel})`; s[k] = (s[k]||0)+1; } }); });
+                for(let k in s) text += `${k} : ${s[k]}\n`;
+            } else {
+                Object.values(orders).forEach(o => { 
+                    const fits = (o.items||[]).filter(it => selected.includes(it.e));
+                    if(fits.length) { text += `\n【${o.nick}】\n`; fits.forEach(it => text += `- ${it.n}(${it.sel}) x 1\n`); }
+                });
+            }
+            alert("請查看 Console (F12) 或我會優化這裡"); console.log(text);
+        };
+        document.getElementById('edit-modal').style.display = 'flex';
     }
 </script>
 </body>
