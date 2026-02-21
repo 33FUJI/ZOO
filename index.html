@@ -21,7 +21,7 @@
         .app-container { display: none; flex: 1; overflow: hidden; flex-direction: row; }
         .list-area { flex: 1; overflow-y: auto; padding: 15px; background: var(--gray); -webkit-overflow-scrolling: touch; }
         
-        /* 網格系統：電腦版寬大好讀，手機版自適應 */
+        /* 網格系統：電腦版優化 */
         .prod-grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
@@ -47,7 +47,6 @@
         .cart-area { width: 360px; background: #FFF; border-left: 1px solid #DDD; display: flex; flex-direction: column; box-shadow: -2px 0 10px rgba(0,0,0,0.05); }
         .cart-bottom { padding: 15px; border-top: 1px solid #EEE; background: #FFF; padding-bottom: calc(15px + env(safe-area-inset-bottom)); }
 
-        /* 手機版適應 (螢幕寬度小於 768px) */
         @media (max-width: 768px) {
             .app-container { flex-direction: column; }
             .cart-area { width: 100%; flex: 1.5; border-left: none; border-top: 1px solid #EEE; }
@@ -60,7 +59,6 @@
             .btn-add { padding: 12px; font-size: 14px; }
         }
 
-        /* 管理面板 & 其他組件 */
         #admin-panel { position: fixed; inset: 0; background: #F8F9FA; z-index: 4000; display: none; flex-direction: column; }
         .admin-header { background: var(--wood); color: #FFF; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .admin-nav { padding: 10px; background: #EEE; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #DDD; }
@@ -227,23 +225,21 @@
             const itemsHtml = Object.values(orderSumm).map(it => {
                 const sk = `${it.pid}_${it.sel}`; 
                 const limit = (products[it.pid]||{}).limit || 999;
-                let wins = 0, manualWins = 0, waits = [];
+                let wins = 0, waits = [];
                 
-                // 重點：正取遞補核心計算
                 it.idxs.forEach(originalIdx => {
                     const item = o.items[originalIdx];
                     if(item.fWin) {
-                        manualWins++; // 手動強正，不佔用配額
+                        wins++; // 強正的人顯示為正取，但不佔用下方的 globalCounter 限額
                     } else {
                         globalCounter[sk] = (globalCounter[sk] || 0) + 1;
-                        if(globalCounter[sk] <= limit) wins++; // 名額內正取
-                        else waits.push(globalCounter[sk] - limit); // 候補序號
+                        if(globalCounter[sk] <= limit) wins++; 
+                        else waits.push(globalCounter[sk] - limit);
                     }
                 });
 
                 let st = "";
                 if(wins > 0) st += `<span style="color:green; font-weight:bold;">正取x${wins} </span>`;
-                if(manualWins > 0) st += `<span style="color:purple; font-weight:bold;">強正x${manualWins} </span>`;
                 if(waits.length > 0) st += `<span style="color:orange;">(候補 ${waits.join(',')})</span>`;
 
                 return `<div class="admin-item-row">
@@ -316,7 +312,7 @@
         document.getElementById('modal-title').innerText = "上架";
         document.getElementById('modal-body').innerHTML = `活動：<input id="p-e" class="input-std">名稱：<input id="p-n" class="input-std">價格：<input id="p-p" type="number" class="input-std">限購：<input id="p-l" type="number" class="input-std" value="999">規格：<input id="p-s" class="input-std" placeholder="規格1,規格2">`;
         document.getElementById('edit-modal').style.display='flex';
-        document.getElementById('modal-save').onclick = () => { products.push({ e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value }); db.ref('products').set(products).then(()=>document.getElementById('edit-modal').style.display='none'); };
+        document.getElementById('modal-save').onclick = () => { products.push({ e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value }; db.ref('products').set(products).then(()=>document.getElementById('edit-modal').style.display='none'); };
     }
 
     function performSearch() {
@@ -334,7 +330,7 @@
                 
                 let win = false, waitNum = 0;
                 if(it.fWin) {
-                    win = true;
+                    win = true; // 強正的人在查詢時也直接是正取
                 } else {
                     globalCounter[sk] = (globalCounter[sk] || 0) + 1;
                     if(globalCounter[sk] <= limit) win = true;
@@ -349,7 +345,7 @@
             }); 
             if(userMatch) userResults.push({ o, summ: Object.values(orderSumm) });
         });
-        resArea.innerHTML = userResults.length ? userResults.reverse().map(res => `<div style="background:#FFF; padding:15px; border-radius:12px; margin-bottom:10px;">${res.summ.map(it => `<div>• ${it.n}(${it.sel}) x ${it.wins + it.waits.length} ${it.ship?'<b>[已出貨]</b>':''}</div>`).join('')}<div style="text-align:right; margin-top:5px;">總計: $${res.o.total} | 尚欠: $${(res.o.total||0)-(res.o.deposit||0)-(res.o.paid||0)}</div></div>`).join('') : '查無訂單';
+        resArea.innerHTML = userResults.length ? userResults.reverse().map(res => `<div style="background:#FFF; padding:15px; border-radius:12px; margin-bottom:10px;">${res.summ.map(it => `<div>• ${it.n}(${it.sel}) x ${it.wins + it.waits.length} ${it.wins>0?'<b>[正取]</b>':''} ${it.ship?'<b>[已出貨]</b>':''}</div>`).join('')}<div style="text-align:right; margin-top:5px;">總計: $${res.o.total} | 尚欠: $${(res.o.total||0)-(res.o.deposit||0)-(res.o.paid||0)}</div></div>`).join('') : '查無訂單';
     }
 
     function askExport(type) {
