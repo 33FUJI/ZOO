@@ -46,6 +46,7 @@
         .admin-order-card { background: #FFF; border: 1px solid #EEE; border-radius: 12px; padding: 15px; margin-bottom: 15px; position: relative; }
         .admin-item-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #F9F9F9; gap: 8px; font-size: 14px; }
         .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .btn-add:disabled { background: #CCC; cursor: not-allowed; }
         .status-label { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; background: #F0F0F0; padding: 8px; border-radius: 8px; font-weight: bold; font-size: 13px; border: 1px solid #DDD; }
         .fwin-btn { font-size: 11px; border: 1px solid var(--caramel); color: var(--caramel); background: none; padding: 3px 6px; border-radius: 5px; cursor: pointer; }
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 15px; }
@@ -75,7 +76,7 @@
         <div class="cart-bottom">
             <p style="display:flex; justify-content:space-between; font-weight:bold; font-size:18px; margin:5px 0;">總計: <span style="color:var(--caramel);">$ <span id="cart-total">0</span></span></p>
             <input id="nick" class="input-std" placeholder="您的 LINE 暱稱">
-            <button class="btn-add" style="width:100%; background:var(--matcha); padding:16px; font-size:18px; margin-top:5px;" onclick="submitOrder()">確認提交訂單</button>
+            <button id="submit-order-btn" class="btn-add" style="width:100%; background:var(--matcha); padding:16px; font-size:18px; margin-top:5px;" onclick="submitOrder()">確認提交訂單</button>
             <button onclick="backToHall()" style="width:100%; margin-top:10px; border:none; background:none; color:#999; font-size:13px;">← 返回目錄</button>
         </div>
     </div>
@@ -167,15 +168,24 @@
     function removeFromCart(pid, sel) { cart = cart.filter(it => !(it.pid == pid && it.sel == sel)); renderCart(); }
 
     function submitOrder() {
-        const n = document.getElementById('nick').value.trim(); if(!n || cart.length===0) return alert("輸入暱稱及商品");
+        const n = document.getElementById('nick').value.trim(); 
+        const btn = document.getElementById('submit-order-btn');
+        if(!n || cart.length===0) return alert("輸入暱稱及商品");
+        
+        btn.disabled = true;
+        btn.innerText = "提交中...";
+        
         db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), adminNote: "", paid: 0, deposit: 0, isPaid: false, isDep: false })
-          .then(() => { alert("訂單已提交！"); cart = []; location.reload(); });
+          .then(() => { alert("訂單已提交！"); cart = []; location.reload(); })
+          .catch(() => { btn.disabled = false; btn.innerText = "確認提交訂單"; alert("網路錯誤"); });
     }
 
     function adminLogin() { if(prompt("管理密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; renderAdminOrders(); } }
 
     function renderAdminOrders() {
-        const main = document.getElementById('admin-main'); const sorted = Object.entries(orders).sort((a,b) => a[1].time - b[1].time);
+        const main = document.getElementById('admin-main'); 
+        // 核心修正：嚴格按時間先後排序，確保最後下單的排在後面
+        const sorted = Object.entries(orders).sort((a,b) => a[1].time - b[1].time);
         let globalCounter = {}; 
         main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%; background:var(--caramel);" onclick="mergeSelected()">🔗 執行併單</button>` + sorted.map(([k, o]) => {
             let orderSumm = {}; (o.items || []).forEach((it, idx) => { let sk = `${it.pid}_${it.sel}`; if(!orderSumm[sk]) orderSumm[sk] = { ...it, idxs: [], qty: 0 }; orderSumm[sk].idxs.push(idx); orderSumm[sk].qty++; });
@@ -195,13 +205,12 @@
                 </div>`
             }).join('');
 
-            // 動態餘額公式：總額 - 訂金 - 尾款
             const bal = (o.total || 0) - (o.deposit || 0) - (o.paid || 0);
 
             return `<div class="admin-order-card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> <b onclick="editNick('${k}','${o.nick}')">${o.nick} ✎</b></span>
-                    <div><span style="font-size:12px; color:#999; margin-right:10px;">${new Date(o.time).toLocaleDateString()}</span><button class="del-order-btn" onclick="deleteEntireOrder('${k}')">刪除</button></div>
+                    <div><span style="font-size:12px; color:#999; margin-right:10px;">${new Date(o.time).toLocaleString()}</span><button class="del-order-btn" onclick="deleteEntireOrder('${k}')">刪除</button></div>
                 </div>
                 <div style="border-top:1px solid #F0F0F0; padding:5px 0;">${itemsHtml}</div>
                 <div class="status-labels" style="display:flex; gap:10px; margin:10px 0;">
@@ -257,19 +266,23 @@
         const nicks = checks.map(el => el.getAttribute('data-nick').toLowerCase());
         if(new Set(nicks).size > 1) return alert("須為同一人才可併單！");
         
+        // 修改重點：併單時抓取最早的時間戳，防止「惠」等後下單者的候補順位超前
         let items = [], total = 0, keys = checks.map(el => el.value), tp=0, td=0, ip=false, id=false, cn="";
+        let earliestTime = Date.now();
+
         keys.forEach(k => { 
             const o = orders[k]; 
             items = items.concat(o.items||[]); 
             total += (o.total||0); 
-            tp += (o.paid||0); // 加總尾款
-            td += (o.deposit||0); // 加總訂金
+            tp += (o.paid||0); 
+            td += (o.deposit||0); 
             if(o.isPaid) ip=true; 
             if(o.isDep) id=true; 
             if(o.adminNote) cn += o.adminNote+" "; 
+            if(o.time < earliestTime) earliestTime = o.time;
         });
         db.ref('orders').push({ 
-            nick: checks[0].getAttribute('data-nick'), items: items, total: total, paid: tp, deposit: td, isPaid: ip, isDep: id, time: Date.now(), adminNote: cn+"(併)" 
+            nick: checks[0].getAttribute('data-nick'), items: items, total: total, paid: tp, deposit: td, isPaid: ip, isDep: id, time: earliestTime, adminNote: cn+"(併)" 
         }).then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); });
     }
 
@@ -296,6 +309,7 @@
     function performSearch() {
         const n = document.getElementById('search-nick').value.trim().toLowerCase();
         const resArea = document.getElementById('search-results-area'); if(!n) return;
+        // 核心修正：搜尋時也確保按時間順序計算
         const allSorted = Object.entries(orders).sort((a,b) => a[1].time - b[1].time);
         let globalCounter = {}; let userResults = [];
         allSorted.forEach(([k, o]) => {
@@ -328,7 +342,9 @@
                 let s = {}; Object.values(orders).forEach(o => { (o.items||[]).forEach(it => { if(selected.includes(it.e)) { let k = `[${it.e}] ${it.n}(${it.sel})`; s[k] = (s[k]||0)+1; } }); });
                 for(let k in s) text += `${k} : ${s[k]} 個\n`;
             } else {
-                Object.values(orders).forEach(o => { const fits = (o.items||[]).filter(it => selected.includes(it.e)); if(fits.length) { const b = (o.total||0)-(o.deposit||0)-(o.paid||0); text += `\n【${o.nick}】(總計:$${o.total}/餘:$${b})\n`; fits.forEach(it => { text += `- ${it.n}(${it.sel})${it.ship?'(已出)':''}\n`; }); } });
+                // 匯出明細時也按時間順序排列
+                const sortedExport = Object.values(orders).sort((a,b) => a.time - b.time);
+                sortedExport.forEach(o => { const fits = (o.items||[]).filter(it => selected.includes(it.e)); if(fits.length) { const b = (o.total||0)-(o.deposit||0)-(o.paid||0); text += `\n【${o.nick}】(總計:$${o.total}/餘:$${b})\n`; fits.forEach(it => { text += `- ${it.n}(${it.sel})${it.ship?'(已出)':''}\n`; }); } });
             }
             const blob = new Blob([text], { type: "text/plain" }); const link = document.createElement("a");
             link.href = URL.createObjectURL(blob); link.download = `33zoo_export.txt`; link.click();
