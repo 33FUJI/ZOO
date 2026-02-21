@@ -231,7 +231,6 @@
         const o = orders[k]; const it = o.items[idx];
         const newN = prompt("修改名稱：", it.n); if(!newN) return;
         const newP = prompt("修改單價：", it.p); if(!newP) return;
-        // 同品項同步修改
         o.items.forEach(item => { if(item.pid == it.pid && item.sel == it.sel) { item.n = newN; item.p = parseInt(newP); } });
         o.total = o.items.reduce((a, b) => a + (parseInt(b.p)||0), 0);
         db.ref(`orders/${k}`).set(o);
@@ -340,17 +339,34 @@
         btn.innerText = "確認匯出";
         btn.onclick = () => {
             const selected = Array.from(document.querySelectorAll('.evt-check:checked')).map(el => el.value);
-            let text = "";
+            let text = `🌟 33日本動物園 - ${type==='summary'?'採購清單':'場次明細'}\n`;
+            let totalQty = 0;
+
             if(type==='summary') {
                 let s = {}; Object.values(orders).forEach(o => { (o.items||[]).forEach(it => { if(selected.includes(it.e)) { let k = `[${it.e}] ${it.n}(${it.sel})`; s[k] = (s[k]||0)+1; } }); });
-                for(let k in s) text += `${k} : ${s[k]}\n`;
+                for(let k in s) { text += `${k} : ${s[k]} 個\n`; totalQty += s[k]; }
+                text += `\n------------------\n📦 總計購買數量：${totalQty} 件`;
             } else {
                 Object.values(orders).forEach(o => { 
                     const fits = (o.items||[]).filter(it => selected.includes(it.e));
-                    if(fits.length) { text += `\n【${o.nick}】\n`; fits.forEach(it => text += `- ${it.n}(${it.sel}) x 1\n`); }
+                    if(fits.length) { text += `\n【${o.nick}】\n`; fits.forEach(it => { text += `- ${it.n}(${it.sel}) x 1\n`; totalQty++; }); }
                 });
+                text += `\n------------------\n📋 總品項數：${totalQty} 件`;
             }
-            alert("請查看 Console (F12) 或我會優化這裡"); console.log(text);
+
+            // 1. 下載 TXT 檔案
+            const blob = new Blob([text], { type: "text/plain" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `33日本動物園_${type==='summary'?'採購統計':'匯出明細'}.txt`;
+            link.click();
+
+            // 2. 複製到剪貼簿 (以便貼到 LINE 群組)
+            navigator.clipboard.writeText(text).then(() => {
+                alert("✅ 檔案已下載，內容也已複製到您的剪貼簿！\n請直接到 LINE 群組按「貼上」即可。");
+            });
+
+            document.getElementById('edit-modal').style.display = 'none';
         };
         document.getElementById('edit-modal').style.display = 'flex';
     }
