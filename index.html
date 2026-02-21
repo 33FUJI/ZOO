@@ -11,13 +11,9 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Noto Sans TC', sans-serif; }
         html, body { height: 100%; margin: 0; padding: 0; background: var(--gray); overflow: hidden; color: var(--wood); }
         body { display: flex; flex-direction: column; }
-
-        /* 入口大廳 */
         .hall { position: fixed; inset: 0; background: var(--rice); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
         .grid-hall { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; width: 100%; max-width: 500px; margin-top: 20px; }
         .card-hall { background: #FFF; padding: 25px 10px; border-radius: 15px; border: 1px solid #EAE2D1; text-align: center; cursor: pointer; box-shadow: 0 4px 0 #EAE2D1; font-weight: bold; color: var(--matcha); font-size: 16px; }
-        
-        /* 購物主介面 */
         .app-container { display: none; flex: 1; overflow: hidden; flex-direction: row; }
         .list-area { flex: 1; overflow-y: auto; padding: 15px; background: var(--gray); -webkit-overflow-scrolling: touch; }
         .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; max-width: 1400px; margin: 0 auto; }
@@ -29,17 +25,7 @@
         .btn-qty { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #DDD; background: #FFF; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
         .cart-area { width: 360px; background: #FFF; border-left: 1px solid #DDD; display: flex; flex-direction: column; box-shadow: -2px 0 10px rgba(0,0,0,0.05); }
         .cart-bottom { padding: 15px; border-top: 1px solid #EEE; background: #FFF; padding-bottom: calc(15px + env(safe-area-inset-bottom)); }
-
-        @media (max-width: 768px) {
-            .app-container { flex-direction: column; }
-            .cart-area { width: 100%; flex: 1.5; border-left: none; border-top: 1px solid #EEE; }
-            .prod-grid { grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 8px; }
-            .prod-card { padding: 8px; min-height: 220px; border-radius: 8px; }
-            .prod-name { font-size: 12px; min-height: 32px; }
-            .btn-add { padding: 12px; font-size: 14px; }
-        }
-
-        /* 管理工作台 */
+        @media (max-width: 768px) { .app-container { flex-direction: column; } .cart-area { width: 100%; flex: 1.5; border-left: none; border-top: 1px solid #EEE; } .prod-grid { grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 8px; } .prod-card { padding: 8px; min-height: 220px; border-radius: 8px; } .prod-name { font-size: 12px; min-height: 32px; } .btn-add { padding: 12px; font-size: 14px; } }
         #admin-panel { position: fixed; inset: 0; background: #F8F9FA; z-index: 4000; display: none; flex-direction: column; }
         .admin-header { background: var(--wood); color: #FFF; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .admin-nav { padding: 10px; background: #EEE; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #DDD; }
@@ -53,8 +39,7 @@
         .modal-box { background: var(--rice); padding: 25px; border-radius: 20px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
         .input-std { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #DDD; border-radius: 10px; font-size: 15px; }
         .del-order-btn { background: #FF4D4D; color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; }
-        
-        /* 視覺優化 - 禁止劃線 */
+        .reset-time-btn { background: #777; color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; margin-right: 5px; }
         .item-text { cursor: pointer; text-decoration: none !important; }
         .shipped-text { color: #2a9d8f; font-weight: bold; margin-left: 5px; }
     </style>
@@ -94,24 +79,11 @@
 </div>
 
 <div id="edit-modal" class="modal">
-    <div class="modal-box">
-        <h3 id="modal-title">編輯</h3>
-        <div id="modal-body"></div>
-        <div style="display:flex; gap:10px; margin-top:20px;">
-            <button class="btn-add" id="modal-save" style="flex:1;">儲存</button>
-            <button class="btn-add" style="flex:1; background:#999;" onclick="document.getElementById('edit-modal').style.display='none'">取消</button>
-        </div>
-    </div>
+    <div class="modal-box"><h3 id="modal-title">編輯</h3><div id="modal-body"></div><div style="display:flex; gap:10px; margin-top:20px;"><button class="btn-add" id="modal-save" style="flex:1;">儲存</button><button class="btn-add" style="flex:1; background:#999;" onclick="document.getElementById('edit-modal').style.display='none'">取消</button></div></div>
 </div>
 
 <div id="search-modal" class="modal">
-    <div class="modal-box">
-        <h2 style="text-align:center; color:var(--matcha);">訂單查詢</h2>
-        <input id="search-nick" class="input-std" placeholder="輸入您的 LINE 暱稱">
-        <div id="search-results-area" style="max-height:300px; overflow-y:auto; margin-bottom:15px;"></div>
-        <button class="btn-add" style="width:100%; padding:15px;" onclick="performSearch()">搜尋</button>
-        <button onclick="document.getElementById('search-modal').style.display='none'" style="width:100%; margin-top:10px; border:none; background:none; color:#666;">關閉視窗</button>
-    </div>
+    <div class="modal-box"><h2 style="text-align:center; color:var(--matcha);">訂單查詢</h2><input id="search-nick" class="input-std" placeholder="輸入您的 LINE 暱稱"><div id="search-results-area" style="max-height:300px; overflow-y:auto; margin-bottom:15px;"></div><button class="btn-add" style="width:100%; padding:15px;" onclick="performSearch()">搜尋</button><button onclick="document.getElementById('search-modal').style.display='none'" style="width:100%; margin-top:10px; border:none; background:none; color:#666;">關閉視窗</button></div>
 </div>
 
 <script>
@@ -154,7 +126,8 @@
 
     function addToCart(rid) {
         const p = products[rid]; if(p.s && !curS[rid]) return alert("請選規格");
-        for(let i=0; i<curQty[rid]; i++) { cart.push({...p, sel: curS[rid] || "一般", pid: rid, fWin: false, ship: false}); } renderCart();
+        const now = Date.now();
+        for(let i=0; i<curQty[rid]; i++) { cart.push({...p, sel: curS[rid] || "一般", pid: rid, fWin: false, ship: false, t: now}); } renderCart();
     }
 
     function renderCart() {
@@ -171,10 +144,7 @@
         const n = document.getElementById('nick').value.trim(); 
         const btn = document.getElementById('submit-order-btn');
         if(!n || cart.length===0) return alert("輸入暱稱及商品");
-        
-        btn.disabled = true;
-        btn.innerText = "提交中...";
-        
+        btn.disabled = true; btn.innerText = "提交中...";
         db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), adminNote: "", paid: 0, deposit: 0, isPaid: false, isDep: false })
           .then(() => { alert("訂單已提交！"); cart = []; location.reload(); })
           .catch(() => { btn.disabled = false; btn.innerText = "確認提交訂單"; alert("網路錯誤"); });
@@ -183,74 +153,50 @@
     function adminLogin() { if(prompt("管理密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; renderAdminOrders(); } }
 
     function renderAdminOrders() {
-        const main = document.getElementById('admin-main'); 
-        // 核心修正：嚴格按時間先後排序，確保最後下單的排在後面
-        const sorted = Object.entries(orders).sort((a,b) => a[1].time - b[1].time);
-        let globalCounter = {}; 
+        const main = document.getElementById('admin-main');
+        let pool = {};
+        Object.values(orders).forEach(o => { (o.items||[]).forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; if(!it.t) it.t = o.time || 0; pool[sk].push(it); }); });
+        for(let k in pool) pool[k].sort((a,b) => a.t - b.t);
+
+        const sorted = Object.entries(orders).sort((a,b) => (a[1].time||0) - (b[1].time||0));
         main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%; background:var(--caramel);" onclick="mergeSelected()">🔗 執行併單</button>` + sorted.map(([k, o]) => {
             let orderSumm = {}; (o.items || []).forEach((it, idx) => { let sk = `${it.pid}_${it.sel}`; if(!orderSumm[sk]) orderSumm[sk] = { ...it, idxs: [], qty: 0 }; orderSumm[sk].idxs.push(idx); orderSumm[sk].qty++; });
             const itemsHtml = Object.values(orderSumm).map(it => {
                 const sk = `${it.pid}_${it.sel}`; const limit = (products[it.pid]||{}).limit || 999;
-                let wins = 0, waits = []; it.idxs.forEach(originalIdx => { if(o.items[originalIdx].fWin) wins++; else { globalCounter[sk] = (globalCounter[sk] || 0) + 1; if(globalCounter[sk] <= limit) wins++; else waits.push(globalCounter[sk] - limit); } });
+                let wins = 0, waits = []; 
+                it.idxs.forEach(originalIdx => {
+                    let item = o.items[originalIdx]; if(!item.t) item.t = o.time;
+                    if(item.fWin) wins++; else { let rank = pool[sk].indexOf(item) + 1; if(rank <= limit) wins++; else waits.push(rank - limit); }
+                });
                 let st = wins > 0 ? `<span style="color:green; font-weight:bold;">正取x${wins} </span>` : "";
                 if(waits.length > 0) st += `<span style="color:orange;">(候補第 ${waits.join(',')} 順位)</span>`;
-                const shipLabel = o.items[it.idxs[0]].ship ? `<span class="shipped-text">(🚚已出)</span>` : "";
-
-                return `<div class="admin-item-row">
-                    <input type="checkbox" class="item-check-${k}" value="${it.idxs.join(',')}">
-                    <span class="item-text" onclick="toggleSingleShip('${k}', [${it.idxs}])"><b>${it.n}(${it.sel}) x ${it.qty}</b> $${it.p*it.qty} ${st}${shipLabel}</span>
-                    <button onclick="editSingleItem('${k}', [${it.idxs}])" style="background:none; border:none; color:blue;">✎</button>
-                    <button class="fwin-btn" onclick="batchFWin('${k}', [${it.idxs}])">強正</button>
-                    <button onclick="deleteItems('${k}', [${it.idxs}])" style="color:#DDD; background:none; border:none;">✕</button>
-                </div>`
+                return `<div class="admin-item-row"><input type="checkbox" class="item-check-${k}" value="${it.idxs.join(',')}"><span class="item-text" onclick="toggleSingleShip('${k}', [${it.idxs}])"><b>${it.n}(${it.sel}) x ${it.qty}</b> $${it.p*it.qty} ${st}${o.items[it.idxs[0]].ship?'<span class="shipped-text">(🚚已出)</span>':''}</span><button class="fwin-btn" onclick="batchFWin('${k}', [${it.idxs}])">強正</button><button onclick="deleteItems('${k}', [${it.idxs}])" style="color:#DDD; background:none; border:none;">✕</button></div>`
             }).join('');
-
             const bal = (o.total || 0) - (o.deposit || 0) - (o.paid || 0);
-
             return `<div class="admin-order-card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <span><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> <b onclick="editNick('${k}','${o.nick}')">${o.nick} ✎</b></span>
-                    <div><span style="font-size:12px; color:#999; margin-right:10px;">${new Date(o.time).toLocaleString()}</span><button class="del-order-btn" onclick="deleteEntireOrder('${k}')">刪除</button></div>
+                    <div><button class="reset-time-btn" onclick="resetOrderTime('${k}')">重設排序</button><button class="del-order-btn" onclick="deleteEntireOrder('${k}')">刪除</button></div>
                 </div>
                 <div style="border-top:1px solid #F0F0F0; padding:5px 0;">${itemsHtml}</div>
-                <div class="status-labels" style="display:flex; gap:10px; margin:10px 0;">
+                <div style="display:flex; gap:10px; margin:10px 0;">
                     <label class="status-label" style="${o.isPaid?'background:#E8F5E9;':''}"><input type="checkbox" ${o.isPaid?'checked':''} onchange="togglePayStatus('${k}', this.checked)"> 已付</label>
                     <label class="status-label" style="${o.isDep?'background:#FFF3E0;':''}"><input type="checkbox" ${o.isDep?'checked':''} onchange="toggleStatus('${k}', 'isDep', this.checked)"> 訂金</label>
                 </div>
                 <div style="background:#F9F9F9; padding:10px; border-radius:8px; font-size:13px;">
-                    <div style="display:flex; justify-content:space-between;">
-                        <span onclick="editTotal('${k}',${o.total})" style="cursor:pointer;">總額: $${o.total} ✎</span>
-                        <span style="color:${bal<=0?'green':'red'}; font-weight:bold;">${bal<=0?'已清':'餘:'+bal}</span>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; margin-top:5px;">
-                        <span onclick="editDeposit('${k}',${o.deposit||0})" style="cursor:pointer;">訂金: $${o.deposit||0} ✎</span>
-                        <span onclick="editPaid('${k}',${o.paid||0})" style="cursor:pointer;">尾款: $${o.paid||0} ✎</span>
-                    </div>
+                    <div style="display:flex; justify-content:space-between;"><span onclick="editTotal('${k}',${o.total})" style="cursor:pointer;">總額: $${o.total} ✎</span><span style="color:${bal<=0?'green':'red'}; font-weight:bold;">${bal<=0?'已清':'餘:'+bal}</span></div>
+                    <div style="display:flex; justify-content:space-between; margin-top:5px;"><span onclick="editDeposit('${k}',${o.deposit||0})" style="cursor:pointer;">訂金: $${o.deposit||0} ✎</span><span onclick="editPaid('${k}',${o.paid||0})" style="cursor:pointer;">尾款: $${o.paid||0} ✎</span></div>
                 </div>
                 <input class="input-std" style="height:35px; font-size:12px;" id="note-${k}" value="${o.adminNote||''}" placeholder="備註按 Enter" onkeydown="if(event.key==='Enter') saveNote('${k}')">
                 <button class="btn-add" style="width:100%; margin-top:5px; background:#EEE; color:#666;" onclick="addItemToOrd('${k}')">＋ 加商品</button>
             </div>`}).join('');
     }
 
+    function resetOrderTime(k) { if(confirm("這將會把此人的所有商品排到最後一名，確定嗎？")){ const now = Date.now(); let o = orders[k]; o.time = now; (o.items||[]).forEach(it => it.t = now); db.ref(`orders/${k}`).set(o).then(()=>alert("已移至最後順位")); } }
     function toggleStatus(k, f, v) { db.ref(`orders/${k}`).update({ [f]: v }); }
-
-    function togglePayStatus(k, v) {
-        let o = orders[k];
-        if(v) {
-            if(confirm("是否要全額結清？\n[確定]：自動填入剩餘款項\n[取消]：手動輸入")) {
-                let remain = (o.total || 0) - (o.deposit || 0);
-                db.ref(`orders/${k}`).update({ isPaid: true, paid: remain });
-            } else {
-                db.ref(`orders/${k}`).update({ isPaid: true });
-            }
-        } else {
-            db.ref(`orders/${k}`).update({ isPaid: false });
-        }
-    }
-
+    function togglePayStatus(k, v) { let o = orders[k]; if(v) { if(confirm("是否要全額結清？")) { let r = (o.total||0)-(o.deposit||0); db.ref(`orders/${k}`).update({ isPaid: true, paid: r }); } else { db.ref(`orders/${k}`).update({ isPaid: true }); } } else { db.ref(`orders/${k}`).update({ isPaid: false }); } }
     function deleteEntireOrder(k) { if(confirm("確定刪除整筆訂單？")) db.ref(`orders/${k}`).remove(); }
     function toggleSingleShip(k, idxs) { let o = orders[k]; const ns = !o.items[idxs[0]].ship; idxs.forEach(i => o.items[i].ship = ns); db.ref(`orders/${k}`).set(o); }
-    function editSingleItem(k, idxs) { const o = orders[k]; const it = o.items[idxs[0]]; const newN = prompt("編輯名稱：", it.n); const newP = prompt("編輯金額：", it.p); if(newN && newP){ idxs.forEach(i => { o.items[i].n = newN; o.items[i].p = parseInt(newP); }); o.total = o.items.reduce((a, b) => a + (b.p || 0), 0); db.ref(`orders/${k}`).set(o); } }
     function batchFWin(k, idxs) { let o = orders[k]; idxs.forEach(i => o.items[i].fWin = true); db.ref(`orders/${k}`).set(o); }
     function deleteItems(k, idxs) { if(confirm('刪除商品？')){ let o = orders[k]; idxs.sort((a,b)=>b-a).forEach(i => o.items.splice(i,1)); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o); } }
     function editNick(k, old) { const v = prompt("姓名：", old); if(v) db.ref(`orders/${k}`).update({ nick: v }); }
@@ -258,32 +204,17 @@
     function editDeposit(k, old) { const v = prompt("實收訂金：", old); if(v!==null) db.ref(`orders/${k}`).update({ deposit: parseInt(v) }); }
     function editPaid(k, old) { const v = prompt("實收尾款：", old); if(v!==null) db.ref(`orders/${k}`).update({ paid: parseInt(v) }); }
     function saveNote(k) { const v = document.getElementById(`note-${k}`).value; db.ref(`orders/${k}`).update({ adminNote: v }).then(()=>alert("已存備註")); }
-    function addItemToOrd(k) { const n = prompt("商品名稱："); const p = prompt("價格：","0"); if(n){ let o = orders[k]; o.items.push({ e: "手動", n: n, sel: "一般", p: parseInt(p||0), pid: "manual", fWin: true, ship: false }); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o); } }
+    function addItemToOrd(k) { const n = prompt("商品名稱："); const p = prompt("價格：","0"); if(n){ let o = orders[k]; o.items.push({ e: "手動", n: n, sel: "一般", p: parseInt(p||0), pid: "manual", fWin: true, ship: false, t: Date.now() }); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o); } }
 
     function mergeSelected() {
         const checks = Array.from(document.querySelectorAll('.merge-check:checked'));
         if(checks.length < 2) return alert("請至少選兩筆");
         const nicks = checks.map(el => el.getAttribute('data-nick').toLowerCase());
         if(new Set(nicks).size > 1) return alert("須為同一人才可併單！");
-        
-        // 修改重點：併單時抓取最早的時間戳，防止「惠」等後下單者的候補順位超前
         let items = [], total = 0, keys = checks.map(el => el.value), tp=0, td=0, ip=false, id=false, cn="";
         let earliestTime = Date.now();
-
-        keys.forEach(k => { 
-            const o = orders[k]; 
-            items = items.concat(o.items||[]); 
-            total += (o.total||0); 
-            tp += (o.paid||0); 
-            td += (o.deposit||0); 
-            if(o.isPaid) ip=true; 
-            if(o.isDep) id=true; 
-            if(o.adminNote) cn += o.adminNote+" "; 
-            if(o.time < earliestTime) earliestTime = o.time;
-        });
-        db.ref('orders').push({ 
-            nick: checks[0].getAttribute('data-nick'), items: items, total: total, paid: tp, deposit: td, isPaid: ip, isDep: id, time: earliestTime, adminNote: cn+"(併)" 
-        }).then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); });
+        keys.forEach(k => { const o = orders[k]; items = items.concat(o.items||[]); total += (o.total||0); tp += (o.paid||0); td += (o.deposit||0); if(o.isPaid) ip=true; if(o.isDep) id=true; if(o.adminNote) cn += o.adminNote+" "; if(o.time < earliestTime) earliestTime = o.time; });
+        db.ref('orders').push({ nick: checks[0].getAttribute('data-nick'), items: items, total: total, paid: tp, deposit: td, isPaid: ip, isDep: id, time: earliestTime, adminNote: cn+"(併)" }).then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); alert("併單完成！"); });
     }
 
     function renderAdminProds() {
@@ -309,24 +240,24 @@
     function performSearch() {
         const n = document.getElementById('search-nick').value.trim().toLowerCase();
         const resArea = document.getElementById('search-results-area'); if(!n) return;
-        // 核心修正：搜尋時也確保按時間順序計算
-        const allSorted = Object.entries(orders).sort((a,b) => a[1].time - b[1].time);
-        let globalCounter = {}; let userResults = [];
-        allSorted.forEach(([k, o]) => {
-            let userMatch = o.nick.toLowerCase() === n; 
-            let orderSumm = {};
-            (o.items || []).forEach(it => { 
-                let sk = `${it.pid}_${it.sel}`; let limit = (products[it.pid] || {}).limit || 999;
-                let win = false, waitNum = 0;
-                if(it.fWin) win = true; 
-                else { globalCounter[sk] = (globalCounter[sk] || 0) + 1; if(globalCounter[sk] <= limit) win = true; else waitNum = globalCounter[sk] - limit; }
-                if(userMatch) { if(!orderSumm[sk]) orderSumm[sk] = { ...it, details: [] }; orderSumm[sk].details.push({ isWin: win, seq: waitNum, isShip: it.ship }); }
-            }); 
-            if(userMatch) userResults.push({ o, summ: Object.values(orderSumm) });
+        let pool = {};
+        Object.values(orders).forEach(o => { (o.items||[]).forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; if(!it.t) it.t = o.time || 0; pool[sk].push(it); }); });
+        for(let k in pool) pool[k].sort((a,b) => a.t - b.t);
+        let userResults = [];
+        Object.entries(orders).forEach(([k, o]) => {
+            if(o.nick.toLowerCase() === n) {
+                let orderSumm = {};
+                (o.items || []).forEach(it => { 
+                    let sk = `${it.pid}_${it.sel}`; let limit = (products[it.pid] || {}).limit || 999;
+                    let win = false, waitNum = 0; if(it.fWin) win = true; else { let rank = pool[sk].indexOf(it) + 1; if(rank <= limit) win = true; else waitNum = rank - limit; }
+                    if(!orderSumm[sk]) orderSumm[sk] = { ...it, details: [] }; orderSumm[sk].details.push({ isWin: win, seq: waitNum, isShip: it.ship });
+                });
+                userResults.push({ o, summ: Object.values(orderSumm) });
+            }
         });
         resArea.innerHTML = userResults.length ? userResults.reverse().map(res => {
-            const userBal = (res.o.total||0)-(res.o.deposit||0)-(res.o.paid||0);
-            return `<div style="background:#FFF; padding:15px; border-radius:12px; margin-bottom:10px; border-left: 5px solid var(--matcha);">${res.summ.map(it => { const statusText = it.details.map(d => { let txt = d.isWin ? '<b style="color:green;">[正取]</b>' : `<b style="color:orange;">[候補第 ${d.seq} 順位]</b>`; if(d.isShip) txt += ' <small style="color:#2a9d8f;">(已出貨)</small>'; return txt; }).join('、'); return `<div>• ${it.n}(${it.sel}) x ${it.details.length} <br> &nbsp;&nbsp;狀態：${statusText}</div>`; }).join('')}<div style="text-align:right; margin-top:8px; border-top:1px dashed #EEE; padding-top:5px; font-size:13px;">總計: $${res.o.total} | 尚欠: <span style="color:${userBal<=0?'green':'red'}; font-weight:bold;">$${userBal}</span></div></div>`
+            const b = (res.o.total||0)-(res.o.deposit||0)-(res.o.paid||0);
+            return `<div style="background:#FFF; padding:15px; border-radius:12px; margin-bottom:10px; border-left: 5px solid var(--matcha);">${res.summ.map(it => { const statusText = it.details.map(d => { let txt = d.isWin ? '<b style="color:green;">[正取]</b>' : `<b style="color:orange;">[候補第 ${d.seq} 順位]</b>`; if(d.isShip) txt += ' <small style="color:#2a9d8f;">(已出貨)</small>'; return txt; }).join('、'); return `<div>• ${it.n}(${it.sel}) x ${it.details.length} <br> &nbsp;&nbsp;狀態：${statusText}</div>`; }).join('')}<div style="text-align:right; margin-top:8px; border-top:1px dashed #EEE; padding-top:5px; font-size:13px;">總計: $${res.o.total} | 尚欠: <span style="color:${b<=0?'green':'red'}; font-weight:bold;">$${b}</span></div></div>`
         }).join('') : '<p style="text-align:center; color:#999;">查無訂單</p>';
     }
 
@@ -342,9 +273,7 @@
                 let s = {}; Object.values(orders).forEach(o => { (o.items||[]).forEach(it => { if(selected.includes(it.e)) { let k = `[${it.e}] ${it.n}(${it.sel})`; s[k] = (s[k]||0)+1; } }); });
                 for(let k in s) text += `${k} : ${s[k]} 個\n`;
             } else {
-                // 匯出明細時也按時間順序排列
-                const sortedExport = Object.values(orders).sort((a,b) => a.time - b.time);
-                sortedExport.forEach(o => { const fits = (o.items||[]).filter(it => selected.includes(it.e)); if(fits.length) { const b = (o.total||0)-(o.deposit||0)-(o.paid||0); text += `\n【${o.nick}】(總計:$${o.total}/餘:$${b})\n`; fits.forEach(it => { text += `- ${it.n}(${it.sel})${it.ship?'(已出)':''}\n`; }); } });
+                Object.values(orders).sort((a,b)=>a.time-b.time).forEach(o => { const fits = (o.items||[]).filter(it => selected.includes(it.e)); if(fits.length) { const b = (o.total||0)-(o.deposit||0)-(o.paid||0); text += `\n【${o.nick}】(總計:$${o.total}/餘:$${b})\n`; fits.forEach(it => { text += `- ${it.n}(${it.sel})${it.ship?'(已出)':''}\n`; }); } });
             }
             const blob = new Blob([text], { type: "text/plain" }); const link = document.createElement("a");
             link.href = URL.createObjectURL(blob); link.download = `33zoo_export.txt`; link.click();
