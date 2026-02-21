@@ -12,7 +12,7 @@
         html, body { height: 100%; margin: 0; padding: 0; background: var(--gray); overflow: hidden; color: var(--wood); }
         body { display: flex; flex-direction: column; }
 
-        /* 入口大廳修正 */
+        /* 入口大廳 */
         .hall { position: fixed; inset: 0; background: var(--rice); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
         .grid-hall { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; width: 100%; max-width: 500px; margin-top: 20px; }
         .card-hall { background: #FFF; padding: 25px 10px; border-radius: 15px; border: 1px solid #EAE2D1; text-align: center; cursor: pointer; box-shadow: 0 4px 0 #EAE2D1; font-weight: bold; color: var(--matcha); font-size: 16px; }
@@ -39,13 +39,12 @@
             .btn-add { padding: 12px; font-size: 14px; }
         }
 
+        /* 管理後台 */
         #admin-panel { position: fixed; inset: 0; background: #F8F9FA; z-index: 4000; display: none; flex-direction: column; }
         .admin-header { background: var(--wood); color: #FFF; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .admin-nav { padding: 10px; background: #EEE; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #DDD; }
         .admin-order-card { background: #FFF; border: 1px solid #EEE; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
         .admin-item-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #F9F9F9; gap: 8px; font-size: 14px; }
-        .item-text { flex: 1; cursor: pointer; }
-        .shipped-item { color: #BBB !important; text-decoration: line-through; }
         .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
         .status-label { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; background: #F0F0F0; padding: 8px; border-radius: 8px; font-weight: bold; font-size: 13px; border: 1px solid #DDD; }
         .fwin-btn { font-size: 11px; border: 1px solid var(--caramel); color: var(--caramel); background: none; padding: 3px 6px; border-radius: 5px; cursor: pointer; }
@@ -124,7 +123,6 @@
 
     let products = [], orders = {}, cart = [], curS = {}, curQty = {}, currentEvent = "";
 
-    // 監聽 Firebase 資料
     db.ref('products').on('value', snap => { 
         products = snap.val() || []; 
         renderHall(); 
@@ -135,15 +133,9 @@
         if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); 
     });
 
-    // 修正大廳卡片顯示邏輯
     function renderHall() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e && e.trim() !== "");
-        const hallGrid = document.getElementById('hall-grid');
-        if (evts.length === 0) {
-            hallGrid.innerHTML = '<p style="grid-column:1/-1; color:#999;">目前沒有進行中的活動</p>';
-        } else {
-            hallGrid.innerHTML = evts.map(e => `<div class="card-hall" onclick="openShop('${e}')">${e}</div>`).join('');
-        }
+        document.getElementById('hall-grid').innerHTML = evts.map(e => `<div class="card-hall" onclick="openShop('${e}')">${e}</div>`).join('');
     }
 
     function openShop(e) {
@@ -224,7 +216,7 @@
                 it.idxs.forEach(originalIdx => {
                     const item = o.items[originalIdx];
                     if(item.fWin) {
-                        wins++; // 強正的人顯示為正取，但不佔用下方的 globalCounter 限額
+                        wins++;
                     } else {
                         globalCounter[sk] = (globalCounter[sk] || 0) + 1;
                         if(globalCounter[sk] <= limit) wins++; 
@@ -234,7 +226,7 @@
 
                 let st = "";
                 if(wins > 0) st += `<span style="color:green; font-weight:bold;">正取x${wins} </span>`;
-                if(waits.length > 0) st += `<span style="color:orange;">(候補 ${waits.join(',')})</span>`;
+                if(waits.length > 0) st += `<span style="color:orange;">(候補第 ${waits.join(',')} 順位)</span>`;
 
                 return `<div class="admin-item-row">
                     <input type="checkbox" class="item-check-${k}" value="${it.idxs.join(',')}">
@@ -332,14 +324,27 @@
                 }
                 
                 if(userMatch) { 
-                    if(!orderSumm[sk]) orderSumm[sk] = { ...it, wins: 0, waits: [] }; 
-                    if(win) orderSumm[sk].wins++; 
-                    else orderSumm[sk].waits.push(waitNum); 
+                    if(!orderSumm[sk]) orderSumm[sk] = { ...it, details: [] }; 
+                    orderSumm[sk].details.push({ isWin: win, seq: waitNum, isShip: it.ship });
                 }
             }); 
             if(userMatch) userResults.push({ o, summ: Object.values(orderSumm) });
         });
-        resArea.innerHTML = userResults.length ? userResults.reverse().map(res => `<div style="background:#FFF; padding:15px; border-radius:12px; margin-bottom:10px;">${res.summ.map(it => `<div>• ${it.n}(${it.sel}) x ${it.wins + it.waits.length} ${it.wins>0?'<b>[正取]</b>':''} ${it.ship?'<b>[已出貨]</b>':''}</div>`).join('')}<div style="text-align:right; margin-top:5px;">總計: $${res.o.total} | 尚欠: $${(res.o.total||0)-(res.o.deposit||0)-(res.o.paid||0)}</div></div>`).join('') : '查無訂單';
+
+        resArea.innerHTML = userResults.length ? userResults.reverse().map(res => `
+            <div style="background:#FFF; padding:15px; border-radius:12px; margin-bottom:10px; border-left: 5px solid var(--matcha);">
+                ${res.summ.map(it => {
+                    const statusText = it.details.map(d => {
+                        let txt = d.isWin ? '<b style="color:green;">[正取]</b>' : `<b style="color:orange;">[候補第 ${d.seq} 順位]</b>`;
+                        if(d.isShip) txt += ' <small style="color:#999;">(已出貨)</small>';
+                        return txt;
+                    }).join('、');
+                    return `<div>• ${it.n}(${it.sel}) x ${it.details.length} <br> &nbsp;&nbsp;狀態：${statusText}</div>`;
+                }).join('')}
+                <div style="text-align:right; margin-top:8px; border-top:1px dashed #EEE; padding-top:5px; font-size:13px;">
+                    總計: $${res.o.total} | 尚欠: <span style="color:red;">$${(res.o.total||0)-(res.o.deposit||0)-(res.o.paid||0)}</span>
+                </div>
+            </div>`).join('') : '<p style="text-align:center; color:#999;">查無訂單</p>';
     }
 
     function askExport(type) {
@@ -354,7 +359,7 @@
                 let s = {}; Object.values(orders).forEach(o => { (o.items||[]).forEach(it => { if(selected.includes(it.e)) { let k = `[${it.e}] ${it.n}(${it.sel})`; s[k] = (s[k]||0)+1; } }); });
                 for(let k in s) text += `${k} : ${s[k]} 個\n`;
             } else {
-                Object.values(orders).forEach(o => { const fits = (o.items||[]).filter(it => selected.includes(it.e)); if(fits.length) { text += `\n【${o.nick}】(總額:$${o.total}/尚欠:$${(o.total||0)-(o.deposit||0)-(o.paid||0)})\n`; fits.forEach(it => { text += `- ${it.n}(${it.sel})\n`; }); } });
+                Object.values(orders).forEach(o => { const fits = (o.items||[]).filter(it => selected.includes(it.e)); if(fits.length) { text += `\n【${o.nick}】(總額:$${o.total}/尚欠:$${(o.total||0)-(res.o.deposit||0)-(res.o.paid||0)})\n`; fits.forEach(it => { text += `- ${it.n}(${it.sel})\n`; }); } });
             }
             const blob = new Blob([text], { type: "text/plain" }); const link = document.createElement("a");
             link.href = URL.createObjectURL(blob); link.download = `export.txt`; link.click();
