@@ -52,6 +52,7 @@
         .modal-box { background: var(--rice); padding: 25px; border-radius: 20px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
         .input-std { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #DDD; border-radius: 10px; font-size: 15px; }
         .del-order-btn { background: #FF4D4D; color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; }
+        .shipped-item { text-decoration: line-through; color: #999; }
     </style>
 </head>
 <body>
@@ -232,48 +233,31 @@
 
     function toggleStatus(k, f, v) { db.ref(`orders/${k}`).update({ [f]: v }); }
 
-    // 優化已付邏輯：支援留尾數需求
     function togglePayStatus(k, v) {
         let o = orders[k];
         if(v) {
-            if(confirm("是否要自動填入剩餘金額（全額清空）？\n按『確定』：全額清空\n按『取消』：保留勾選，稍後手動輸入尾款金額（如留20元）")) {
+            if(confirm("要自動填滿尾款金額嗎？\n[確定]：自動結清\n[取消]：保留已付標記，稍後手動輸入留20元金額")) {
                 let remain = (o.total || 0) - (o.deposit || 0);
                 db.ref(`orders/${k}`).update({ isPaid: true, paid: remain });
             } else {
-                db.ref(`orders/${k}`).update({ isPaid: true }); // 僅勾選標記，不改動金額
+                db.ref(`orders/${k}`).update({ isPaid: true });
             }
         } else {
             db.ref(`orders/${k}`).update({ isPaid: false });
         }
     }
 
-    function deleteEntireOrder(k) {
-        if(confirm("確定要刪除這整筆訂單嗎？")) {
-            db.ref(`orders/${k}`).remove().then(() => alert("訂單已刪除"));
-        }
-    }
-
+    function deleteEntireOrder(k) { if(confirm("確定刪除整筆訂單？")) db.ref(`orders/${k}`).remove(); }
     function toggleSingleShip(k, idxs) { let o = orders[k]; const ns = !o.items[idxs[0]].ship; idxs.forEach(i => o.items[i].ship = ns); db.ref(`orders/${k}`).set(o); }
-    
-    function editSingleItem(k, idxs) {
-        const o = orders[k]; const it = o.items[idxs[0]];
-        const newN = prompt("編輯名稱：", it.n);
-        const newP = prompt("編輯單項金額：", it.p);
-        if(newN !== null && newP !== null) {
-            idxs.forEach(i => { o.items[i].n = newN; o.items[i].p = parseInt(newP); });
-            o.total = o.items.reduce((a, b) => a + (b.p || 0), 0);
-            db.ref(`orders/${k}`).set(o).then(() => renderAdminOrders());
-        }
-    }
-
-    function batchFWin(k, idxs) { let o = orders[k]; idxs.forEach(i => o.items[i].fWin = true); db.ref(`orders/${k}`).set(o).then(() => renderAdminOrders()); }
-    function deleteItems(k, idxs) { if(confirm('刪除？')){ let o = orders[k]; idxs.sort((a,b)=>b-a).forEach(i => o.items.splice(i,1)); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o).then(() => renderAdminOrders()); } }
+    function editSingleItem(k, idxs) { const o = orders[k]; const it = o.items[idxs[0]]; const newN = prompt("編輯名稱：", it.n); const newP = prompt("編輯金額：", it.p); if(newN && newP){ idxs.forEach(i => { o.items[i].n = newN; o.items[i].p = parseInt(newP); }); o.total = o.items.reduce((a, b) => a + (b.p || 0), 0); db.ref(`orders/${k}`).set(o); } }
+    function batchFWin(k, idxs) { let o = orders[k]; idxs.forEach(i => o.items[i].fWin = true); db.ref(`orders/${k}`).set(o); }
+    function deleteItems(k, idxs) { if(confirm('刪除？')){ let o = orders[k]; idxs.sort((a,b)=>b-a).forEach(i => o.items.splice(i,1)); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o); } }
     function editNick(k, old) { const v = prompt("姓名：", old); if(v) db.ref(`orders/${k}`).update({ nick: v }); }
     function editTotal(k, old) { const v = prompt("總額：", old); if(v) db.ref(`orders/${k}`).update({ total: parseInt(v) }); }
     function editDeposit(k, old) { const v = prompt("訂金：", old); if(v!==null) db.ref(`orders/${k}`).update({ deposit: parseInt(v) }); }
     function editPaid(k, old) { const v = prompt("尾款：", old); if(v!==null) db.ref(`orders/${k}`).update({ paid: parseInt(v) }); }
     function saveNote(k) { const v = document.getElementById(`note-${k}`).value; db.ref(`orders/${k}`).update({ adminNote: v }).then(()=>alert("存")); }
-    function addItemToOrd(k) { const n = prompt("商品："); const p = prompt("金額：","0"); if(n){ let o = orders[k]; o.items.push({ e: "手動", n: n, sel: "一般", p: parseInt(p||0), pid: "manual", fWin: true, ship: false }); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o).then(() => renderAdminOrders()); } }
+    function addItemToOrd(k) { const n = prompt("商品："); const p = prompt("金額：","0"); if(n){ let o = orders[k]; o.items.push({ e: "手動", n: n, sel: "一般", p: parseInt(p||0), pid: "manual", fWin: true, ship: false }); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o); } }
 
     function mergeSelected() {
         const checks = Array.from(document.querySelectorAll('.merge-check:checked'));
@@ -302,7 +286,7 @@
         document.getElementById('modal-title').innerText = "上架";
         document.getElementById('modal-body').innerHTML = `活動：<input id="p-e" class="input-std">名稱：<input id="p-n" class="input-std">價格：<input id="p-p" type="number" class="input-std">限購：<input id="p-l" type="number" class="input-std" value="999">規格：<input id="p-s" class="input-std" placeholder="規格1,規格2">`;
         document.getElementById('edit-modal').style.display='flex';
-        document.getElementById('modal-save').onclick = () => { products.push({ e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value }; db.ref('products').set(products).then(()=>document.getElementById('edit-modal').style.display='none'); };
+        document.getElementById('modal-save').onclick = () => { products.push({ e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value }); db.ref('products').set(products).then(()=>document.getElementById('edit-modal').style.display='none'); };
     }
 
     function performSearch() {
