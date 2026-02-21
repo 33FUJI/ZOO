@@ -36,6 +36,7 @@
             .prod-grid { grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 8px; }
             .prod-card { padding: 8px; min-height: 220px; border-radius: 8px; }
             .prod-name { font-size: 12px; min-height: 32px; }
+            .btn-add { padding: 12px; font-size: 14px; }
         }
 
         /* 管理工作台 */
@@ -50,9 +51,10 @@
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 15px; }
         .modal-box { background: var(--rice); padding: 25px; border-radius: 20px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
         .input-std { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #DDD; border-radius: 10px; font-size: 15px; }
+        .del-order-btn { background: #FF4D4D; color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 12px; cursor: pointer; }
         
-        /* 視覺修正 */
-        .item-text { cursor: pointer; text-decoration: none !important; } /* 強制移除劃線 */
+        /* 視覺優化 - 禁止劃線 */
+        .item-text { cursor: pointer; text-decoration: none !important; }
         .shipped-text { color: #2a9d8f; font-weight: bold; margin-left: 5px; }
     </style>
 </head>
@@ -193,7 +195,7 @@
                 </div>`
             }).join('');
 
-            // 修正餘額計算邏輯：總額 - 訂金 - 尾款
+            // 動態餘額公式：總額 - 訂金 - 尾款
             const bal = (o.total || 0) - (o.deposit || 0) - (o.paid || 0);
 
             return `<div class="admin-order-card">
@@ -226,7 +228,7 @@
     function togglePayStatus(k, v) {
         let o = orders[k];
         if(v) {
-            if(confirm("是否要全額結清？\n[確定]：自動填入剩餘款項\n[取消]：保留現有數額，僅勾選已付")) {
+            if(confirm("是否要全額結清？\n[確定]：自動填入剩餘款項\n[取消]：手動輸入")) {
                 let remain = (o.total || 0) - (o.deposit || 0);
                 db.ref(`orders/${k}`).update({ isPaid: true, paid: remain });
             } else {
@@ -241,19 +243,19 @@
     function toggleSingleShip(k, idxs) { let o = orders[k]; const ns = !o.items[idxs[0]].ship; idxs.forEach(i => o.items[i].ship = ns); db.ref(`orders/${k}`).set(o); }
     function editSingleItem(k, idxs) { const o = orders[k]; const it = o.items[idxs[0]]; const newN = prompt("編輯名稱：", it.n); const newP = prompt("編輯金額：", it.p); if(newN && newP){ idxs.forEach(i => { o.items[i].n = newN; o.items[i].p = parseInt(newP); }); o.total = o.items.reduce((a, b) => a + (b.p || 0), 0); db.ref(`orders/${k}`).set(o); } }
     function batchFWin(k, idxs) { let o = orders[k]; idxs.forEach(i => o.items[i].fWin = true); db.ref(`orders/${k}`).set(o); }
-    function deleteItems(k, idxs) { if(confirm('刪除？')){ let o = orders[k]; idxs.sort((a,b)=>b-a).forEach(i => o.items.splice(i,1)); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o); } }
+    function deleteItems(k, idxs) { if(confirm('刪除商品？')){ let o = orders[k]; idxs.sort((a,b)=>b-a).forEach(i => o.items.splice(i,1)); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o); } }
     function editNick(k, old) { const v = prompt("姓名：", old); if(v) db.ref(`orders/${k}`).update({ nick: v }); }
     function editTotal(k, old) { const v = prompt("總額：", old); if(v) db.ref(`orders/${k}`).update({ total: parseInt(v) }); }
     function editDeposit(k, old) { const v = prompt("實收訂金：", old); if(v!==null) db.ref(`orders/${k}`).update({ deposit: parseInt(v) }); }
     function editPaid(k, old) { const v = prompt("實收尾款：", old); if(v!==null) db.ref(`orders/${k}`).update({ paid: parseInt(v) }); }
-    function saveNote(k) { const v = document.getElementById(`note-${k}`).value; db.ref(`orders/${k}`).update({ adminNote: v }).then(()=>alert("存")); }
-    function addItemToOrd(k) { const n = prompt("商品："); const p = prompt("金額：","0"); if(n){ let o = orders[k]; o.items.push({ e: "手動", n: n, sel: "一般", p: parseInt(p||0), pid: "manual", fWin: true, ship: false }); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o); } }
+    function saveNote(k) { const v = document.getElementById(`note-${k}`).value; db.ref(`orders/${k}`).update({ adminNote: v }).then(()=>alert("已存備註")); }
+    function addItemToOrd(k) { const n = prompt("商品名稱："); const p = prompt("價格：","0"); if(n){ let o = orders[k]; o.items.push({ e: "手動", n: n, sel: "一般", p: parseInt(p||0), pid: "manual", fWin: true, ship: false }); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o); } }
 
     function mergeSelected() {
         const checks = Array.from(document.querySelectorAll('.merge-check:checked'));
         if(checks.length < 2) return alert("請至少選兩筆");
         const nicks = checks.map(el => el.getAttribute('data-nick').toLowerCase());
-        if(new Set(nicks).size > 1) return alert("必須是同一個人的訂單才能合併喔！");
+        if(new Set(nicks).size > 1) return alert("須為同一人才可併單！");
         
         let items = [], total = 0, keys = checks.map(el => el.value), tp=0, td=0, ip=false, id=false, cn="";
         keys.forEach(k => { 
@@ -273,19 +275,19 @@
 
     function renderAdminProds() {
         const main = document.getElementById('admin-main');
-        main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px;" onclick="openAdd()">＋ 上架</button>` + 
+        main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px;" onclick="openAdd()">＋ 上架新商品</button>` + 
         products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between;"><div><b>[${p.e}]</b> ${p.n} <br><small>$${p.p}</small></div><button class="btn-add" style="background:#EEE; color:#333;" onclick="openEdit(${i})">編輯</button></div>`).join('');
     }
 
     function openEdit(i) {
-        const p = products[i]; document.getElementById('modal-title').innerText = "編輯";
+        const p = products[i]; document.getElementById('modal-title').innerText = "編輯商品";
         document.getElementById('modal-body').innerHTML = `活動：<input id="p-e" class="input-std" value="${p.e}">名稱：<input id="p-n" class="input-std" value="${p.n}">價格：<input id="p-p" type="number" class="input-std" value="${p.p}">限購：<input id="p-l" type="number" class="input-std" value="${p.limit||999}">規格：<input id="p-s" class="input-std" value="${p.s||''}">`;
         document.getElementById('edit-modal').style.display='flex';
         document.getElementById('modal-save').onclick = () => { products[i] = { e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value }; db.ref('products').set(products).then(()=>document.getElementById('edit-modal').style.display='none'); };
     }
 
     function openAdd() {
-        document.getElementById('modal-title').innerText = "上架";
+        document.getElementById('modal-title').innerText = "上架新商品";
         document.getElementById('modal-body').innerHTML = `活動：<input id="p-e" class="input-std">名稱：<input id="p-n" class="input-std">價格：<input id="p-p" type="number" class="input-std">限購：<input id="p-l" type="number" class="input-std" value="999">規格：<input id="p-s" class="input-std" placeholder="規格1,規格2">`;
         document.getElementById('edit-modal').style.display='flex';
         document.getElementById('modal-save').onclick = () => { products.push({ e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value }); db.ref('products').set(products).then(()=>document.getElementById('edit-modal').style.display='none'); };
@@ -316,20 +318,20 @@
 
     function askExport(type) {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
-        document.getElementById('modal-title').innerText = "匯出";
+        document.getElementById('modal-title').innerText = "選擇匯出活動";
         document.getElementById('modal-body').innerHTML = evts.map(e => `<div><input type="checkbox" class="evt-check" value="${e}" checked> ${e}</div>`).join('');
         document.getElementById('edit-modal').style.display = 'flex';
         document.getElementById('modal-save').onclick = () => {
             const selected = Array.from(document.querySelectorAll('.evt-check:checked')).map(el => el.value);
-            let text = `🌟 33日本動物園 - ${type==='summary'?'採購':'明細'}\n`;
+            let text = `🌟 33日本動物園 - ${type==='summary'?'採購總計':'訂單明細'}\n`;
             if(type==='summary') {
                 let s = {}; Object.values(orders).forEach(o => { (o.items||[]).forEach(it => { if(selected.includes(it.e)) { let k = `[${it.e}] ${it.n}(${it.sel})`; s[k] = (s[k]||0)+1; } }); });
                 for(let k in s) text += `${k} : ${s[k]} 個\n`;
             } else {
-                Object.values(orders).forEach(o => { const fits = (o.items||[]).filter(it => selected.includes(it.e)); if(fits.length) { const userBal = (o.total||0)-(o.deposit||0)-(o.paid||0); text += `\n【${o.nick}】(總計:$${o.total}/餘:$${userBal})\n`; fits.forEach(it => { text += `- ${it.n}(${it.sel})${it.ship?'(已出)':''}\n`; }); } });
+                Object.values(orders).forEach(o => { const fits = (o.items||[]).filter(it => selected.includes(it.e)); if(fits.length) { const b = (o.total||0)-(o.deposit||0)-(o.paid||0); text += `\n【${o.nick}】(總計:$${o.total}/餘:$${b})\n`; fits.forEach(it => { text += `- ${it.n}(${it.sel})${it.ship?'(已出)':''}\n`; }); } });
             }
             const blob = new Blob([text], { type: "text/plain" }); const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob); link.download = `export.txt`; link.click();
+            link.href = URL.createObjectURL(blob); link.download = `33zoo_export.txt`; link.click();
             document.getElementById('edit-modal').style.display = 'none';
         };
     }
