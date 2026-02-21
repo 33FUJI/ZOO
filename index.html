@@ -233,7 +233,7 @@
                     <span class="item-text ${o.items[it.idxs[0]].ship?'shipped-item':''}" onclick="toggleSingleShip('${k}', [${it.idxs}])">
                         <b>${it.n}(${it.sel}) x ${it.qty}</b> $${it.p*it.qty} ${st}
                     </span>
-                    <button onclick="editSingleItem('${k}', ${it.idxs[0]})" style="background:none; border:none; color:blue;">✎</button>
+                    <button onclick="editSingleItem('${k}', [${it.idxs}])" style="background:none; border:none; color:blue;">✎</button>
                     <button class="fwin-btn" onclick="batchFWin('${k}', [${it.idxs}])">強正</button>
                     <button onclick="deleteItems('${k}', [${it.idxs}])" style="color:#DDD; background:none; border:none;">✕</button>
                 </div>`
@@ -261,7 +261,23 @@
 
     function toggleStatus(k, f, v) { db.ref(`orders/${k}`).update({ [f]: v }); }
     function toggleSingleShip(k, idxs) { let o = orders[k]; const ns = !o.items[idxs[0]].ship; idxs.forEach(i => o.items[i].ship = ns); db.ref(`orders/${k}`).set(o); }
-    function editSingleItem(k, idx) { const o = orders[k]; const it = o.items[idx]; const newN = prompt("名稱：", it.n); const newP = prompt("單價：", it.p); if(newN&&newP){ o.items.forEach(i => { if(i.pid==it.pid&&i.sel==it.sel){ i.n=newN; i.p=parseInt(newP); } }); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o); } }
+    
+    // 修正單項金額編輯邏輯
+    function editSingleItem(k, idxs) {
+        const o = orders[k];
+        const it = o.items[idxs[0]];
+        const newN = prompt("編輯名稱：", it.n);
+        const newP = prompt("編輯單項金額：", it.p);
+        if(newN !== null && newP !== null) {
+            idxs.forEach(i => {
+                o.items[i].n = newN;
+                o.items[i].p = parseInt(newP);
+            });
+            o.total = o.items.reduce((a, b) => a + (b.p || 0), 0);
+            db.ref(`orders/${k}`).set(o).then(() => renderAdminOrders());
+        }
+    }
+
     function batchFWin(k, idxs) { let o = orders[k]; idxs.forEach(i => o.items[i].fWin = true); db.ref(`orders/${k}`).set(o).then(() => renderAdminOrders()); }
     function deleteItems(k, idxs) { if(confirm('刪除？')){ let o = orders[k]; idxs.sort((a,b)=>b-a).forEach(i => o.items.splice(i,1)); o.total = o.items.reduce((a,b)=>a+b.p,0); db.ref(`orders/${k}`).set(o).then(() => renderAdminOrders()); } }
     function editNick(k, old) { const v = prompt("姓名：", old); if(v) db.ref(`orders/${k}`).update({ nick: v }); }
@@ -359,7 +375,7 @@
                 let s = {}; Object.values(orders).forEach(o => { (o.items||[]).forEach(it => { if(selected.includes(it.e)) { let k = `[${it.e}] ${it.n}(${it.sel})`; s[k] = (s[k]||0)+1; } }); });
                 for(let k in s) text += `${k} : ${s[k]} 個\n`;
             } else {
-                Object.values(orders).forEach(o => { const fits = (o.items||[]).filter(it => selected.includes(it.e)); if(fits.length) { text += `\n【${o.nick}】(總額:$${o.total}/尚欠:$${(o.total||0)-(res.o.deposit||0)-(res.o.paid||0)})\n`; fits.forEach(it => { text += `- ${it.n}(${it.sel})\n`; }); } });
+                Object.values(orders).forEach(o => { const fits = (o.items||[]).filter(it => selected.includes(it.e)); if(fits.length) { text += `\n【${o.nick}】(總額:$${o.total}/尚欠:$${(o.total||0)-(o.deposit||0)-(o.paid||0)})\n`; fits.forEach(it => { text += `- ${it.n}(${it.sel})\n`; }); } });
             }
             const blob = new Blob([text], { type: "text/plain" }); const link = document.createElement("a");
             link.href = URL.createObjectURL(blob); link.download = `export.txt`; link.click();
