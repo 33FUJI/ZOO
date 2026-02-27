@@ -378,12 +378,12 @@
         const n = document.getElementById('search-nick').value.trim().toLowerCase();
         const resArea = document.getElementById('search-results-area');
         const allOrders = Object.values(orders);
-        // 核心邏輯：除了檢查本地權限，現在多檢查後台是否「手動勾選解鎖」或「已付清/訂金」
         const hasVerifiedOrder = allOrders.some(o => o.nick.toLowerCase() === n && (o.isPaid || o.isDep || o.isUnlocked));
         const authList = JSON.parse(localStorage.getItem('zoo_auth') || "[]");
         
+        // 修改提示文字，不提到「解鎖」或「隱私」
         if (!authList.includes(n) && !hasVerifiedOrder) {
-            resArea.innerHTML = `<p style="text-align:center; color:#999; padding:20px;">🔒 隱私鎖定：查詢功能僅限本人訂單。<br><small></small></p>`;
+            resArea.innerHTML = `<p style="text-align:center; color:#999; padding:20px;">查無訂單或訂單處理中...<br><small>請稍後再試，或聯繫園長確認。</small></p>`;
             return;
         }
 
@@ -411,10 +411,10 @@
     function adminLogin() { if(prompt("管理密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; renderAdminOrders(); } }
 
     function unlockAllOrders() {
-        if(!confirm("確定要將目前所有訂單「一鍵解鎖」嗎？(不會影響財務統計)")) return;
+        if(!confirm("確定要將目前所有訂單一鍵「開放查詢」嗎？")) return;
         const updates = {};
         Object.keys(orders).forEach(k => { updates[`${k}/isUnlocked`] = true; });
-        db.ref('orders').update(updates).then(() => alert("已全部解鎖查詢權限！"));
+        db.ref('orders').update(updates).then(() => alert("已全部開放查詢。"));
     }
 
     function renderAdminOrders() {
@@ -428,7 +428,7 @@
             const itemsHtml = Object.values(orderSumm).map(it => {
                 const sk = `${it.pid}_${it.sel}`, limit = (products[it.pid]||{}).limit||999;
                 let wins = 0, waits = []; it.idxs.forEach(i => { let item = o.items[i]; let rank = pool[sk].indexOf(item)+1; if(item.fWin || rank<=limit) wins++; else waits.push(rank-limit); });
-                return `<div class="admin-item-row"><input type="checkbox" class="item-check-${k}" value="${it.idxs.join(',')}"><span><b>${it.n}(${it.sel}) x ${it.qty}</b> <small style="color:green;">正${wins}</small> <small style="color:orange;">補${waits.join(',')}</small></span></div>`
+                return `<div class="admin-item-row"><span><b>${it.n}(${it.sel}) x ${it.qty}</b> <small style="color:green;">正${wins}</small> <small style="color:orange;">補${waits.join(',')}</small></span></div>`
             }).join('');
             const bal = (o.total||0)-(o.deposit||0)-(o.paid||0);
             return `<div class="admin-order-card">
@@ -499,5 +499,3 @@
 </script>
 </body>
 </html>
-
-
