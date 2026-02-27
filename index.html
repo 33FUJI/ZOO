@@ -383,7 +383,7 @@
         const authList = JSON.parse(localStorage.getItem('zoo_auth') || "[]");
         
         if (!authList.includes(n) && !hasVerifiedOrder) {
-            resArea.innerHTML = `<p style="text-align:center; color:#999; padding:20px;">🔒 隱私鎖定：查詢功能僅限本人或園長已解鎖之訂單。<br><small>園長代下單後，請待園長「解鎖」即可查詢。</small></p>`;
+            resArea.innerHTML = `<p style="text-align:center; color:#999; padding:20px;">🔒 隱私鎖定：查詢功能僅限本人訂單。<br><small>。</small></p>`;
             return;
         }
 
@@ -499,3 +499,4 @@
 </script>
 </body>
 </html>
+
