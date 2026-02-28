@@ -512,7 +512,7 @@
         let subTotal = 0, itemText = "";
         selectedIdx.forEach((idx, i) => { const it = o.items[idx]; subTotal += it.p; itemText += `${i+1}. ${it.n}(${it.sel}) $${it.p}\n`; });
         const bal = subTotal - (o.deposit || 0) - (o.paid || 0);
-        const msg = `🌟 33日本動物園 - 購得清單 🌟\n--------------------------\n【 暱稱 】${o.nick}\n【 商品明細 】\n${itemText}--------------------------\n總計：$${subTotal}\n已付訂金：$${o.deposit || 0}\n💰 需付尾款：$${bal}\n\n※ 請確認無誤後完成付款，感謝！`;
+        const msg = `🌟 33日本動物園 - 下單明細 🌟\n--------------------------\n【 暱稱 】${o.nick}\n【 商品明細 】\n${itemText}--------------------------\n總計：$${subTotal}\n已付訂金：$${o.deposit || 0}\n💰 需付尾款：$${bal}\n\n※ 請確認無誤後完成付款，感謝！`;
         navigator.clipboard.writeText(msg).then(() => alert("✅ 已複製勾選的商品明細！"));
     }
 
@@ -569,3 +569,4 @@
 </script>
 </body>
 </html>
+
