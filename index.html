@@ -407,17 +407,14 @@
         const n = document.getElementById('search-nick').value.trim().toLowerCase();
         const resArea = document.getElementById('search-results-area');
         if(!n) return alert("請輸入暱稱");
-
         if(searchListener) db.ref('orders').off('value', searchListener);
         searchListener = db.ref('orders').on('value', snap => {
             const all = snap.val() || {};
             let userResults = Object.values(all).filter(o => o.nick.toLowerCase() === n);
             if (userResults.length === 0) { resArea.innerHTML = `<p style="text-align:center; color:red; padding:20px;">找不到您的訂單紀錄。</p>`; return; }
-
             let pool = {};
             Object.values(all).forEach(o => { (o.items||[]).forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; pool[sk].push({...it, t: it.t || o.time}); }); });
             for(let k in pool) pool[k].sort((a,b) => a.t - b.t);
-
             resArea.innerHTML = userResults.sort((a,b)=> (b.time||0)-(a.time||0)).map(o => {
                 const bal = (o.total||0)-(o.deposit||0)-(o.paid||0);
                 let summ = {}; (o.items || []).forEach(it => { 
@@ -453,16 +450,12 @@
     function renderAdminOrders() {
         const main = document.getElementById('admin-main');
         const filterEvt = document.getElementById('admin-event-filter').value;
-        
         let pool = {};
         Object.values(orders).forEach(o => { (o.items||[]).forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; if(!it.t) it.t = o.time || 0; pool[sk].push(it); }); });
         for(let k in pool) pool[k].sort((a,b) => a.t - b.t);
 
         let orderEntries = Object.entries(orders);
-        if (filterEvt !== "ALL") {
-            orderEntries = orderEntries.filter(([k, o]) => (o.items || []).some(it => it.e === filterEvt));
-        }
-        // 關鍵修改：a.time - b.time (舊到新排序)
+        if (filterEvt !== "ALL") { orderEntries = orderEntries.filter(([k, o]) => (o.items || []).some(it => it.e === filterEvt)); }
         const sorted = orderEntries.sort((a,b) => (a[1].time||0) - (b[1].time||0));
 
         main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%; background:var(--caramel);" onclick="mergeSelected()">🔗 執行併單 (請勾選標題處)</button>` + sorted.map(([k, o]) => {
@@ -471,10 +464,12 @@
                 let rank = pool[sk].indexOf(it)+1;
                 let isAutoWin = rank <= limit;
                 let isWin = it.fWin || isAutoWin;
-                
-                return `<div style="display:flex; align-items:center; gap:8px; font-size:13px; margin:5px 0;">
+                return `<div style="display:flex; align-items:center; gap:8px; font-size:13px; margin:5px 0; border-bottom:1px solid #F0F0F0; padding-bottom:4px;">
                     <input type="checkbox" class="msg-item-check-${k}" value="${idx}" checked>
-                    <span>${it.n}(${it.sel}) 
+                    <span>
+                        <span onclick="editItemName('${k}', ${idx})" style="cursor:help;">${it.n}</span>
+                        (<span onclick="editItemSpec('${k}', ${idx})" style="color:blue; cursor:help;">${it.sel}</span>)
+                        <span onclick="editItemVal('${k}', ${idx})" style="color:var(--caramel); font-weight:bold; margin:0 5px;">$${it.p}</span>
                         <b onclick="toggleWinStatus('${k}', ${idx}, ${!it.fWin})" style="cursor:pointer; color:${isWin?'green':'orange'};">
                             ${isWin ? '[正]' : '[補'+(rank-limit)+']'}
                         </b>
@@ -482,7 +477,6 @@
                     </span>
                 </div>`;
             }).join('');
-
             const bal = (o.total||0)-(o.deposit||0)-(o.paid||0);
             return `<div class="admin-order-card" id="ord-${k}">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -506,20 +500,17 @@
             </div>`}).join('');
     }
 
-    function toggleWinStatus(okey, idx, val) {
-        db.ref(`orders/${okey}/items/${idx}`).update({ fWin: val });
-    }
+    function toggleWinStatus(okey, idx, val) { db.ref(`orders/${okey}/items/${idx}`).update({ fWin: val }); }
+    function editItemVal(okey, idx) { const p = prompt("請輸入該商品新價格：", orders[okey].items[idx].p); if(p!==null) db.ref(`orders/${okey}/items/${idx}`).update({ p: parseInt(p) }); }
+    function editItemSpec(okey, idx) { const s = prompt("請輸入新規格：", orders[okey].items[idx].sel); if(s!==null) db.ref(`orders/${okey}/items/${idx}`).update({ sel: s }); }
+    function editItemName(okey, idx) { const n = prompt("請輸入新商品名稱：", orders[okey].items[idx].n); if(n!==null) db.ref(`orders/${okey}/items/${idx}`).update({ n: n }); }
 
     function copyToLine(k) {
         const o = orders[k];
         const selectedIdx = Array.from(document.querySelectorAll(`.msg-item-check-${k}:checked`)).map(el => parseInt(el.value));
-        if (selectedIdx.length === 0) return alert("請先勾選要發送的商品明細！");
+        if (selectedIdx.length === 0) return alert("請先勾選商品！");
         let subTotal = 0, itemText = "";
-        selectedIdx.forEach((idx, i) => {
-            const it = o.items[idx];
-            subTotal += it.p;
-            itemText += `${i+1}. ${it.n}(${it.sel}) $${it.p}\n`;
-        });
+        selectedIdx.forEach((idx, i) => { const it = o.items[idx]; subTotal += it.p; itemText += `${i+1}. ${it.n}(${it.sel}) $${it.p}\n`; });
         const bal = subTotal - (o.deposit || 0) - (o.paid || 0);
         const msg = `🌟 33日本動物園 - 購得清單 🌟\n--------------------------\n【 暱稱 】${o.nick}\n【 商品明細 】\n${itemText}--------------------------\n總計：$${subTotal}\n已付訂金：$${o.deposit || 0}\n💰 需付尾款：$${bal}\n\n※ 請確認無誤後完成付款，感謝！`;
         navigator.clipboard.writeText(msg).then(() => alert("✅ 已複製勾選的商品明細！"));
@@ -544,22 +535,22 @@
     }
 
     function openEdit(i) {
-        const p = products[i]; document.getElementById('modal-title').innerText = "編輯";
+        const p = products[i]; document.getElementById('modal-title').innerText = "編輯商品";
         document.getElementById('modal-body').innerHTML = `活動：<input id="p-e" class="input-std" value="${p.e}">名稱：<input id="p-n" class="input-std" value="${p.n}">價格：<input id="p-p" type="number" class="input-std" value="${p.p}">限購：<input id="p-l" type="number" class="input-std" value="${p.limit||999}">規格：<input id="p-s" class="input-std" value="${p.s||''}">`;
         document.getElementById('edit-modal').style.display='flex';
         document.getElementById('modal-save').onclick = () => { products[i] = { e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value }; db.ref('products').set(products).then(()=>document.getElementById('edit-modal').style.display='none'); };
     }
 
     function openAdd() {
-        document.getElementById('modal-title').innerText = "新增";
-        document.getElementById('modal-body').innerHTML = `活動：<input id="p-e" class="input-std">名稱：<input id="p-n" class="input-std">價格：<input id="p-p" type="number" class="input-std">限購：<input id="p-l" type="number" class="input-std" value="999">規格：<input id="p-s" class="input-std">`;
+        document.getElementById('modal-title').innerText = "上架商品";
+        document.getElementById('modal-body').innerHTML = `活動名稱：<input id="p-e" class="input-std" placeholder="例如：2月日本連線">商品名稱：<input id="p-n" class="input-std">價格：<input id="p-p" type="number" class="input-std">正取名額：<input id="p-l" type="number" class="input-std" value="999">規格(以逗號隔開)：<input id="p-s" class="input-std" placeholder="藍,紅,綠">`;
         document.getElementById('edit-modal').style.display='flex';
         document.getElementById('modal-save').onclick = () => { products.push({ e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value }); db.ref('products').set(products).then(()=>document.getElementById('edit-modal').style.display='none'); };
     }
 
     function askExport(type) {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
-        document.getElementById('modal-title').innerText = "選匯出活動";
+        document.getElementById('modal-title').innerText = "選取匯出活動";
         document.getElementById('modal-body').innerHTML = evts.map(e => `<div><input type="checkbox" class="evt-check" value="${e}" checked> ${e}</div>`).join('');
         document.getElementById('edit-modal').style.display='flex';
         document.getElementById('modal-save').onclick = () => {
@@ -569,7 +560,7 @@
                 let s = {}; Object.values(orders).forEach(o => { (o.items||[]).forEach(it => { if(selected.includes(it.e)){ let k = `[${it.e}] ${it.n}(${it.sel})`; s[k]=(s[k]||0)+1; } }); });
                 for(let k in s) text += `${k} : ${s[k]} 個\n`;
             } else {
-                Object.values(orders).forEach(o => { const fits = (o.items||[]).filter(it => selected.includes(it.e)); if(fits.length){ text += `\n【${o.nick}】餘:$${(o.total||0)-(o.deposit||0)-(o.paid||0)}\n`; fits.forEach(it => { text += `- ${it.n}(${it.sel})\n`; }); } });
+                Object.values(orders).forEach(o => { const fits = (o.items||[]).filter(it => selected.includes(it.e)); if(fits.length){ text += `\n【${o.nick}】待付餘額:$${(o.total||0)-(o.deposit||0)-(o.paid||0)}\n`; fits.forEach(it => { text += `- ${it.n}(${it.sel})\n`; }); } });
             }
             const blob = new Blob([text], { type: "text/plain" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `33zoo_export.txt`; link.click();
             document.getElementById('edit-modal').style.display='none';
