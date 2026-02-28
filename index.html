@@ -365,45 +365,56 @@
     function submitOrder() {
         const n = document.getElementById('nick').value.trim();
         if(!n || cart.length===0) return alert("請輸入暱稱並選購商品");
-        db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), adminNote: "", paid: 0, deposit: 0, isPaid: false, isDep: false, isUnlocked: false })
-          .then(() => {
-              let authList = JSON.parse(localStorage.getItem('zoo_auth') || "[]");
-              if(!authList.includes(n.toLowerCase())) authList.push(n.toLowerCase());
-              localStorage.setItem('zoo_auth', JSON.stringify(authList));
-              alert("提交成功！"); cart = []; location.reload();
-          });
+        db.ref('orders').push({ 
+            nick: n, 
+            items: cart, 
+            total: cart.reduce((a,b)=>a+b.p,0), 
+            time: Date.now(), 
+            adminNote: "", 
+            paid: 0, 
+            deposit: 0, 
+            isPaid: false, 
+            isDep: false, 
+            isUnlocked: false 
+        }).then(() => { alert("提交成功！可於首頁查詢進度。"); cart = []; location.reload(); });
     }
 
     function performSearch() {
         const n = document.getElementById('search-nick').value.trim().toLowerCase();
         const resArea = document.getElementById('search-results-area');
-        const allOrders = Object.values(orders);
-        const hasVerifiedOrder = allOrders.some(o => o.nick.toLowerCase() === n && (o.isPaid || o.isDep || o.isUnlocked));
-        const authList = JSON.parse(localStorage.getItem('zoo_auth') || "[]");
-        
-        // 修改提示文字，不提到「解鎖」或「隱私」
-        if (!authList.includes(n) && !hasVerifiedOrder) {
-            resArea.innerHTML = `<p style="text-align:center; color:#999; padding:20px;">查無訂單或訂單處理中...<br><small>請稍後再試，或聯繫園長確認。</small></p>`;
-            return;
-        }
+        if(!n) return alert("請輸入暱稱");
 
         if(searchListener) db.ref('orders').off('value', searchListener);
         searchListener = db.ref('orders').on('value', snap => {
             const all = snap.val() || {};
+            let userResults = Object.values(all).filter(o => o.nick.toLowerCase() === n);
+            if (userResults.length === 0) { resArea.innerHTML = `<p style="text-align:center; color:red; padding:20px;">找不到您的訂單紀錄。</p>`; return; }
+
             let pool = {};
             Object.values(all).forEach(o => { (o.items||[]).forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; pool[sk].push({...it, t: it.t || o.time}); }); });
             for(let k in pool) pool[k].sort((a,b) => a.t - b.t);
-            let userResults = Object.values(all).filter(o => o.nick.toLowerCase() === n);
-            resArea.innerHTML = userResults.length ? userResults.reverse().map(o => {
+
+            resArea.innerHTML = userResults.reverse().map(o => {
                 const bal = (o.total||0)-(o.deposit||0)-(o.paid||0);
-                let summ = {}; (o.items || []).forEach(it => { let sk = `${it.pid}_${it.sel}`; let limit = (products[it.pid]||{}).limit||999; let rank = pool[sk].findIndex(p => p.t === it.t)+1; let isWin = it.fWin || (rank<=limit); if(!summ[sk]) summ[sk] = { n: it.n, sel: it.sel, list: [] }; summ[sk].list.push({ isWin, waitNum: rank-limit, ship: it.ship }); });
-                const itemsHtml = Object.values(summ).map(g => { const st = g.list.map(d => (d.isWin ? '<span style="color:green;">[正]</span>' : `<span style="color:orange;">[補${d.waitNum}]</span>`) + (d.ship ? '🚚' : '')).join(' '); return `<div style="font-size:14px; margin-bottom:4px;">• ${g.n}(${g.sel}) x ${g.list.length}<br>${st}</div>`; }).join('');
+                let summ = {}; (o.items || []).forEach(it => { 
+                    let sk = `${it.pid}_${it.sel}`; 
+                    let limit = (products[it.pid]||{}).limit||999; 
+                    let rank = pool[sk].findIndex(p => p.t === it.t)+1; 
+                    let isWin = it.fWin || (rank<=limit); // 只要園長手動勾選或在限額內都算正取
+                    if(!summ[sk]) summ[sk] = { n: it.n, sel: it.sel, list: [] }; 
+                    summ[sk].list.push({ isWin, ship: it.ship }); 
+                });
+                // 客人端：只顯示 [正取] 或 [候補]，不顯示數字 12345
+                const itemsHtml = Object.values(summ).map(g => { 
+                    const st = g.list.map(d => (d.isWin ? '<span style="color:green;">[正取]</span>' : '<span style="color:orange;">[候補]</span>') + (d.ship ? '🚚' : '')).join(' '); 
+                    return `<div style="font-size:14px; margin-bottom:4px;">• ${g.n}(${g.sel}) x ${g.list.length}<br>${st}</div>`; 
+                }).join('');
                 return `<div style="background:#FFF; padding:15px; border-radius:12px; margin-bottom:10px; border-left:5px solid var(--matcha);">
                     <div style="font-size:11px; color:#AAA;">${new Date(o.time).toLocaleString()}</div>${itemsHtml}
                     <div style="text-align:right; border-top:1px dashed #EEE; margin-top:8px; padding-top:8px; font-size:13px;">總計:$${o.total} | <b>${bal<=0 ? '<span style="color:green;">已清款</span>' : '<span style="color:red;">待付:$'+bal+'</span>'}</b></div>
                     ${o.adminNote ? `<div style="background:#FDF6ED; color:#BC6C25; padding:8px; border-radius:5px; font-size:12px; margin-top:8px;">園長備註：${o.adminNote}</div>` : ''}
                 </div>`;
-            }).join('') : '<p style="text-align:center; color:#999;">查無訂單</p>';
+            }).join('');
         });
     }
 
@@ -412,39 +423,64 @@
 
     function unlockAllOrders() {
         if(!confirm("確定要將目前所有訂單一鍵「開放查詢」嗎？")) return;
-        const updates = {};
-        Object.keys(orders).forEach(k => { updates[`${k}/isUnlocked`] = true; });
+        const updates = {}; Object.keys(orders).forEach(k => { updates[`${k}/isUnlocked`] = true; });
         db.ref('orders').update(updates).then(() => alert("已全部開放查詢。"));
     }
 
+    // 園長管理面板：保留勾選、併單與序號顯示
     function renderAdminOrders() {
         const main = document.getElementById('admin-main');
         let pool = {};
         Object.values(orders).forEach(o => { (o.items||[]).forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; if(!it.t) it.t = o.time || 0; pool[sk].push(it); }); });
         for(let k in pool) pool[k].sort((a,b) => a.t - b.t);
-        const sorted = Object.entries(orders).sort((a,b) => (a[1].time||0) - (b[1].time||0));
+        const sorted = Object.entries(orders).sort((a,b) => (b[1].time||0) - (a[1].time||0));
+
         main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%; background:var(--caramel);" onclick="mergeSelected()">🔗 執行併單</button>` + sorted.map(([k, o]) => {
-            let orderSumm = {}; (o.items || []).forEach((it, idx) => { let sk = `${it.pid}_${it.sel}`; if(!orderSumm[sk]) orderSumm[sk] = { ...it, idxs: [], qty: 0 }; orderSumm[sk].idxs.push(idx); orderSumm[sk].qty++; });
-            const itemsHtml = Object.values(orderSumm).map(it => {
+            const itemsHtml = (o.items || []).map((it, idx) => {
                 const sk = `${it.pid}_${it.sel}`, limit = (products[it.pid]||{}).limit||999;
-                let wins = 0, waits = []; it.idxs.forEach(i => { let item = o.items[i]; let rank = pool[sk].indexOf(item)+1; if(item.fWin || rank<=limit) wins++; else waits.push(rank-limit); });
-                return `<div class="admin-item-row"><span><b>${it.n}(${it.sel}) x ${it.qty}</b> <small style="color:green;">正${wins}</small> <small style="color:orange;">補${waits.join(',')}</small></span></div>`
+                let rank = pool[sk].indexOf(it)+1;
+                let isAutoWin = rank <= limit;
+                // 園長端：依然可以看到 1, 2, 3... 序號
+                return `<div style="display:flex; align-items:center; gap:8px; font-size:13px; margin:5px 0;">
+                    <input type="checkbox" ${it.fWin ? 'checked' : ''} onchange="updateItemWin('${k}', ${idx}, this.checked)">
+                    <span>${it.n}(${it.sel}) <small style="${(it.fWin||isAutoWin)?'color:green':'color:orange'}">${(it.fWin||isAutoWin)?'[正]':'[補'+(rank-limit)+']'}</small> <small style="color:#999;">#${rank}</small></span>
+                </div>`;
             }).join('');
+
             const bal = (o.total||0)-(o.deposit||0)-(o.paid||0);
-            return `<div class="admin-order-card">
-                <div style="display:flex; justify-content:space-between;"><span><b>${o.nick}</b></span><button onclick="deleteOrder('${k}')" style="color:red; background:none; border:none;">✕</button></div>
-                ${itemsHtml}
+            return `<div class="admin-order-card" id="ord-${k}">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> <b>${o.nick}</b></span>
+                    <button onclick="deleteOrder('${k}')" style="color:red; background:none; border:none; font-size:18px;">✕</button>
+                </div>
+                <div style="margin:10px 0;">${itemsHtml}</div>
                 <div style="display:flex; gap:5px; margin-top:10px;">
+                    <button class="btn-add" style="background:#4CAF50; flex:1; font-size:12px;" onclick="copyToLine('${k}')">📋 複製 LINE 明細</button>
+                </div>
+                <div style="display:flex; gap:5px; margin-top:5px;">
                     <label class="status-label" style="background:#FFF9C4; border-color:#FBC02D;"><input type="checkbox" ${o.isUnlocked?'checked':''} onchange="updateOrd('${k}','isUnlocked',this.checked)"> 🔓 解鎖</label>
                     <label class="status-label"><input type="checkbox" ${o.isPaid?'checked':''} onchange="updateOrd('${k}','isPaid',this.checked)"> 已付清</label>
                     <label class="status-label"><input type="checkbox" ${o.isDep?'checked':''} onchange="updateOrd('${k}','isDep',this.checked)"> 訂金</label>
                 </div>
-                <div style="font-size:13px; margin-top:5px; background:#F9F9F9; padding:8px; border-radius:5px;">
+                <div style="font-size:13px; margin-top:8px; background:#F9F9F9; padding:8px; border-radius:8px;">
                     總:$${o.total} | 餘:<b style="color:${bal<=0?'green':'red'}">${bal}</b> | 訂金:$${o.deposit||0} | 尾款:$${o.paid||0}
                     <div style="margin-top:5px;"><button onclick="editVal('${k}','total')">改總</button> <button onclick="editVal('${k}','deposit')">改訂</button> <button onclick="editVal('${k}','paid')">改尾</button></div>
                 </div>
-                <input class="input-std" style="height:35px;" value="${o.adminNote||''}" placeholder="備註..." onchange="updateOrd('${k}','adminNote',this.value)">
+                <input class="input-std" style="height:35px; margin-top:8px;" value="${o.adminNote||''}" placeholder="園長備註..." onchange="updateOrd('${k}','adminNote',this.value)">
             </div>`}).join('');
+    }
+
+    function updateItemWin(okey, idx, val) { db.ref(`orders/${okey}/items/${idx}`).update({ fWin: val }); }
+
+    function copyToLine(k) {
+        const o = orders[k];
+        const winItems = (o.items || []).filter(it => it.fWin === true);
+        if (winItems.length === 0) return alert("園長，請先勾選有買到的商品再複製喔！");
+        let subTotal = 0, itemText = "";
+        winItems.forEach((it, i) => { subTotal += it.p; itemText += `${i+1}. ${it.n}(${it.sel}) $${it.p}\n`; });
+        const bal = subTotal - (o.deposit || 0) - (o.paid || 0);
+        const msg = `🌟 33日本動物園 - 購得清單 🌟\n--------------------------\n【 暱稱 】${o.nick}\n【 商品明細 】\n${itemText}--------------------------\n總計：$${subTotal}\n已付訂金：$${o.deposit || 0}\n💰 需付尾款：$${bal}\n\n※ 請確認無誤後完成付款，感謝！`;
+        navigator.clipboard.writeText(msg).then(() => alert("✅ LINE 訊息已複製！"));
     }
 
     function updateOrd(k, f, v) { db.ref(`orders/${k}`).update({ [f]: v }); }
@@ -452,8 +488,9 @@
     function editVal(k, f) { const v = prompt("輸入數值：", orders[k][f]||0); if(v!==null) updateOrd(k, f, parseInt(v)); }
 
     function mergeSelected() {
-        const checks = Array.from(document.querySelectorAll('.merge-check:checked')); if(checks.length<2) return alert("請選兩筆");
-        const keys = checks.map(el => el.value); let items = [], total = 0, dp=0, pd=0, an="";
+        const checks = Array.from(document.querySelectorAll('.merge-check:checked')); if(checks.length<2) return alert("請勾選至少兩筆訂單");
+        const keys = checks.map(el => el.value); 
+        let items = [], total = 0, dp=0, pd=0, an="";
         keys.forEach(k => { const o = orders[k]; items = items.concat(o.items||[]); total += o.total; dp += (o.deposit||0); pd += (o.paid||0); an += (o.adminNote||"")+" "; });
         db.ref('orders').push({ nick: checks[0].getAttribute('data-nick'), items, total, deposit: dp, paid: pd, adminNote: an+"(併單)", time: orders[keys[0]].time, isUnlocked: true })
           .then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); alert("併單完成"); });
