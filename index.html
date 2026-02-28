@@ -329,7 +329,7 @@
     db.ref('products').on('value', snap => { 
         products = snap.val() || []; 
         renderHall(); 
-        updateAdminFilter(); // 更新後台篩選下拉單
+        updateAdminFilter(); 
         if(currentEvent) openShop(currentEvent); 
     });
     db.ref('orders').on('value', snap => { 
@@ -418,7 +418,7 @@
             Object.values(all).forEach(o => { (o.items||[]).forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; pool[sk].push({...it, t: it.t || o.time}); }); });
             for(let k in pool) pool[k].sort((a,b) => a.t - b.t);
 
-            resArea.innerHTML = userResults.reverse().map(o => {
+            resArea.innerHTML = userResults.sort((a,b)=> (b.time||0)-(a.time||0)).map(o => {
                 const bal = (o.total||0)-(o.deposit||0)-(o.paid||0);
                 let summ = {}; (o.items || []).forEach(it => { 
                     let sk = `${it.pid}_${it.sel}`; 
@@ -450,7 +450,6 @@
         db.ref('orders').update(updates).then(() => alert("已全部開放查詢。"));
     }
 
-    // 園長管理面板：修正勾選與狀態的關係，並加入場次篩選
     function renderAdminOrders() {
         const main = document.getElementById('admin-main');
         const filterEvt = document.getElementById('admin-event-filter').value;
@@ -459,12 +458,12 @@
         Object.values(orders).forEach(o => { (o.items||[]).forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; if(!it.t) it.t = o.time || 0; pool[sk].push(it); }); });
         for(let k in pool) pool[k].sort((a,b) => a.t - b.t);
 
-        // 篩選與排序訂單
         let orderEntries = Object.entries(orders);
         if (filterEvt !== "ALL") {
             orderEntries = orderEntries.filter(([k, o]) => (o.items || []).some(it => it.e === filterEvt));
         }
-        const sorted = orderEntries.sort((a,b) => (b[1].time||0) - (a[1].time||0));
+        // 關鍵修改：a.time - b.time (舊到新排序)
+        const sorted = orderEntries.sort((a,b) => (a[1].time||0) - (b[1].time||0));
 
         main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%; background:var(--caramel);" onclick="mergeSelected()">🔗 執行併單 (請勾選標題處)</button>` + sorted.map(([k, o]) => {
             const itemsHtml = (o.items || []).map((it, idx) => {
@@ -473,7 +472,6 @@
                 let isAutoWin = rank <= limit;
                 let isWin = it.fWin || isAutoWin;
                 
-                // 修改：勾選框僅用於 LINE 訊息發送，不連動正/補狀態
                 return `<div style="display:flex; align-items:center; gap:8px; font-size:13px; margin:5px 0;">
                     <input type="checkbox" class="msg-item-check-${k}" value="${idx}" checked>
                     <span>${it.n}(${it.sel}) 
@@ -508,7 +506,6 @@
             </div>`}).join('');
     }
 
-    // 點擊文字切換「手動正取」狀態
     function toggleWinStatus(okey, idx, val) {
         db.ref(`orders/${okey}/items/${idx}`).update({ fWin: val });
     }
@@ -516,19 +513,15 @@
     function copyToLine(k) {
         const o = orders[k];
         const selectedIdx = Array.from(document.querySelectorAll(`.msg-item-check-${k}:checked`)).map(el => parseInt(el.value));
-        
         if (selectedIdx.length === 0) return alert("請先勾選要發送的商品明細！");
-
         let subTotal = 0, itemText = "";
         selectedIdx.forEach((idx, i) => {
             const it = o.items[idx];
             subTotal += it.p;
             itemText += `${i+1}. ${it.n}(${it.sel}) $${it.p}\n`;
         });
-
         const bal = subTotal - (o.deposit || 0) - (o.paid || 0);
         const msg = `🌟 33日本動物園 - 購得清單 🌟\n--------------------------\n【 暱稱 】${o.nick}\n【 商品明細 】\n${itemText}--------------------------\n總計：$${subTotal}\n已付訂金：$${o.deposit || 0}\n💰 需付尾款：$${bal}\n\n※ 請確認無誤後完成付款，感謝！`;
-        
         navigator.clipboard.writeText(msg).then(() => alert("✅ 已複製勾選的商品明細！"));
     }
 
