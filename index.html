@@ -355,7 +355,9 @@
         const list = products.filter(p => p.e === e);
         document.getElementById('prod-list').innerHTML = list.map(p => {
             const rid = products.indexOf(p); if(!curQty[rid]) curQty[rid] = 1;
-            const specs = p.s ? p.s.split(',').map(v=>`<button id="s-${rid}-${v}" onclick="selSpec(${rid},'${v}')" style="border:1px solid #DDD; margin:2px; font-size:11px; background:#FFF; border-radius:4px; padding:4px 8px;">${v}</button>`).join('') : '';
+            // 規格處理：支援全形或半形逗號
+            const specArr = p.s ? p.s.replace(/，/g, ',').split(',') : [];
+            const specs = specArr.map(v => v.trim()).filter(v => v !== "").map(v=>`<button id="s-${rid}-${v}" onclick="selSpec(${rid},'${v}')" style="border:1px solid #DDD; margin:2px; font-size:11px; background:#FFF; border-radius:4px; padding:4px 8px; cursor:pointer;">${v}</button>`).join('') : '';
             return `<div class="prod-card">
                 <div><div class="prod-name">${p.n}</div><div class="prod-price">$${p.p}</div><div class="spec-area">${specs}</div></div>
                 <div><div class="qty-area"><button class="btn-qty" onclick="updateQty(${rid},-1)">-</button><span id="qty-val-${rid}">${curQty[rid]}</span><button class="btn-qty" onclick="updateQty(${rid},1)">+</button></div>
@@ -366,10 +368,20 @@
 
     function updateQty(rid, d) { let v = (curQty[rid] || 1) + d; if(v < 1) v = 1; curQty[rid] = v; document.getElementById(`qty-val-${rid}`).innerText = v; }
     function backToHall() { currentEvent = ""; document.getElementById('main-app').style.display='none'; document.getElementById('hall-screen').style.display='flex'; }
-    function selSpec(rid, v) { curS[rid] = v; document.querySelectorAll(`[id^="s-${rid}-"]`).forEach(b => b.style.background = '#FFF'); document.getElementById(`s-${rid}-${v}`).style.background = '#EAE2D1'; }
+    
+    function selSpec(rid, v) { 
+        curS[rid] = v; 
+        document.querySelectorAll(`[id^="s-${rid}-"]`).forEach(b => b.style.background = '#FFF'); 
+        const target = document.getElementById(`s-${rid}-${v}`);
+        if(target) target.style.background = '#EAE2D1'; 
+    }
 
     function addToCart(rid) {
-        const p = products[rid]; if(p.s && !curS[rid]) return alert("請選規格");
+        const p = products[rid]; 
+        // 檢查是否有規格但未選
+        const specArr = p.s ? p.s.replace(/，/g, ',').split(',').filter(x=>x.trim()) : [];
+        if(specArr.length > 0 && !curS[rid]) return alert("請選規格");
+        
         const now = Date.now();
         for(let i=0; i<curQty[rid]; i++) cart.push({...p, sel: curS[rid] || "一般", pid: rid, fWin: false, ship: false, t: now});
         renderCart();
@@ -531,21 +543,49 @@
 
     function renderAdminProds() {
         const main = document.getElementById('admin-main');
-        main.innerHTML = `<button class="btn-add" style="width:100%;" onclick="openAdd()">＋ 上架商品</button>` + products.map((p, i) => `<div class="admin-order-card"><b>[${p.e}] ${p.n}</b> $${p.p} <button onclick="openEdit(${i})">編輯</button></div>`).join('');
+        main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px;" onclick="openAdd()">＋ 上架商品</button>` + products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between; align-items:center;"><div><b>[${p.e}] ${p.n}</b><br>$${p.p} | 規格:${p.s || '無'}</div><button class="btn-add" style="background:var(--caramel);" onclick="openEdit(${i})">編輯</button></div>`).join('');
     }
 
     function openEdit(i) {
         const p = products[i]; document.getElementById('modal-title').innerText = "編輯商品";
-        document.getElementById('modal-body').innerHTML = `活動：<input id="p-e" class="input-std" value="${p.e}">名稱：<input id="p-n" class="input-std" value="${p.n}">價格：<input id="p-p" type="number" class="input-std" value="${p.p}">限購：<input id="p-l" type="number" class="input-std" value="${p.limit||999}">規格：<input id="p-s" class="input-std" value="${p.s||''}">`;
+        document.getElementById('modal-body').innerHTML = `活動：<input id="p-e" class="input-std" value="${p.e}">名稱：<input id="p-n" class="input-std" value="${p.n}">價格：<input id="p-p" type="number" class="input-std" value="${p.p}">限購：<input id="p-l" type="number" class="input-std" value="${p.limit||999}">規格：<input id="p-s" class="input-std" value="${p.s||''}" placeholder="藍,紅,綠">`;
         document.getElementById('edit-modal').style.display='flex';
-        document.getElementById('modal-save').onclick = () => { products[i] = { e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value }; db.ref('products').set(products).then(()=>document.getElementById('edit-modal').style.display='none'); };
+        document.getElementById('modal-save').onclick = () => { 
+            const updated = { 
+                e: document.getElementById('p-e').value.trim(), 
+                n: document.getElementById('p-n').value.trim(), 
+                p: parseInt(document.getElementById('p-p').value) || 0, 
+                limit: parseInt(document.getElementById('p-l').value) || 999, 
+                s: document.getElementById('p-s').value.trim().replace(/，/g, ',')
+            };
+            if(!updated.n) return alert("名稱不能為空");
+            products[i] = updated;
+            db.ref('products').set(products).then(()=>{
+                alert("存檔成功");
+                document.getElementById('edit-modal').style.display='none';
+            }); 
+        };
     }
 
     function openAdd() {
         document.getElementById('modal-title').innerText = "上架商品";
         document.getElementById('modal-body').innerHTML = `活動名稱：<input id="p-e" class="input-std" placeholder="例如：2月日本連線">商品名稱：<input id="p-n" class="input-std">價格：<input id="p-p" type="number" class="input-std">正取名額：<input id="p-l" type="number" class="input-std" value="999">規格(以逗號隔開)：<input id="p-s" class="input-std" placeholder="藍,紅,綠">`;
         document.getElementById('edit-modal').style.display='flex';
-        document.getElementById('modal-save').onclick = () => { products.push({ e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value }); db.ref('products').set(products).then(()=>document.getElementById('edit-modal').style.display='none'); };
+        document.getElementById('modal-save').onclick = () => { 
+            const newProd = { 
+                e: document.getElementById('p-e').value.trim(), 
+                n: document.getElementById('p-n').value.trim(), 
+                p: parseInt(document.getElementById('p-p').value) || 0, 
+                limit: parseInt(document.getElementById('p-l').value) || 999, 
+                s: document.getElementById('p-s').value.trim().replace(/，/g, ',')
+            };
+            if(!newProd.n) return alert("名稱不能為空");
+            products.push(newProd);
+            db.ref('products').set(products).then(()=>{
+                alert("新增成功");
+                document.getElementById('edit-modal').style.display='none';
+            }); 
+        };
     }
 
     function askExport(type) {
@@ -569,4 +609,3 @@
 </script>
 </body>
 </html>
-
