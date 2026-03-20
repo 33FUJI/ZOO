@@ -187,6 +187,19 @@
         db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), isUnlocked: false }).then(() => { alert("成功"); location.reload(); });
     }
 
+    // 園長修正：新增單項刪除邏輯
+    function removeOrderItem(orderKey, itemIdx) {
+        if(!confirm('確定要從訂單中刪除此項商品嗎？')) return;
+        let o = orders[orderKey];
+        o.items.splice(itemIdx, 1);
+        if(o.items.length === 0) {
+            db.ref(`orders/${orderKey}`).remove();
+        } else {
+            o.total = o.items.reduce((a, b) => a + (b.p || 0), 0);
+            db.ref(`orders/${orderKey}`).update({ items: o.items, total: o.total });
+        }
+    }
+
     function renderAdminOrders() {
         const main = document.getElementById('admin-main'), filterEvt = document.getElementById('admin-event-filter').value;
         let pool = {}; Object.values(orders).forEach(o => (o.items||[]).forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; pool[sk].push(it); }));
@@ -195,13 +208,16 @@
         main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%;" onclick="mergeSelected()">🔗 併單</button>` + orderEntries.sort((a,b)=>a[1].time-b[1].time).map(([k, o]) => {
             const itemsHtml = (o.items || []).map((it, idx) => {
                 const limit = (products[it.pid]||{}).limit||999, rank = pool[`${it.pid}_${it.sel}`].indexOf(it)+1, isWin = it.fWin || rank <= limit;
-                return `<div style="font-size:13px; border-bottom:1px solid #F0F0F0; padding:4px 0;">
-                    <input type="checkbox" class="msg-item-check-${k}" value="${idx}" checked>
-                    <span>${it.n}(${it.sel}) $${it.p} <b onclick="db.ref('orders/${k}/items/${idx}').update({fWin:${!it.fWin}})" style="color:${isWin?'green':'orange'}; cursor:pointer;">${isWin?'[正]':'[補'+(rank-limit)+']'}</b></span>
+                return `<div style="font-size:13px; border-bottom:1px solid #F0F0F0; padding:6px 0; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <input type="checkbox" class="msg-item-check-${k}" value="${idx}" checked>
+                        <span>${it.n}(${it.sel}) $${it.p} <b onclick="db.ref('orders/${k}/items/${idx}').update({fWin:${!it.fWin}})" style="color:${isWin?'green':'orange'}; cursor:pointer;">${isWin?'[正]':'[補'+(rank-limit)+']'}</b></span>
+                    </div>
+                    <span onclick="removeOrderItem('${k}', ${idx})" style="color:red; cursor:pointer; font-size:11px; padding:2px 5px; border:1px solid red; border-radius:4px;">🗑️ 刪除</span>
                 </div>`;
             }).join('');
             return `<div class="admin-order-card">
-                <div style="display:flex; justify-content:space-between;"><span><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> <b>${o.nick}</b></span><button onclick="if(confirm('刪除？'))db.ref('orders/${k}').remove()" style="color:red; background:none; border:none;">✕</button></div>
+                <div style="display:flex; justify-content:space-between;"><span><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> <b>${o.nick}</b></span><button onclick="if(confirm('整筆刪除？'))db.ref('orders/${k}').remove()" style="color:red; background:none; border:none;">✕</button></div>
                 <div style="margin:8px 0;">${itemsHtml}</div>
                 <button class="btn-add" style="width:100%; margin-bottom:5px; background:#4CAF50;" onclick="copyToLine('${k}')">📋 複製明細</button>
                 <div style="display:flex; gap:5px;"><label class="status-label"><input type="checkbox" ${o.isUnlocked?'checked':''} onchange="db.ref('orders/${k}').update({isUnlocked:this.checked})">解鎖</label></div>
@@ -227,7 +243,6 @@
         `;
         document.getElementById('edit-modal').style.display = 'flex';
 
-        // 園長修正：移除舊按鈕並替換成新按鈕，解決重複綁定
         const oldBtn = document.getElementById('modal-save');
         const newBtn = oldBtn.cloneNode(true);
         oldBtn.parentNode.replaceChild(newBtn, oldBtn);
