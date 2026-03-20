@@ -18,13 +18,13 @@
         html, body { height: 100%; margin: 0; padding: 0; background: var(--gray); overflow: hidden; color: var(--wood); }
         body { display: flex; flex-direction: column; }
 
-        /* 入口大廳 */
+        /* 入口大廳樣式 */
         .hall { position: fixed; inset: 0; background: var(--rice); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
         .grid-hall { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; width: 100%; max-width: 500px; margin-top: 20px; }
         .card-hall { background: #FFF; padding: 25px 10px; border-radius: 15px; border: 1px solid #EAE2D1; text-align: center; cursor: pointer; box-shadow: 0 4px 0 #EAE2D1; font-weight: bold; color: var(--matcha); font-size: 16px; }
         .card-hall:active { transform: translateY(2px); box-shadow: 0 2px 0 #EAE2D1; }
 
-        /* 主程式容器 */
+        /* 主程式佈局 */
         .app-container { display: none; flex: 1; overflow: hidden; flex-direction: row; }
         .list-area { flex: 1; overflow-y: auto; padding: 15px; background: var(--gray); -webkit-overflow-scrolling: touch; }
         .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; max-width: 1400px; margin: 0 auto; }
@@ -40,7 +40,7 @@
 
         .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
 
-        /* 管理面板 */
+        /* 管理者介面專用 */
         #admin-panel { position: fixed; inset: 0; background: #F8F9FA; z-index: 4000; display: none; flex-direction: column; }
         .admin-header { background: var(--wood); color: #FFF; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .admin-nav { padding: 10px; background: #EEE; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #DDD; }
@@ -100,7 +100,14 @@
 </div>
 
 <div id="edit-modal" class="modal">
-    <div class="modal-box"><h3 id="modal-title">編輯</h3><div id="modal-body"></div><div style="display:flex; gap:10px; margin-top:20px;"><button class="btn-add" id="modal-save" style="flex:1;">儲存</button><button class="btn-add" style="flex:1; background:#999;" onclick="document.getElementById('edit-modal').style.display='none'">取消</button></div></div>
+    <div class="modal-box">
+        <h3 id="modal-title">編輯</h3>
+        <div id="modal-body"></div>
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button class="btn-add" id="modal-save" style="flex:1;">儲存</button>
+            <button class="btn-add" style="flex:1; background:#999;" onclick="document.getElementById('edit-modal').style.display='none'">取消</button>
+        </div>
+    </div>
 </div>
 
 <div id="search-modal" class="modal">
@@ -129,6 +136,7 @@
     let products = [], orders = {}, cart = [], curS = {}, curQty = {}, currentEvent = "";
     let searchListener = null;
 
+    // 監聽 Firebase 資料
     db.ref('products').on('value', snap => { 
         products = snap.val() || []; 
         renderHall(); 
@@ -140,19 +148,16 @@
         if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); 
     });
 
+    // 大廳與購物邏輯
     function renderHall() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e && e.trim() !== "");
         document.getElementById('hall-grid').innerHTML = evts.map(e => `<div class="card-hall" onclick="openShop('${e}')">${e}</div>`).join('');
     }
-
     function updateAdminFilter() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
         const filter = document.getElementById('admin-event-filter');
-        const cur = filter.value;
         filter.innerHTML = '<option value="ALL">所有場次</option>' + evts.map(e => `<option value="${e}">${e}</option>`).join('');
-        filter.value = cur;
     }
-
     function openShop(e) {
         currentEvent = e; document.getElementById('hall-screen').style.display='none'; document.getElementById('main-app').style.display='flex';
         const list = products.filter(p => p.e === e);
@@ -167,15 +172,9 @@
             </div>`;
         }).join('');
     }
-
-    function selSpec(rid, v) { 
-        curS[rid] = v; 
-        document.querySelectorAll(`[id^="s-${rid}-"]`).forEach(b => b.style.background = '#FFF'); 
-        const target = document.getElementById(`s-${rid}-${v}`); if(target) target.style.background = '#EAE2D1'; 
-    }
+    function selSpec(rid, v) { curS[rid] = v; document.querySelectorAll(`[id^="s-${rid}-"]`).forEach(b => b.style.background = '#FFF'); document.getElementById(`s-${rid}-${v}`).style.background = '#EAE2D1'; }
     function updateQty(rid, d) { let v = (curQty[rid] || 1) + d; if(v < 1) v = 1; curQty[rid] = v; document.getElementById(`qty-val-${rid}`).innerText = v; }
     function backToHall() { currentEvent = ""; document.getElementById('main-app').style.display='none'; document.getElementById('hall-screen').style.display='flex'; }
-    
     function addToCart(rid) {
         const p = products[rid], specArr = p.s ? p.s.replace(/，/g, ',').split(',').filter(x=>x.trim()) : [];
         if(specArr.length > 0 && !curS[rid]) return alert("請選規格");
@@ -183,7 +182,6 @@
         for(let i=0; i<curQty[rid]; i++) cart.push({...p, sel: curS[rid] || "一般", pid: rid, fWin: false, ship: false, t: now});
         renderCart();
     }
-
     function renderCart() {
         let summ = {}; cart.forEach(it => { let k = `${it.pid}_${it.sel}`; summ[k] = (summ[k]||0)+1; });
         document.getElementById('cart-items').innerHTML = Object.keys(summ).map(k => {
@@ -193,14 +191,14 @@
         document.getElementById('cart-total').innerText = cart.reduce((a,b)=>a+b.p,0);
     }
     function removeFromCart(pid, sel) { cart = cart.filter(it => !(it.pid == pid && it.sel == sel)); renderCart(); }
-
     function submitOrder() {
         const n = document.getElementById('nick').value.trim();
-        if(!n || cart.length===0) return alert("請輸入暱稱並選購");
+        if(!n || cart.length===0) return alert("請輸入暱稱並選購商品");
         db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), isUnlocked: false, paid: 0, deposit: 0, isPaid: false, isDep: false })
           .then(() => { alert("提交成功！"); cart = []; location.reload(); });
     }
 
+    // 查詢功能
     function performSearch() {
         const n = document.getElementById('search-nick').value.trim().toLowerCase();
         const resArea = document.getElementById('search-results-area');
@@ -225,10 +223,10 @@
             }).join('');
         });
     }
-
     function closeSearch() { if(searchListener) db.ref('orders').off('value', searchListener); document.getElementById('search-modal').style.display='none'; }
     function adminLogin() { if(prompt("密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; renderAdminOrders(); } }
 
+    // 管理員功能：訂單管理
     function renderAdminOrders() {
         const main = document.getElementById('admin-main'), filterEvt = document.getElementById('admin-event-filter').value;
         let pool = {}; Object.values(orders).forEach(o => { (o.items||[]).forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; if(!it.t) it.t = o.time || 0; pool[sk].push(it); }); });
@@ -252,7 +250,6 @@
                 <input class="input-std" style="height:30px;" value="${o.adminNote||''}" onchange="updateOrd('${k}','adminNote',this.value)">
             </div>`}).join('');
     }
-
     function toggleWin(okey, idx, val) { db.ref(`orders/${okey}/items/${idx}`).update({ fWin: val }); }
     function updateOrd(k, f, v) { db.ref(`orders/${k}`).update({ [f]: v }); }
     function deleteOrder(k) { if(confirm("刪除？")) db.ref(`orders/${k}`).remove(); }
@@ -264,7 +261,6 @@
         txt += `總計：$${sub}\n需付：$${sub - (o.deposit||0) - (o.paid||0)}`;
         navigator.clipboard.writeText(txt).then(() => alert("已複製"));
     }
-
     function mergeSelected() {
         const checks = Array.from(document.querySelectorAll('.merge-check:checked')); if(checks.length<2) return alert("選兩筆以上");
         const keys = checks.map(el => el.value); let items = [], total = 0;
@@ -272,6 +268,7 @@
         db.ref('orders').push({ nick: checks[0].getAttribute('data-nick'), items, total, time: Date.now(), isUnlocked: true }).then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); });
     }
 
+    // 管理員功能：商品維護（含修復後的儲存邏輯）
     function renderAdminProds() {
         const main = document.getElementById('admin-main');
         main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px;" onclick="openAdd()">＋ 上架</button>` + products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between;"><div><b>[${p.e}] ${p.n}</b><br>$${p.p} | 規格:${p.s||'無'}</div><button class="btn-add" style="background:var(--caramel);" onclick="openEdit(${i})">編輯</button></div>`).join('');
@@ -279,11 +276,25 @@
 
     function openEdit(i) {
         const p = products[i]; document.getElementById('modal-title').innerText = "編輯";
-        document.getElementById('modal-body').innerHTML = `活動：<input id="p-e" class="input-std" value="${p.e}">名稱：<input id="p-n" class="input-std" value="${p.n}">價格：<input id="p-p" type="number" class="input-std" value="${p.p}">限購：<input id="p-l" type="number" class="input-std" value="${p.limit||999}">規格：<input id="p-s" class="input-std" value="${p.s||''}">`;
+        document.getElementById('modal-body').innerHTML = `
+            活動：<input id="p-e" class="input-std" value="${p.e || ''}">
+            名稱：<input id="p-n" class="input-std" value="${p.n || ''}">
+            價格：<input id="p-p" type="number" class="input-std" value="${p.p || 0}">
+            限購：<input id="p-l" type="number" class="input-std" value="${p.limit || 999}">
+            規格：<input id="p-s" class="input-std" value="${p.s || ''}">`;
         document.getElementById('edit-modal').style.display='flex';
-        document.getElementById('modal-save').onclick = () => {
-            products[i] = { e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value.replace(/，/g, ',') };
-            db.ref('products').set(products).then(() => { alert("存檔成功"); document.getElementById('edit-modal').style.display='none'; });
+        
+        document.getElementById('modal-save').onclick = function() {
+            const upd = {
+                e: document.getElementById('p-e').value.trim(),
+                n: document.getElementById('p-n').value.trim(),
+                p: parseInt(document.getElementById('p-p').value) || 0,
+                limit: parseInt(document.getElementById('p-l').value) || 999,
+                s: document.getElementById('p-s').value.trim().replace(/，/g, ',')
+            };
+            if(!upd.n) return alert("名稱必填");
+            products[i] = upd;
+            db.ref('products').set(products).then(() => { alert("存檔成功"); document.getElementById('edit-modal').style.display='none'; renderAdminProds(); });
         };
     }
 
@@ -291,9 +302,16 @@
         document.getElementById('modal-title').innerText = "上架";
         document.getElementById('modal-body').innerHTML = `活動：<input id="p-e" class="input-std">名稱：<input id="p-n" class="input-std">價格：<input id="p-p" type="number" class="input-std">限購：<input id="p-l" type="number" class="input-std" value="999">規格：<input id="p-s" class="input-std">`;
         document.getElementById('edit-modal').style.display='flex';
-        document.getElementById('modal-save').onclick = () => {
-            products.push({ e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value.replace(/，/g, ',') });
-            db.ref('products').set(products).then(() => { alert("新增成功"); document.getElementById('edit-modal').style.display='none'; });
+        document.getElementById('modal-save').onclick = function() {
+            const newP = {
+                e: document.getElementById('p-e').value.trim(),
+                n: document.getElementById('p-n').value.trim(),
+                p: parseInt(document.getElementById('p-p').value) || 0,
+                limit: parseInt(document.getElementById('p-l').value) || 999,
+                s: document.getElementById('p-s').value.trim().replace(/，/g, ',')
+            };
+            products.push(newP);
+            db.ref('products').set(products).then(() => { alert("新增成功"); document.getElementById('edit-modal').style.display='none'; renderAdminProds(); });
         };
     }
 
@@ -311,7 +329,6 @@
             } else {
                 Object.values(orders).forEach(o => { const fs = (o.items||[]).filter(it => sel.includes(it.e)); if(fs.length){ txt += `\n【${o.nick}】\n`; fs.forEach(it => txt += `- ${it.n}(${it.sel})\n`); } });
             }
-            console.log(txt); alert("已生成於控制台(F12)並下載");
             const blob = new Blob([txt], { type: "text/plain" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "export.txt"; a.click();
             document.getElementById('edit-modal').style.display='none';
         };
