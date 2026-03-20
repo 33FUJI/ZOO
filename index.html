@@ -18,13 +18,11 @@
         html, body { height: 100%; margin: 0; padding: 0; background: var(--gray); overflow: hidden; color: var(--wood); }
         body { display: flex; flex-direction: column; }
 
-        /* 入口大廳樣式 */
         .hall { position: fixed; inset: 0; background: var(--rice); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
         .grid-hall { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; width: 100%; max-width: 500px; margin-top: 20px; }
         .card-hall { background: #FFF; padding: 25px 10px; border-radius: 15px; border: 1px solid #EAE2D1; text-align: center; cursor: pointer; box-shadow: 0 4px 0 #EAE2D1; font-weight: bold; color: var(--matcha); font-size: 16px; }
         .card-hall:active { transform: translateY(2px); box-shadow: 0 2px 0 #EAE2D1; }
 
-        /* 主程式佈局 */
         .app-container { display: none; flex: 1; overflow: hidden; flex-direction: row; }
         .list-area { flex: 1; overflow-y: auto; padding: 15px; background: var(--gray); -webkit-overflow-scrolling: touch; }
         .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; max-width: 1400px; margin: 0 auto; }
@@ -40,7 +38,6 @@
 
         .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
 
-        /* 管理者介面專用 */
         #admin-panel { position: fixed; inset: 0; background: #F8F9FA; z-index: 4000; display: none; flex-direction: column; }
         .admin-header { background: var(--wood); color: #FFF; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .admin-nav { padding: 10px; background: #EEE; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #DDD; }
@@ -230,7 +227,12 @@
         `;
         document.getElementById('edit-modal').style.display = 'flex';
 
-        document.getElementById('modal-save').onclick = function() {
+        // 園長修正：移除舊按鈕並替換成新按鈕，解決重複綁定
+        const oldBtn = document.getElementById('modal-save');
+        const newBtn = oldBtn.cloneNode(true);
+        oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+
+        newBtn.onclick = function() {
             const vE = document.getElementById('inp-e').value.trim();
             const vN = document.getElementById('inp-n').value.trim();
             const vP = parseInt(document.getElementById('inp-p').value) || 0;
@@ -240,14 +242,15 @@
             if (!vN) return alert("請輸入名稱");
 
             const obj = { e: vE, n: vN, p: vP, limit: vL, s: vS };
+            let newProducts = [...products];
 
             if (isNew) {
-                products.push(obj);
+                newProducts.push(obj);
             } else {
-                products[index] = obj;
+                newProducts[index] = obj;
             }
 
-            db.ref('products').set(products).then(() => {
+            db.ref('products').set(newProducts).then(() => {
                 alert("儲存成功！");
                 document.getElementById('edit-modal').style.display = 'none';
                 renderAdminProds();
