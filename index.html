@@ -14,242 +14,47 @@
             --wood: #283618;
             --gray: #F4F1EA;
         }
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            font-family: 'Noto Sans TC', sans-serif;
-        }
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            background: var(--gray);
-            overflow: hidden;
-            color: var(--wood);
-        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Noto Sans TC', sans-serif; }
+        html, body { height: 100%; margin: 0; padding: 0; background: var(--gray); overflow: hidden; color: var(--wood); }
         body { display: flex; flex-direction: column; }
 
         /* 入口大廳 */
-        .hall {
-            position: fixed;
-            inset: 0;
-            background: var(--rice);
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            overflow-y: auto;
-        }
-        .grid-hall {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 15px;
-            width: 100%;
-            max-width: 500px;
-            margin-top: 20px;
-        }
-        .card-hall {
-            background: #FFF;
-            padding: 25px 10px;
-            border-radius: 15px;
-            border: 1px solid #EAE2D1;
-            text-align: center;
-            cursor: pointer;
-            box-shadow: 0 4px 0 #EAE2D1;
-            font-weight: bold;
-            color: var(--matcha);
-            font-size: 16px;
-        }
+        .hall { position: fixed; inset: 0; background: var(--rice); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        .grid-hall { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; width: 100%; max-width: 500px; margin-top: 20px; }
+        .card-hall { background: #FFF; padding: 25px 10px; border-radius: 15px; border: 1px solid #EAE2D1; text-align: center; cursor: pointer; box-shadow: 0 4px 0 #EAE2D1; font-weight: bold; color: var(--matcha); font-size: 16px; }
         .card-hall:active { transform: translateY(2px); box-shadow: 0 2px 0 #EAE2D1; }
 
         /* 主程式容器 */
-        .app-container {
-            display: none;
-            flex: 1;
-            overflow: hidden;
-            flex-direction: row;
-        }
+        .app-container { display: none; flex: 1; overflow: hidden; flex-direction: row; }
+        .list-area { flex: 1; overflow-y: auto; padding: 15px; background: var(--gray); -webkit-overflow-scrolling: touch; }
+        .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; max-width: 1400px; margin: 0 auto; }
+        .prod-card { background: #FFF; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.08); min-height: 280px; }
+        .prod-name { font-size: 16px; font-weight: bold; min-height: 45px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.4; }
+        .prod-price { color: var(--caramel); font-size: 18px; margin: 8px 0; font-weight: bold; text-align: center; }
+        .spec-area { min-height: 60px; margin-bottom: 8px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px; }
+        .qty-area { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; }
+        .btn-qty { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #DDD; background: #FFF; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
 
-        .list-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            background: var(--gray);
-            -webkit-overflow-scrolling: touch;
-        }
-        .prod-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 15px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        .prod-card {
-            background: #FFF;
-            border-radius: 12px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            min-height: 280px;
-        }
-        .prod-name {
-            font-size: 16px;
-            font-weight: bold;
-            min-height: 45px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            line-height: 1.4;
-        }
-        .prod-price {
-            color: var(--caramel);
-            font-size: 18px;
-            margin: 8px 0;
-            font-weight: bold;
-            text-align: center;
-        }
-        .spec-area {
-            min-height: 60px;
-            margin-bottom: 8px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-        }
-        .qty-area {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-        .btn-qty {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: 1px solid #DDD;
-            background: #FFF;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            cursor: pointer;
-        }
+        .cart-area { width: 360px; background: #FFF; border-left: 1px solid #DDD; display: flex; flex-direction: column; box-shadow: -2px 0 10px rgba(0,0,0,0.05); }
+        .cart-bottom { padding: 15px; border-top: 1px solid #EEE; background: #FFF; padding-bottom: calc(15px + env(safe-area-inset-bottom)); }
 
-        .cart-area {
-            width: 360px;
-            background: #FFF;
-            border-left: 1px solid #DDD;
-            display: flex;
-            flex-direction: column;
-            box-shadow: -2px 0 10px rgba(0,0,0,0.05);
-        }
-        .cart-bottom {
-            padding: 15px;
-            border-top: 1px solid #EEE;
-            background: #FFF;
-            padding-bottom: calc(15px + env(safe-area-inset-bottom));
-        }
-
-        .btn-add {
-            background: var(--matcha);
-            color: #FFF;
-            border: none;
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 14px;
-        }
+        .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
 
         /* 管理面板 */
-        #admin-panel {
-            position: fixed;
-            inset: 0;
-            background: #F8F9FA;
-            z-index: 4000;
-            display: none;
-            flex-direction: column;
-        }
-        .admin-header {
-            background: var(--wood);
-            color: #FFF;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .admin-nav {
-            padding: 10px;
-            background: #EEE;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            border-bottom: 1px solid #DDD;
-        }
-        .admin-order-card {
-            background: #FFF;
-            border: 1px solid #EEE;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            position: relative;
-        }
-        .status-label {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            cursor: pointer;
-            background: #F0F0F0;
-            padding: 6px;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 12px;
-            border: 1px solid #DDD;
-        }
+        #admin-panel { position: fixed; inset: 0; background: #F8F9FA; z-index: 4000; display: none; flex-direction: column; }
+        .admin-header { background: var(--wood); color: #FFF; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .admin-nav { padding: 10px; background: #EEE; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #DDD; }
+        .admin-order-card { background: #FFF; border: 1px solid #EEE; border-radius: 12px; padding: 15px; margin-bottom: 15px; position: relative; }
+        .status-label { flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; background: #F0F0F0; padding: 6px; border-radius: 6px; font-weight: bold; font-size: 12px; border: 1px solid #DDD; }
 
-        .modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.7);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 5000;
-            padding: 15px;
-        }
-        .modal-box {
-            background: var(--rice);
-            padding: 25px;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 500px;
-            max-height: 85vh;
-            overflow-y: auto;
-        }
-        .input-std {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border: 1px solid #DDD;
-            border-radius: 10px;
-            font-size: 15px;
-        }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 15px; }
+        .modal-box { background: var(--rice); padding: 25px; border-radius: 20px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
+        .input-std { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #DDD; border-radius: 10px; font-size: 15px; }
 
         @media (max-width: 768px) {
             .app-container { flex-direction: column; }
             .cart-area { width: 100%; flex: 1.5; border-left: none; }
-            .prod-grid { grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 8px; }
-            .prod-card { padding: 8px; min-height: 220px; }
-            .prod-name { font-size: 12px; }
+            .prod-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
         }
     </style>
 </head>
@@ -280,9 +85,7 @@
     <div class="admin-header">
         <b>33 園長工作台</b>
         <div style="display:flex; gap:10px; align-items:center;">
-            <select id="admin-event-filter" onchange="renderAdminOrders()" style="padding:5px; border-radius:5px; font-size:12px;">
-                <option value="ALL">所有場次</option>
-            </select>
+            <select id="admin-event-filter" onchange="renderAdminOrders()" style="padding:5px; border-radius:5px; font-size:12px;"><option value="ALL">所有場次</option></select>
             <button onclick="document.getElementById('admin-panel').style.display='none'">關閉</button>
         </div>
     </div>
@@ -329,7 +132,7 @@
     db.ref('products').on('value', snap => { 
         products = snap.val() || []; 
         renderHall(); 
-        updateAdminFilter(); 
+        updateAdminFilter();
         if(currentEvent) openShop(currentEvent); 
     });
     db.ref('orders').on('value', snap => { 
@@ -343,11 +146,11 @@
     }
 
     function updateAdminFilter() {
-        const evts = [...new Set(products.map(p => p.e))].filter(e => e && e.trim() !== "");
+        const evts = [...new Set(products.map(p => p.e))].filter(e => e);
         const filter = document.getElementById('admin-event-filter');
-        const currentVal = filter.value;
+        const cur = filter.value;
         filter.innerHTML = '<option value="ALL">所有場次</option>' + evts.map(e => `<option value="${e}">${e}</option>`).join('');
-        filter.value = currentVal;
+        filter.value = cur;
     }
 
     function openShop(e) {
@@ -355,9 +158,8 @@
         const list = products.filter(p => p.e === e);
         document.getElementById('prod-list').innerHTML = list.map(p => {
             const rid = products.indexOf(p); if(!curQty[rid]) curQty[rid] = 1;
-            // 規格處理：支援全形或半形逗號
             const specArr = p.s ? p.s.replace(/，/g, ',').split(',') : [];
-            const specs = specArr.map(v => v.trim()).filter(v => v !== "").map(v=>`<button id="s-${rid}-${v}" onclick="selSpec(${rid},'${v}')" style="border:1px solid #DDD; margin:2px; font-size:11px; background:#FFF; border-radius:4px; padding:4px 8px; cursor:pointer;">${v}</button>`).join('') : '';
+            const specs = specArr.map(v => v.trim()).filter(v => v !== "").map(v=>`<button id="s-${rid}-${v}" onclick="selSpec(${rid},'${v}')" style="border:1px solid #DDD; margin:2px; font-size:11px; background:#FFF; border-radius:4px; padding:4px 8px; cursor:pointer;">${v}</button>`).join('');
             return `<div class="prod-card">
                 <div><div class="prod-name">${p.n}</div><div class="prod-price">$${p.p}</div><div class="spec-area">${specs}</div></div>
                 <div><div class="qty-area"><button class="btn-qty" onclick="updateQty(${rid},-1)">-</button><span id="qty-val-${rid}">${curQty[rid]}</span><button class="btn-qty" onclick="updateQty(${rid},1)">+</button></div>
@@ -366,22 +168,17 @@
         }).join('');
     }
 
-    function updateQty(rid, d) { let v = (curQty[rid] || 1) + d; if(v < 1) v = 1; curQty[rid] = v; document.getElementById(`qty-val-${rid}`).innerText = v; }
-    function backToHall() { currentEvent = ""; document.getElementById('main-app').style.display='none'; document.getElementById('hall-screen').style.display='flex'; }
-    
     function selSpec(rid, v) { 
         curS[rid] = v; 
         document.querySelectorAll(`[id^="s-${rid}-"]`).forEach(b => b.style.background = '#FFF'); 
-        const target = document.getElementById(`s-${rid}-${v}`);
-        if(target) target.style.background = '#EAE2D1'; 
+        const target = document.getElementById(`s-${rid}-${v}`); if(target) target.style.background = '#EAE2D1'; 
     }
-
+    function updateQty(rid, d) { let v = (curQty[rid] || 1) + d; if(v < 1) v = 1; curQty[rid] = v; document.getElementById(`qty-val-${rid}`).innerText = v; }
+    function backToHall() { currentEvent = ""; document.getElementById('main-app').style.display='none'; document.getElementById('hall-screen').style.display='flex'; }
+    
     function addToCart(rid) {
-        const p = products[rid]; 
-        // 檢查是否有規格但未選
-        const specArr = p.s ? p.s.replace(/，/g, ',').split(',').filter(x=>x.trim()) : [];
+        const p = products[rid], specArr = p.s ? p.s.replace(/，/g, ',').split(',').filter(x=>x.trim()) : [];
         if(specArr.length > 0 && !curS[rid]) return alert("請選規格");
-        
         const now = Date.now();
         for(let i=0; i<curQty[rid]; i++) cart.push({...p, sel: curS[rid] || "一般", pid: rid, fWin: false, ship: false, t: now});
         renderCart();
@@ -395,24 +192,13 @@
         }).join('');
         document.getElementById('cart-total').innerText = cart.reduce((a,b)=>a+b.p,0);
     }
-
     function removeFromCart(pid, sel) { cart = cart.filter(it => !(it.pid == pid && it.sel == sel)); renderCart(); }
 
     function submitOrder() {
         const n = document.getElementById('nick').value.trim();
-        if(!n || cart.length===0) return alert("請輸入暱稱並選購商品");
-        db.ref('orders').push({ 
-            nick: n, 
-            items: cart, 
-            total: cart.reduce((a,b)=>a+b.p,0), 
-            time: Date.now(), 
-            adminNote: "", 
-            paid: 0, 
-            deposit: 0, 
-            isPaid: false, 
-            isDep: false, 
-            isUnlocked: false 
-        }).then(() => { alert("提交成功！可於首頁查詢進度。"); cart = []; location.reload(); });
+        if(!n || cart.length===0) return alert("請輸入暱稱並選購");
+        db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), isUnlocked: false, paid: 0, deposit: 0, isPaid: false, isDep: false })
+          .then(() => { alert("提交成功！"); cart = []; location.reload(); });
     }
 
     function performSearch() {
@@ -421,188 +207,112 @@
         if(!n) return alert("請輸入暱稱");
         if(searchListener) db.ref('orders').off('value', searchListener);
         searchListener = db.ref('orders').on('value', snap => {
-            const all = snap.val() || {};
-            let userResults = Object.values(all).filter(o => o.nick.toLowerCase() === n);
-            if (userResults.length === 0) { resArea.innerHTML = `<p style="text-align:center; color:red; padding:20px;">找不到您的訂單紀錄。</p>`; return; }
-            let pool = {};
-            Object.values(all).forEach(o => { (o.items||[]).forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; pool[sk].push({...it, t: it.t || o.time}); }); });
+            const all = snap.val() || {}; let userResults = Object.values(all).filter(o => o.nick.toLowerCase() === n);
+            if (userResults.length === 0) { resArea.innerHTML = `<p style="text-align:center; color:red;">無紀錄</p>`; return; }
+            let pool = {}; Object.values(all).forEach(o => { (o.items||[]).forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; pool[sk].push({...it, t: it.t || o.time}); }); });
             for(let k in pool) pool[k].sort((a,b) => a.t - b.t);
             resArea.innerHTML = userResults.sort((a,b)=> (b.time||0)-(a.time||0)).map(o => {
                 const bal = (o.total||0)-(o.deposit||0)-(o.paid||0);
                 let summ = {}; (o.items || []).forEach(it => { 
-                    let sk = `${it.pid}_${it.sel}`; 
-                    let limit = (products[it.pid]||{}).limit||999; 
-                    let rank = pool[sk].findIndex(p => p.t === it.t)+1; 
-                    let isWin = it.fWin || (rank<=limit);
-                    if(!summ[sk]) summ[sk] = { n: it.n, sel: it.sel, list: [] }; 
-                    summ[sk].list.push({ isWin, ship: it.ship }); 
+                    let sk = `${it.pid}_${it.sel}`, limit = (products[it.pid]||{}).limit||999, rank = pool[sk].findIndex(p => p.t === it.t)+1, isWin = it.fWin || (rank<=limit);
+                    if(!summ[sk]) summ[sk] = { n: it.n, sel: it.sel, list: [] }; summ[sk].list.push({ isWin, ship: it.ship }); 
                 });
-                const itemsHtml = Object.values(summ).map(g => { 
-                    const st = g.list.map(d => (d.isWin ? '<span style="color:green;">[正取]</span>' : '<span style="color:orange;">[候補]</span>') + (d.ship ? '🚚' : '')).join(' '); 
-                    return `<div style="font-size:14px; margin-bottom:4px;">• ${g.n}(${g.sel}) x ${g.list.length}<br>${st}</div>`; 
-                }).join('');
+                const itemsHtml = Object.values(summ).map(g => { const st = g.list.map(d => (d.isWin ? '<span style="color:green;">[正]</span>' : '<span style="color:orange;">[補]</span>') + (d.ship ? '🚚' : '')).join(' '); return `<div style="font-size:14px;">• ${g.n}(${g.sel}) x ${g.list.length}<br>${st}</div>`; }).join('');
                 return `<div style="background:#FFF; padding:15px; border-radius:12px; margin-bottom:10px; border-left:5px solid var(--matcha);">
                     <div style="font-size:11px; color:#AAA;">${new Date(o.time).toLocaleString()}</div>${itemsHtml}
-                    <div style="text-align:right; border-top:1px dashed #EEE; margin-top:8px; padding-top:8px; font-size:13px;">總計:$${o.total} | <b>${bal<=0 ? '<span style="color:green;">已清款</span>' : '<span style="color:red;">待付:$'+bal+'</span>'}</b></div>
-                    ${o.adminNote ? `<div style="background:#FDF6ED; color:#BC6C25; padding:8px; border-radius:5px; font-size:12px; margin-top:8px;">園長備註：${o.adminNote}</div>` : ''}
+                    <div style="text-align:right; border-top:1px dashed #EEE; padding-top:8px;">總:$${o.total} | <b>${bal<=0 ? '已清款' : '待付:$'+bal}</b></div>
                 </div>`;
             }).join('');
         });
     }
 
     function closeSearch() { if(searchListener) db.ref('orders').off('value', searchListener); document.getElementById('search-modal').style.display='none'; }
-    function adminLogin() { if(prompt("管理密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; renderAdminOrders(); } }
-
-    function unlockAllOrders() {
-        if(!confirm("確定要將目前所有訂單一鍵「開放查詢」嗎？")) return;
-        const updates = {}; Object.keys(orders).forEach(k => { updates[`${k}/isUnlocked`] = true; });
-        db.ref('orders').update(updates).then(() => alert("已全部開放查詢。"));
-    }
+    function adminLogin() { if(prompt("密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; renderAdminOrders(); } }
 
     function renderAdminOrders() {
-        const main = document.getElementById('admin-main');
-        const filterEvt = document.getElementById('admin-event-filter').value;
-        let pool = {};
-        Object.values(orders).forEach(o => { (o.items||[]).forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; if(!it.t) it.t = o.time || 0; pool[sk].push(it); }); });
+        const main = document.getElementById('admin-main'), filterEvt = document.getElementById('admin-event-filter').value;
+        let pool = {}; Object.values(orders).forEach(o => { (o.items||[]).forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; if(!it.t) it.t = o.time || 0; pool[sk].push(it); }); });
         for(let k in pool) pool[k].sort((a,b) => a.t - b.t);
-
-        let orderEntries = Object.entries(orders);
-        if (filterEvt !== "ALL") { orderEntries = orderEntries.filter(([k, o]) => (o.items || []).some(it => it.e === filterEvt)); }
-        const sorted = orderEntries.sort((a,b) => (a[1].time||0) - (b[1].time||0));
-
-        main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%; background:var(--caramel);" onclick="mergeSelected()">🔗 執行併單 (請勾選標題處)</button>` + sorted.map(([k, o]) => {
+        let orderEntries = Object.entries(orders); if (filterEvt !== "ALL") orderEntries = orderEntries.filter(([k, o]) => (o.items || []).some(it => it.e === filterEvt));
+        main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%; background:var(--caramel);" onclick="mergeSelected()">🔗 併單</button>` + orderEntries.sort((a,b) => a[1].time - b[1].time).map(([k, o]) => {
             const itemsHtml = (o.items || []).map((it, idx) => {
-                const sk = `${it.pid}_${it.sel}`, limit = (products[it.pid]||{}).limit||999;
-                let rank = pool[sk].indexOf(it)+1;
-                let isAutoWin = rank <= limit;
-                let isWin = it.fWin || isAutoWin;
-                return `<div style="display:flex; align-items:center; gap:8px; font-size:13px; margin:5px 0; border-bottom:1px solid #F0F0F0; padding-bottom:4px;">
+                const sk = `${it.pid}_${it.sel}`, limit = (products[it.pid]||{}).limit||999, rank = pool[sk].indexOf(it)+1, isWin = it.fWin || rank <= limit;
+                return `<div style="display:flex; align-items:center; gap:8px; font-size:13px; border-bottom:1px solid #F0F0F0; padding:4px 0;">
                     <input type="checkbox" class="msg-item-check-${k}" value="${idx}" checked>
-                    <span>
-                        <span onclick="editItemName('${k}', ${idx})" style="cursor:help;">${it.n}</span>
-                        (<span onclick="editItemSpec('${k}', ${idx})" style="color:blue; cursor:help;">${it.sel}</span>)
-                        <span onclick="editItemVal('${k}', ${idx})" style="color:var(--caramel); font-weight:bold; margin:0 5px;">$${it.p}</span>
-                        <b onclick="toggleWinStatus('${k}', ${idx}, ${!it.fWin})" style="cursor:pointer; color:${isWin?'green':'orange'};">
-                            ${isWin ? '[正]' : '[補'+(rank-limit)+']'}
-                        </b>
-                        <small style="color:#999;">#${rank}</small>
-                    </span>
+                    <span>${it.n}(${it.sel}) $${it.p} <b onclick="toggleWin('${k}',${idx},${!it.fWin})" style="color:${isWin?'green':'orange'}; cursor:pointer;">${isWin?'[正]':'[補'+(rank-limit)+']'}</b></span>
                 </div>`;
             }).join('');
             const bal = (o.total||0)-(o.deposit||0)-(o.paid||0);
-            return `<div class="admin-order-card" id="ord-${k}">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> <b>${o.nick}</b></span>
-                    <button onclick="deleteOrder('${k}')" style="color:red; background:none; border:none; font-size:18px;">✕</button>
-                </div>
+            return `<div class="admin-order-card">
+                <div style="display:flex; justify-content:space-between;"><span><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> <b>${o.nick}</b></span><button onclick="deleteOrder('${k}')" style="color:red; background:none; border:none;">✕</button></div>
                 <div style="margin:10px 0;">${itemsHtml}</div>
-                <div style="display:flex; gap:5px; margin-top:10px;">
-                    <button class="btn-add" style="background:#4CAF50; flex:1; font-size:12px;" onclick="copyToLine('${k}')">📋 複製所選 LINE 明細</button>
-                </div>
-                <div style="display:flex; gap:5px; margin-top:5px;">
-                    <label class="status-label" style="background:#FFF9C4; border-color:#FBC02D;"><input type="checkbox" ${o.isUnlocked?'checked':''} onchange="updateOrd('${k}','isUnlocked',this.checked)"> 🔓 解鎖</label>
-                    <label class="status-label"><input type="checkbox" ${o.isPaid?'checked':''} onchange="updateOrd('${k}','isPaid',this.checked)"> 已付清</label>
-                    <label class="status-label"><input type="checkbox" ${o.isDep?'checked':''} onchange="updateOrd('${k}','isDep',this.checked)"> 訂金</label>
-                </div>
-                <div style="font-size:13px; margin-top:8px; background:#F9F9F9; padding:8px; border-radius:8px;">
-                    總:$${o.total} | 餘:<b style="color:${bal<=0?'green':'red'}">${bal}</b> | 訂金:$${o.deposit||0} | 尾款:$${o.paid||0}
-                    <div style="margin-top:5px;"><button onclick="editVal('${k}','total')">改總</button> <button onclick="editVal('${k}','deposit')">改訂</button> <button onclick="editVal('${k}','paid')">改尾</button></div>
-                </div>
-                <input class="input-std" style="height:35px; margin-top:8px;" value="${o.adminNote||''}" placeholder="園長備註..." onchange="updateOrd('${k}','adminNote',this.value)">
+                <button class="btn-add" style="width:100%; margin:5px 0; background:#4CAF50;" onclick="copyToLine('${k}')">📋 複製明細</button>
+                <div style="display:flex; gap:5px;"><label class="status-label"><input type="checkbox" ${o.isUnlocked?'checked':''} onchange="updateOrd('${k}','isUnlocked',this.checked)">解鎖</label><label class="status-label"><input type="checkbox" ${o.isPaid?'checked':''} onchange="updateOrd('${k}','isPaid',this.checked)">付清</label></div>
+                <div style="font-size:13px; margin-top:5px;">總:$${o.total} | 餘:$${bal} <button onclick="editVal('${k}','paid')">填尾款</button></div>
+                <input class="input-std" style="height:30px;" value="${o.adminNote||''}" onchange="updateOrd('${k}','adminNote',this.value)">
             </div>`}).join('');
     }
 
-    function toggleWinStatus(okey, idx, val) { db.ref(`orders/${okey}/items/${idx}`).update({ fWin: val }); }
-    function editItemVal(okey, idx) { const p = prompt("請輸入該商品新價格：", orders[okey].items[idx].p); if(p!==null) db.ref(`orders/${okey}/items/${idx}`).update({ p: parseInt(p) }); }
-    function editItemSpec(okey, idx) { const s = prompt("請輸入新規格：", orders[okey].items[idx].sel); if(s!==null) db.ref(`orders/${okey}/items/${idx}`).update({ sel: s }); }
-    function editItemName(okey, idx) { const n = prompt("請輸入新商品名稱：", orders[okey].items[idx].n); if(n!==null) db.ref(`orders/${okey}/items/${idx}`).update({ n: n }); }
-
+    function toggleWin(okey, idx, val) { db.ref(`orders/${okey}/items/${idx}`).update({ fWin: val }); }
+    function updateOrd(k, f, v) { db.ref(`orders/${k}`).update({ [f]: v }); }
+    function deleteOrder(k) { if(confirm("刪除？")) db.ref(`orders/${k}`).remove(); }
+    function editVal(k, f) { const v = prompt("輸入數值："); if(v!==null) updateOrd(k, f, parseInt(v)); }
+    function unlockAllOrders() { const ups = {}; Object.keys(orders).forEach(k => ups[`${k}/isUnlocked`] = true); db.ref('orders').update(ups); }
     function copyToLine(k) {
-        const o = orders[k];
-        const selectedIdx = Array.from(document.querySelectorAll(`.msg-item-check-${k}:checked`)).map(el => parseInt(el.value));
-        if (selectedIdx.length === 0) return alert("請先勾選商品！");
-        let subTotal = 0, itemText = "";
-        selectedIdx.forEach((idx, i) => { const it = o.items[idx]; subTotal += it.p; itemText += `${i+1}. ${it.n}(${it.sel}) $${it.p}\n`; });
-        const bal = subTotal - (o.deposit || 0) - (o.paid || 0);
-        const msg = `🌟 33日本動物園 - 下單明細 🌟\n--------------------------\n【 暱稱 】${o.nick}\n【 商品明細 】\n${itemText}--------------------------\n總計：$${subTotal}\n已付訂金：$${o.deposit || 0}\n💰 需付尾款：$${bal}\n\n※ 請確認無誤後完成付款，感謝！`;
-        navigator.clipboard.writeText(msg).then(() => alert("✅ 已複製勾選的商品明細！"));
+        const o = orders[k]; const sel = Array.from(document.querySelectorAll(`.msg-item-check-${k}:checked`)).map(el => parseInt(el.value));
+        let sub = 0, txt = `🌟 ${o.nick} 明細 🌟\n`; sel.forEach((idx, i) => { const it = o.items[idx]; sub += it.p; txt += `${i+1}. ${it.n}(${it.sel}) $${it.p}\n`; });
+        txt += `總計：$${sub}\n需付：$${sub - (o.deposit||0) - (o.paid||0)}`;
+        navigator.clipboard.writeText(txt).then(() => alert("已複製"));
     }
 
-    function updateOrd(k, f, v) { db.ref(`orders/${k}`).update({ [f]: v }); }
-    function deleteOrder(k) { if(confirm("刪除訂單？")) db.ref(`orders/${k}`).remove(); }
-    function editVal(k, f) { const v = prompt("輸入數值：", orders[k][f]||0); if(v!==null) updateOrd(k, f, parseInt(v)); }
-
     function mergeSelected() {
-        const checks = Array.from(document.querySelectorAll('.merge-check:checked')); if(checks.length<2) return alert("請勾選至少兩筆訂單");
-        const keys = checks.map(el => el.value); 
-        let items = [], total = 0, dp=0, pd=0, an="";
-        keys.forEach(k => { const o = orders[k]; items = items.concat(o.items||[]); total += o.total; dp += (o.deposit||0); pd += (o.paid||0); an += (o.adminNote||"")+" "; });
-        db.ref('orders').push({ nick: checks[0].getAttribute('data-nick'), items, total, deposit: dp, paid: pd, adminNote: an+"(併單)", time: orders[keys[0]].time, isUnlocked: true })
-          .then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); alert("併單完成"); });
+        const checks = Array.from(document.querySelectorAll('.merge-check:checked')); if(checks.length<2) return alert("選兩筆以上");
+        const keys = checks.map(el => el.value); let items = [], total = 0;
+        keys.forEach(k => { items = items.concat(orders[k].items||[]); total += orders[k].total; });
+        db.ref('orders').push({ nick: checks[0].getAttribute('data-nick'), items, total, time: Date.now(), isUnlocked: true }).then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); });
     }
 
     function renderAdminProds() {
         const main = document.getElementById('admin-main');
-        main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px;" onclick="openAdd()">＋ 上架商品</button>` + products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between; align-items:center;"><div><b>[${p.e}] ${p.n}</b><br>$${p.p} | 規格:${p.s || '無'}</div><button class="btn-add" style="background:var(--caramel);" onclick="openEdit(${i})">編輯</button></div>`).join('');
+        main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px;" onclick="openAdd()">＋ 上架</button>` + products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between;"><div><b>[${p.e}] ${p.n}</b><br>$${p.p} | 規格:${p.s||'無'}</div><button class="btn-add" style="background:var(--caramel);" onclick="openEdit(${i})">編輯</button></div>`).join('');
     }
 
     function openEdit(i) {
-        const p = products[i]; document.getElementById('modal-title').innerText = "編輯商品";
-        document.getElementById('modal-body').innerHTML = `活動：<input id="p-e" class="input-std" value="${p.e}">名稱：<input id="p-n" class="input-std" value="${p.n}">價格：<input id="p-p" type="number" class="input-std" value="${p.p}">限購：<input id="p-l" type="number" class="input-std" value="${p.limit||999}">規格：<input id="p-s" class="input-std" value="${p.s||''}" placeholder="藍,紅,綠">`;
+        const p = products[i]; document.getElementById('modal-title').innerText = "編輯";
+        document.getElementById('modal-body').innerHTML = `活動：<input id="p-e" class="input-std" value="${p.e}">名稱：<input id="p-n" class="input-std" value="${p.n}">價格：<input id="p-p" type="number" class="input-std" value="${p.p}">限購：<input id="p-l" type="number" class="input-std" value="${p.limit||999}">規格：<input id="p-s" class="input-std" value="${p.s||''}">`;
         document.getElementById('edit-modal').style.display='flex';
-        document.getElementById('modal-save').onclick = () => { 
-            const updated = { 
-                e: document.getElementById('p-e').value.trim(), 
-                n: document.getElementById('p-n').value.trim(), 
-                p: parseInt(document.getElementById('p-p').value) || 0, 
-                limit: parseInt(document.getElementById('p-l').value) || 999, 
-                s: document.getElementById('p-s').value.trim().replace(/，/g, ',')
-            };
-            if(!updated.n) return alert("名稱不能為空");
-            products[i] = updated;
-            db.ref('products').set(products).then(()=>{
-                alert("存檔成功");
-                document.getElementById('edit-modal').style.display='none';
-            }); 
+        document.getElementById('modal-save').onclick = () => {
+            products[i] = { e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value.replace(/，/g, ',') };
+            db.ref('products').set(products).then(() => { alert("存檔成功"); document.getElementById('edit-modal').style.display='none'; });
         };
     }
 
     function openAdd() {
-        document.getElementById('modal-title').innerText = "上架商品";
-        document.getElementById('modal-body').innerHTML = `活動名稱：<input id="p-e" class="input-std" placeholder="例如：2月日本連線">商品名稱：<input id="p-n" class="input-std">價格：<input id="p-p" type="number" class="input-std">正取名額：<input id="p-l" type="number" class="input-std" value="999">規格(以逗號隔開)：<input id="p-s" class="input-std" placeholder="藍,紅,綠">`;
+        document.getElementById('modal-title').innerText = "上架";
+        document.getElementById('modal-body').innerHTML = `活動：<input id="p-e" class="input-std">名稱：<input id="p-n" class="input-std">價格：<input id="p-p" type="number" class="input-std">限購：<input id="p-l" type="number" class="input-std" value="999">規格：<input id="p-s" class="input-std">`;
         document.getElementById('edit-modal').style.display='flex';
-        document.getElementById('modal-save').onclick = () => { 
-            const newProd = { 
-                e: document.getElementById('p-e').value.trim(), 
-                n: document.getElementById('p-n').value.trim(), 
-                p: parseInt(document.getElementById('p-p').value) || 0, 
-                limit: parseInt(document.getElementById('p-l').value) || 999, 
-                s: document.getElementById('p-s').value.trim().replace(/，/g, ',')
-            };
-            if(!newProd.n) return alert("名稱不能為空");
-            products.push(newProd);
-            db.ref('products').set(products).then(()=>{
-                alert("新增成功");
-                document.getElementById('edit-modal').style.display='none';
-            }); 
+        document.getElementById('modal-save').onclick = () => {
+            products.push({ e: document.getElementById('p-e').value, n: document.getElementById('p-n').value, p: parseInt(document.getElementById('p-p').value), limit: parseInt(document.getElementById('p-l').value), s: document.getElementById('p-s').value.replace(/，/g, ',') });
+            db.ref('products').set(products).then(() => { alert("新增成功"); document.getElementById('edit-modal').style.display='none'; });
         };
     }
 
     function askExport(type) {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
-        document.getElementById('modal-title').innerText = "選取匯出活動";
+        document.getElementById('modal-title').innerText = "匯出場次";
         document.getElementById('modal-body').innerHTML = evts.map(e => `<div><input type="checkbox" class="evt-check" value="${e}" checked> ${e}</div>`).join('');
         document.getElementById('edit-modal').style.display='flex';
         document.getElementById('modal-save').onclick = () => {
-            const selected = Array.from(document.querySelectorAll('.evt-check:checked')).map(el => el.value);
-            let text = `🌟 33日本動物園 - ${type}\n`;
-            if(type==='summary') {
-                let s = {}; Object.values(orders).forEach(o => { (o.items||[]).forEach(it => { if(selected.includes(it.e)){ let k = `[${it.e}] ${it.n}(${it.sel})`; s[k]=(s[k]||0)+1; } }); });
-                for(let k in s) text += `${k} : ${s[k]} 個\n`;
+            const sel = Array.from(document.querySelectorAll('.evt-check:checked')).map(el => el.value);
+            let txt = `${type === 'summary' ? '採購統計' : '匯出明細'}\n`;
+            if(type === 'summary') {
+                let s = {}; Object.values(orders).forEach(o => (o.items||[]).forEach(it => { if(sel.includes(it.e)){ let k = `[${it.e}] ${it.n}(${it.sel})`; s[k]=(s[k]||0)+1; } }));
+                for(let k in s) txt += `${k} : ${s[k]}\n`;
             } else {
-                Object.values(orders).forEach(o => { const fits = (o.items||[]).filter(it => selected.includes(it.e)); if(fits.length){ text += `\n【${o.nick}】待付餘額:$${(o.total||0)-(o.deposit||0)-(o.paid||0)}\n`; fits.forEach(it => { text += `- ${it.n}(${it.sel})\n`; }); } });
+                Object.values(orders).forEach(o => { const fs = (o.items||[]).filter(it => sel.includes(it.e)); if(fs.length){ txt += `\n【${o.nick}】\n`; fs.forEach(it => txt += `- ${it.n}(${it.sel})\n`); } });
             }
-            const blob = new Blob([text], { type: "text/plain" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `33zoo_export.txt`; link.click();
+            console.log(txt); alert("已生成於控制台(F12)並下載");
+            const blob = new Blob([txt], { type: "text/plain" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "export.txt"; a.click();
             document.getElementById('edit-modal').style.display='none';
         };
     }
