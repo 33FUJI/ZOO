@@ -90,7 +90,7 @@
         <button class="btn-add" onclick="renderAdminOrders()">訂單管理</button>
         <button class="btn-add" style="background:#BC6C25;" onclick="unlockAllOrders()">🔓 一鍵全開</button>
         <button class="btn-add" style="background:#888;" onclick="renderAdminProds()">商品維護</button>
-        <button class="btn-add" style="background:#E07A5F;" onclick="openPackAssistant()">📦 包貨彙整</button>
+        <button class="btn-add" style="background:#E07A5F;" onclick="openPackAssistant()">📦 配貨出貨助手</button>
         <button class="btn-add" style="background:#4361EE;" onclick="askExport('summary')">📊 統計採購</button>
         <button class="btn-add" style="background:#7209B7;" onclick="askExport('detail')">📋 匯出明細</button>
     </div>
@@ -246,61 +246,112 @@
         };
     }
 
-    // 園長修正：包貨彙整功能 (跳出視窗複製版)
+    // 園長修正：配貨出貨管理助手 (兩階段：選訂單 -> 勾商品 -> 對帳卡片)
     function openPackAssistant() {
         const curE = document.getElementById('admin-event-filter').value;
-        if(curE === 'ALL') return alert("請先在上方選擇一個「場次」再進行包貨彙整");
+        if(curE === 'ALL') return alert("請先在上方選擇「場次」");
+
+        document.getElementById('modal-title').innerText = "📦 " + curE + " 出貨管理";
         
-        // 抓出該場次所有商品
-        const filteredProds = products.filter(p => p.e === curE);
-        document.getElementById('modal-title').innerText = "📦 包貨彙整助手 - " + curE;
-        document.getElementById('modal-body').innerHTML = `
-            <div style="font-size:12px; color:red; margin-bottom:10px;">預設只匯出「正取」商品</div>
-            <div id="prod-checks" style="max-height:200px; overflow-y:auto; border:1px solid #EEE; padding:10px; border-radius:8px;">
-                ${filteredProds.map((p, i) => `<div><input type="checkbox" class="pack-p-check" value="${products.indexOf(p)}" checked> ${p.n}</div>`).join('')}
-            </div>
-            <textarea id="pack-result" class="input-std" style="height:150px; font-size:12px; margin-top:15px; display:none;" readonly></textarea>
+        let html = `
+            <div id="step1-area">
+                <div style="font-size:13px; color:var(--caramel); margin-bottom:10px;"><b>第一步：勾選要處理的訂單</b></div>
+                <div style="max-height:400px; overflow-y:auto; background:#FFF; border-radius:10px; border:1px solid #EEE;">
         `;
-        document.getElementById('edit-modal').style.display = 'flex';
-        
-        const oldBtn = document.getElementById('modal-save');
-        const newBtn = oldBtn.cloneNode(true); oldBtn.parentNode.replaceChild(newBtn, oldBtn);
-        newBtn.innerText = "生成報表";
-        newBtn.onclick = () => {
-            const selPids = Array.from(document.querySelectorAll('.pack-p-check:checked')).map(el => parseInt(el.value));
-            if(selPids.length === 0) return alert("請至少勾選一個品項");
 
-            // 計算正取邏輯
-            let pool = {}; Object.values(orders).forEach(o => (o.items||[]).forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; pool[sk].push(it); }));
-            for(let k in pool) pool[k].sort((a,b) => (a.t||0) - (b.t||0));
-
-            let summary = {}, personDetail = {};
-            Object.values(orders).forEach(o => {
-                (o.items || []).forEach(it => {
-                    const limit = (products[it.pid]||{}).limit||999, rank = pool[`${it.pid}_${it.sel}`].indexOf(it)+1, isWin = it.fWin || rank <= limit;
-                    if(isWin && selPids.includes(it.pid)) {
-                        let pk = `${it.n}(${it.sel})`;
-                        summary[pk] = (summary[pk]||0) + 1;
-                        if(!personDetail[o.nick]) personDetail[o.nick] = [];
-                        personDetail[o.nick].push(pk);
-                    }
-                });
-            });
-
-            let txt = `📦 【${curE} 抓貨總結】\n`;
-            for(let k in summary) txt += `- ${k}: ${summary[k]} 件\n`;
-            txt += `\n👤 【個人包貨清單】\n`;
-            for(let nick in personDetail) {
-                txt += `------------------\n[${nick}]\n`;
-                let counts = {}; personDetail[nick].forEach(x => counts[x] = (counts[x]||0)+1);
-                for(let k in counts) txt += `- ${k} x ${counts[k]}\n`;
+        Object.entries(orders).forEach(([k, o]) => {
+            const hasWaitItem = (o.items || []).some(it => it.e === curE && !it.isShipped);
+            if ((o.items || []).some(it => it.e === curE)) {
+                html += `
+                    <div style="padding:12px; border-bottom:1px solid #F5F5F5; display:flex; align-items:center; gap:10px;">
+                        <input type="checkbox" class="order-select-chk" value="${k}" id="sel-${k}">
+                        <label for="sel-${k}" style="flex:1; cursor:pointer;">
+                            <b>${o.nick}</b> 
+                            <span style="font-size:11px; color:${hasWaitItem?'#BC6C25':'#888'};">
+                                (${hasWaitItem ? '有待出貨' : '已全數出完'})
+                            </span>
+                        </label>
+                    </div>
+                `;
             }
+        });
 
-            const resArea = document.getElementById('pack-result');
-            resArea.value = txt; resArea.style.display = 'block';
-            newBtn.innerText = "點我複製全文";
-            newBtn.onclick = () => { resArea.select(); document.execCommand('copy'); alert("已複製到剪貼簿！"); };
+        html += `</div></div><div id="step2-area" style="display:none; margin-top:15px;"></div>`;
+        
+        document.getElementById('modal-body').innerHTML = html;
+        document.getElementById('edit-modal').style.display = 'flex';
+
+        const nextBtn = document.getElementById('modal-save');
+        nextBtn.innerText = "確認訂單，開始配貨 →";
+        nextBtn.onclick = () => {
+            const selectedKeys = Array.from(document.querySelectorAll('.order-select-chk:checked')).map(el => el.value);
+            if (selectedKeys.length === 0) return alert("請先勾選訂單");
+            startDetailPacking(selectedKeys, curE);
         };
+    }
+
+    function startDetailPacking(keys, curE) {
+        let html = `<div style="font-size:13px; color:var(--matcha); margin-bottom:10px;"><b>第二步：核對商品（點擊方框標記寄出）</b></div>`;
+        
+        keys.forEach(k => {
+            const o = orders[k];
+            html += `
+                <div style="background:#FFF; border:1px solid #EAE2D1; border-radius:12px; padding:12px; margin-bottom:15px; position:relative;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid #F4F1EA; padding-bottom:8px; margin-bottom:10px;">
+                        <b style="color:var(--matcha); font-size:16px;">👤 ${o.nick}</b>
+                        <button onclick="copyShippingCard('${k}', '${curE}')" style="background:var(--caramel); color:#fff; border:none; padding:5px 10px; border-radius:6px; font-size:11px; cursor:pointer;">📋 複製對帳卡片</button>
+                    </div>
+            `;
+            
+            o.items.forEach((it, idx) => {
+                if (it.e === curE) {
+                    const isDone = it.isShipped === true;
+                    html += `
+                        <div onclick="toggleItemShipped('${k}', ${idx}, ${!isDone}, '${curE}', '${keys.join(',')}')" 
+                             style="cursor:pointer; display:flex; align-items:center; gap:10px; padding:8px; margin-bottom:5px; border-radius:6px; background:${isDone ? '#F5F5F5' : '#FEF9EF'}; border:1px solid ${isDone ? '#DDD' : '#BC6C25'};">
+                            <span style="font-size:18px;">${isDone ? '☑️' : '⬜'}</span>
+                            <span style="flex:1; ${isDone ? 'text-decoration:line-through; color:#999;' : 'font-weight:500;'}">${it.n} (${it.sel})</span>
+                            <span style="font-size:11px; color:${isDone ? '#999' : '#BC6C25'};">${isDone ? '已出貨' : '待出貨'}</span>
+                        </div>
+                    `;
+                }
+            });
+            html += `</div>`;
+        });
+
+        document.getElementById('step1-area').style.display = 'none';
+        const s2 = document.getElementById('step2-area');
+        s2.innerHTML = html;
+        s2.style.display = 'block';
+
+        const btn = document.getElementById('modal-save');
+        btn.innerText = "← 返回選訂單";
+        btn.onclick = () => openPackAssistant();
+    }
+
+    function toggleItemShipped(orderKey, itemIdx, status, curE, activeKeysStr) {
+        db.ref(`orders/${orderKey}/items/${itemIdx}`).update({ isShipped: status }).then(() => {
+            startDetailPacking(activeKeysStr.split(','), curE);
+            renderAdminOrders();
+        });
+    }
+
+    function copyShippingCard(orderKey, curE) {
+        const o = orders[orderKey];
+        let nowShipping = [], stillWaiting = [];
+        (o.items || []).forEach(it => {
+            if (it.e === curE) {
+                if (it.isShipped) nowShipping.push(`- ${it.n}(${it.sel})`);
+                else stillWaiting.push(`- ${it.n}(${it.sel})`);
+            }
+        });
+
+        let txt = `🌟 【33日本動物園 - 出貨明細】 🌟\n\n👤 暱稱：${o.nick}\n📅 活動：${curE}\n\n`;
+        txt += `📦 【本次預計寄出】：\n${nowShipping.length > 0 ? nowShipping.join('\n') : '(無)'}\n\n`;
+        if (stillWaiting.length > 0) txt += `⏳ 【尚在等候中】：\n${stillWaiting.join('\n')}\n\n`;
+        txt += `以上資訊請核對，如有誤請告知園長唷！謝謝您 🙏`;
+
+        navigator.clipboard.writeText(txt).then(() => alert("✨ 對帳卡片已複製！"));
     }
 
     function mergeSelected() {
