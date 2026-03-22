@@ -314,8 +314,8 @@
         });
         let txt = `🌟 【33日本動物園 - 出貨明細】 🌟\n\n👤 暱稱：${o.nick}\n📅 場次：${selEvts.join('、')}\n\n`;
         txt += `📦 【本次預計寄出】：\n${nowShipping.length > 0 ? nowShipping.join('\n') : '(無)'}\n\n`;
-        if (stillWaiting.length > 0) txt += `⏳ 【尚在等候中】：\n${stillWaiting.join('\n')}\n\n`;
-        txt += `以上資訊請核對，如有誤請告知園長唷！謝謝您 🙏`;
+        if (stillWaiting.length > 0) txt += `⏳ 【等候中】：\n${stillWaiting.join('\n')}\n\n`;
+        txt += `以上資訊請核對，如有誤請告知唷！謝謝您 🙏`;
         navigator.clipboard.writeText(txt).then(() => alert("✨ 跨場次對帳卡片已複製！"));
     }
 
