@@ -176,7 +176,6 @@
         const p = products[rid], sA = p.s ? p.s.split(/,|，/).filter(x=>x.trim()) : [];
         if(sA.length > 0 && !curS[rid]) return alert("選規格");
         const t = Date.now(); 
-        // 提交訂單時帶入當下的日幣單價備份
         for(let i=0; i<curQty[rid]; i++) cart.push({...p, sel: curS[rid]||"一般", pid: rid, t, p_jpy: p.p_jpy||0});
         renderCart();
     }
@@ -255,8 +254,6 @@
         };
     }
 
-    // --- 配貨助手相關核心邏輯 (含分場次滿額計算) ---
-
     function openPackAssistant() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
         tempPackStatus = {}; 
@@ -298,7 +295,6 @@
             const o = orders[k];
             let categoryTotals = {}; 
             
-            // 累計各場次日幣總額 (相容併單與最新設定)
             (o.items || []).forEach(it => {
                 if (selEvts.includes(it.e)) {
                     let mP = products[it.pid];
@@ -369,34 +365,39 @@
 
     function copyShippingCard(orderKey, selEvtsStr) {
         const o = orders[orderKey], selEvts = selEvtsStr.split(','), JPY_THRESHOLD = 6000;
-        let nowShipping = [], totals = {};
+        let nowShipping = [], totals = {}, stillWaiting = [];
         (o.items || []).forEach((it, idx) => {
             if (selEvts.includes(it.e)) {
                 if (tempPackStatus[`${orderKey}_${idx}`]) {
                     nowShipping.push(`- [${it.e}] ${it.n}(${it.sel})`);
-                    
                     let mP = products[it.pid];
                     if (!mP || mP.n !== it.n || mP.e !== it.e) {
                         mP = products.find(p => p.n === it.n && p.e === it.e);
                     }
                     const jpyPrice = mP ? (mP.p_jpy || 0) : (it.p_jpy || 0);
                     totals[it.e] = (totals[it.e] || 0) + jpyPrice;
+                } else {
+                    stillWaiting.push(`- [${it.e}] ${it.n}(${it.sel})`);
                 }
             }
         });
-        let txt = `🌟 【33日本動物園 - 出貨對帳】 🌟\n\n👤 暱稱：${o.nick}\n\n📦 本次預計寄出：\n${nowShipping.join('\n')}\n\n🎁 滿額禮統計：\n`;
+        let txt = `🌟 【33日本動物園 - 出貨對帳】 🌟\n\n👤 暱稱：${o.nick}\n\n📦 本次預計寄出：\n${nowShipping.join('\n')}\n\n`;
+        if (stillWaiting.length > 0) {
+            txt += `⏳ 【尚在等候中】：\n${stillWaiting.join('\n')}\n\n`;
+        }
+        txt += `🎁 滿額禮統計：\n`;
         let hasBonus = false;
         for(let e in totals) { 
             let c = Math.floor(totals[e]/JPY_THRESHOLD); 
-            if (stillWaiting.length > 0) txt += `⏳ 【尚在等候中】：\n${stillWaiting.join('\n')}\n\n`;
-            if(c>0) { txt += `- ${e}：滿 ¥${totals[e]} 送 ${c} 張卡\n`; hasBonus = true; }
+            if(c > 0) { 
+                txt += `- ${e}：滿 ¥${totals[e]} 送 ${c} 張卡\n`; 
+                hasBonus = true; 
+            }
         }
         if(!hasBonus) txt += `(本次寄出內容未達滿額禮門檻)\n`;
         txt += `\n以上資訊供核對，無誤將為您安排寄出唷！`;
         navigator.clipboard.writeText(txt).then(() => alert("對帳卡已複製！"));
     }
-
-    // --- 原始其他功能 (併單、解鎖、匯出等) ---
 
     function mergeSelected() {
         const checks = Array.from(document.querySelectorAll('.merge-check:checked')); if(checks.length<2) return alert("選兩筆以上");
