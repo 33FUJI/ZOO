@@ -14,43 +14,263 @@
             --wood: #283618;
             --gray: #F4F1EA;
         }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Noto Sans TC', sans-serif; }
-        html, body { height: 100%; margin: 0; padding: 0; background: var(--gray); overflow: hidden; color: var(--wood); }
-        body { display: flex; flex-direction: column; }
 
-        /* 目錄大廳 */
-        .hall { position: fixed; inset: 0; background: var(--rice); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
-        .grid-hall { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; width: 100%; max-width: 500px; margin-top: 20px; }
-        .card-hall { background: #FFF; padding: 25px 10px; border-radius: 15px; border: 1px solid #EAE2D1; text-align: center; cursor: pointer; box-shadow: 0 4px 0 #EAE2D1; font-weight: bold; color: var(--matcha); font-size: 16px; }
-        .card-hall:active { transform: translateY(2px); box-shadow: 0 2px 0 #EAE2D1; }
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: var(--gray);
+            overflow: hidden;
+            color: var(--wood);
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 目錄大廳樣式 */
+        .hall {
+            position: fixed;
+            inset: 0;
+            background: var(--rice);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .grid-hall {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+            margin-top: 20px;
+        }
+
+        .card-hall {
+            background: #FFF;
+            padding: 25px 10px;
+            border-radius: 15px;
+            border: 1px solid #EAE2D1;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #EAE2D1;
+            font-weight: bold;
+            color: var(--matcha);
+            font-size: 16px;
+        }
+
+        .card-hall:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #EAE2D1;
+        }
 
         /* 主應用區 */
-        .app-container { display: none; flex: 1; overflow: hidden; flex-direction: row; }
-        .list-area { flex: 1; overflow-y: auto; padding: 15px; background: var(--gray); -webkit-overflow-scrolling: touch; }
-        .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; max-width: 1400px; margin: 0 auto; }
-        .prod-card { background: #FFF; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.08); min-height: 280px; }
-        .prod-name { font-size: 16px; font-weight: bold; min-height: 45px; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.4; }
-        .prod-price { color: var(--caramel); font-size: 18px; margin: 8px 0; font-weight: bold; text-align: center; }
-        .spec-area { min-height: 60px; margin-bottom: 8px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px; }
-        .qty-area { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; }
-        .btn-qty { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #DDD; background: #FFF; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
+        .app-container {
+            display: none;
+            flex: 1;
+            overflow: hidden;
+            flex-direction: row;
+        }
+
+        .list-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: var(--gray);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .prod-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .prod-card {
+            background: #FFF;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            min-height: 280px;
+        }
+
+        .prod-name {
+            font-size: 16px;
+            font-weight: bold;
+            min-height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .prod-price {
+            color: var(--caramel);
+            font-size: 18px;
+            margin: 8px 0;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .spec-area {
+            min-height: 60px;
+            margin-bottom: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .qty-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .btn-qty {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid #DDD;
+            background: #FFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+        }
 
         /* 購物車區 */
-        .cart-area { width: 360px; background: #FFF; border-left: 1px solid #DDD; display: flex; flex-direction: column; box-shadow: -2px 0 10px rgba(0,0,0,0.05); }
-        .cart-bottom { padding: 15px; border-top: 1px solid #EEE; background: #FFF; padding-bottom: calc(15px + env(safe-area-inset-bottom)); }
-        .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .cart-area {
+            width: 360px;
+            background: #FFF;
+            border-left: 1px solid #DDD;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.05);
+        }
+
+        .cart-bottom {
+            padding: 15px;
+            border-top: 1px solid #EEE;
+            background: #FFF;
+            padding-bottom: calc(15px + env(safe-area-inset-bottom));
+        }
+
+        .btn-add {
+            background: var(--matcha);
+            color: #FFF;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
 
         /* 管理面板 */
-        #admin-panel { position: fixed; inset: 0; background: #F8F9FA; z-index: 4000; display: none; flex-direction: column; }
-        .admin-header { background: var(--wood); color: #FFF; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .admin-nav { padding: 10px; background: #EEE; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #DDD; }
-        .admin-order-card { background: #FFF; border: 1px solid #EEE; border-radius: 12px; padding: 15px; margin-bottom: 15px; position: relative; }
-        .status-label { flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; background: #F0F0F0; padding: 6px; border-radius: 6px; font-weight: bold; font-size: 12px; border: 1px solid #DDD; }
+        #admin-panel {
+            position: fixed;
+            inset: 0;
+            background: #F8F9FA;
+            z-index: 4000;
+            display: none;
+            flex-direction: column;
+        }
+
+        .admin-header {
+            background: var(--wood);
+            color: #FFF;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-nav {
+            padding: 10px;
+            background: #EEE;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            border-bottom: 1px solid #DDD;
+        }
+
+        .admin-order-card {
+            background: #FFF;
+            border: 1px solid #EEE;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .status-label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            background: #F0F0F0;
+            padding: 6px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 12px;
+            border: 1px solid #DDD;
+        }
 
         /* 彈窗 */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 15px; }
-        .modal-box { background: var(--rice); padding: 25px; border-radius: 20px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
-        .input-std { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #DDD; border-radius: 10px; font-size: 15px; }
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 5000;
+            padding: 15px;
+        }
+
+        .modal-box {
+            background: var(--rice);
+            padding: 25px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .input-std {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #DDD;
+            border-radius: 10px;
+            font-size: 15px;
+        }
 
         @media (max-width: 768px) {
             .app-container { flex-direction: column; }
@@ -123,7 +343,7 @@
 </div>
 
 <script>
-    // Firebase 設定
+    // Firebase 初始化
     const firebaseConfig = {
         apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",
         authDomain: "zoo-62638.firebaseapp.com",
@@ -136,266 +356,462 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let products = [], orders = {}, cart = [], curS = {}, curQty = {}, currentEvent = "", tempPackStatus = {};
+    let products = [];
+    let orders = {};
+    let cart = [];
+    let curS = {};
+    let curQty = {};
+    let currentEvent = "";
+    let tempPackStatus = {};
 
-    // 監聽數據
-    db.ref('products').on('value', snap => { 
-        products = snap.val() || []; 
-        renderHall(); 
-        updateAdminFilter(); 
-        if(currentEvent) openShop(currentEvent); 
-    });
-    db.ref('orders').on('value', snap => { 
-        orders = snap.val() || {}; 
-        if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); 
+    // 數據監聽
+    db.ref('products').on('value', snap => {
+        products = snap.val() || [];
+        renderHall();
+        updateAdminFilter();
+        if (currentEvent) openShop(currentEvent);
     });
 
-    // 大廳功能
+    db.ref('orders').on('value', snap => {
+        orders = snap.val() || {};
+        if (document.getElementById('admin-panel').style.display === 'flex') renderAdminOrders();
+    });
+
+    // 前台功能
     function renderHall() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e && e.trim() !== "");
         document.getElementById('hall-grid').innerHTML = evts.map(e => `<div class="card-hall" onclick="openShop('${e}')">${e}</div>`).join('');
     }
+
     function updateAdminFilter() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
         const filter = document.getElementById('admin-event-filter');
         filter.innerHTML = '<option value="ALL">所有場次</option>' + evts.map(e => `<option value="${e}">${e}</option>`).join('');
     }
+
     function openShop(e) {
-        currentEvent = e; 
-        document.getElementById('hall-screen').style.display='none'; 
-        document.getElementById('main-app').style.display='flex';
+        currentEvent = e;
+        document.getElementById('hall-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'flex';
         const list = products.filter(p => p.e === e);
         document.getElementById('prod-list').innerHTML = list.map(p => {
-            const rid = products.indexOf(p); if(!curQty[rid]) curQty[rid] = 1;
+            const rid = products.indexOf(p);
+            if (!curQty[rid]) curQty[rid] = 1;
             const specArr = p.s ? p.s.replace(/，/g, ',').split(',') : [];
-            const specs = specArr.map(v => v.trim()).filter(v => v).map(v=>`<button id="s-${rid}-${v}" onclick="selSpec(${rid},'${v}')" style="border:1px solid #DDD; margin:2px; font-size:11px; background:#FFF; border-radius:4px; padding:4px 8px;">${v}</button>`).join('');
+            const specs = specArr.map(v => v.trim()).filter(v => v).map(v => `<button id="s-${rid}-${v}" onclick="selSpec(${rid},'${v}')" style="border:1px solid #DDD; margin:2px; font-size:11px; background:#FFF; border-radius:4px; padding:4px 8px;">${v}</button>`).join('');
             return `<div class="prod-card">
-                <div><div class="prod-name">${p.n}</div><div class="prod-price">$${p.p}</div><div class="spec-area">${specs}</div></div>
-                <div class="qty-area"><button class="btn-qty" onclick="updateQty(${rid},-1)">-</button><span id="qty-val-${rid}">${curQty[rid]}</span><button class="btn-qty" onclick="updateQty(${rid},1)">+</button></div>
+                <div>
+                    <div class="prod-name">${p.n}</div>
+                    <div class="prod-price">$${p.p}</div>
+                    <div class="spec-area">${specs}</div>
+                </div>
+                <div class="qty-area">
+                    <button class="btn-qty" onclick="updateQty(${rid},-1)">-</button>
+                    <span id="qty-val-${rid}">${curQty[rid]}</span>
+                    <button class="btn-qty" onclick="updateQty(${rid},1)">+</button>
+                </div>
                 <button class="btn-add" style="width:100%;" onclick="addToCart(${rid})">加入購物車</button>
             </div>`;
         }).join('');
     }
-    function selSpec(rid, v) { 
-        curS[rid] = v; 
-        document.querySelectorAll(`[id^="s-${rid}-"]`).forEach(b => b.style.background = '#FFF'); 
-        document.getElementById(`s-${rid}-${v}`).style.background = '#EAE2D1'; 
+
+    function selSpec(rid, v) {
+        curS[rid] = v;
+        document.querySelectorAll(`[id^="s-${rid}-"]`).forEach(b => b.style.background = '#FFF');
+        document.getElementById(`s-${rid}-${v}`).style.background = '#EAE2D1';
     }
-    function updateQty(rid, d) { 
-        let v = (curQty[rid] || 1) + d; if(v < 1) v = 1; curQty[rid] = v; 
-        document.getElementById(`qty-val-${rid}`).innerText = v; 
+
+    function updateQty(rid, d) {
+        let v = (curQty[rid] || 1) + d;
+        if (v < 1) v = 1;
+        curQty[rid] = v;
+        document.getElementById(`qty-val-${rid}`).innerText = v;
     }
-    function backToHall() { 
-        currentEvent = ""; 
-        document.getElementById('main-app').style.display='none'; 
-        document.getElementById('hall-screen').style.display='flex'; 
+
+    function backToHall() {
+        currentEvent = "";
+        document.getElementById('main-app').style.display = 'none';
+        document.getElementById('hall-screen').style.display = 'flex';
     }
-    
-    // 購物車功能
+
     function addToCart(rid) {
-        const p = products[rid], sA = p.s ? p.s.split(/,|，/).filter(x=>x.trim()) : [];
-        if(sA.length > 0 && !curS[rid]) return alert("請選擇規格");
+        const p = products[rid];
+        const sA = p.s ? p.s.split(/,|，/).filter(x => x.trim()) : [];
+        if (sA.length > 0 && !curS[rid]) return alert("請選擇規格");
         const t = Date.now();
-        for(let i=0; i<curQty[rid]; i++) cart.push({...p, sel: curS[rid]||"一般", pid: rid, t, p_jpy: p.p_jpy||0});
+        for (let i = 0; i < curQty[rid]; i++) {
+            cart.push({ ...p, sel: curS[rid] || "一般", pid: rid, t: t + i, p_jpy: p.p_jpy || 0 });
+        }
         renderCart();
     }
+
     function renderCart() {
-        let summ = {}; cart.forEach(it => { let k = `${it.pid}_${it.sel}`; summ[k] = (summ[k]||0)+1; });
+        let summ = {};
+        cart.forEach(it => {
+            let k = `${it.pid}_${it.sel}`;
+            summ[k] = (summ[k] || 0) + 1;
+        });
         document.getElementById('cart-items').innerHTML = Object.keys(summ).map(k => {
-            const [pid, sel] = k.split('_'); 
-            return `<div style="padding:8px 0; border-bottom:1px solid #EEE; display:flex; justify-content:space-between;"><span>${products[pid].n}(${sel}) x ${summ[k]}</span><span onclick="cart=cart.filter(x=>!(x.pid==${pid}&&x.sel=='${sel}'));renderCart();">✕</span></div>`
+            const [pid, sel] = k.split('_');
+            return `<div style="padding:8px 0; border-bottom:1px solid #EEE; display:flex; justify-content:space-between;">
+                <span>${products[pid].n}(${sel}) x ${summ[k]}</span>
+                <span style="cursor:pointer; color:red;" onclick="removeFromCart(${pid}, '${sel}')">✕</span>
+            </div>`;
         }).join('');
-        document.getElementById('cart-total').innerText = cart.reduce((a,b)=>a+b.p,0);
+        document.getElementById('cart-total').innerText = cart.reduce((a, b) => a + b.p, 0);
     }
+
+    function removeFromCart(pid, sel) {
+        cart = cart.filter(x => !(x.pid == pid && x.sel == sel));
+        renderCart();
+    }
+
     function submitOrder() {
-        const n = document.getElementById('nick').value.trim(); 
-        if(!n || cart.length===0) return alert("請填寫暱稱並選擇商品");
-        db.ref('orders').push({ 
-            nick: n, 
-            items: cart, 
-            total: cart.reduce((a,b)=>a+b.p,0), 
-            time: Date.now(), 
-            isUnlocked: false 
-        }).then(() => { 
-            alert("提交成功"); 
-            location.reload(); 
+        const n = document.getElementById('nick').value.trim();
+        if (!n || cart.length === 0) return alert("請填寫暱稱並選擇商品");
+        db.ref('orders').push({
+            nick: n,
+            items: cart,
+            total: cart.reduce((a, b) => a + b.p, 0),
+            time: Date.now(),
+            isUnlocked: false
+        }).then(() => {
+            alert("訂單已提交！");
+            location.reload();
         });
     }
 
-    // 管理員：訂單管理
+    // 管理員功能
     function renderAdminOrders() {
-        const main = document.getElementById('admin-main'), filterEvt = document.getElementById('admin-event-filter').value;
-        let pool = {}; 
-        Object.values(orders).forEach(o => (o.items||[]).forEach(it => { 
-            let sk = `${it.pid}_${it.sel}`; 
-            if(!pool[sk]) pool[sk] = []; 
-            pool[sk].push(it); 
-        }));
-        for(let k in pool) pool[k].sort((a,b) => (a.t||0) - (b.t||0));
+        const main = document.getElementById('admin-main');
+        const filterEvt = document.getElementById('admin-event-filter').value;
         
+        let pool = {};
+        Object.values(orders).forEach(o => {
+            (o.items || []).forEach(it => {
+                let sk = `${it.n}_${it.sel}`;
+                if (!pool[sk]) pool[sk] = [];
+                pool[sk].push(it);
+            });
+        });
+        for (let k in pool) pool[k].sort((a, b) => (a.t || 0) - (b.t || 0));
+
         let entries = Object.entries(orders);
-        if(filterEvt !== "ALL") entries = entries.filter(([k, o]) => (o.items||[]).some(it => it.e === filterEvt));
-        
-        main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%;" onclick="mergeSelected()">🔗 執行勾選併單</button>` + entries.sort((a,b)=>a[1].time-b[1].time).map(([k, o]) => {
+        if (filterEvt !== "ALL") {
+            entries = entries.filter(([k, o]) => (o.items || []).some(it => it.e === filterEvt));
+        }
+
+        main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%;" onclick="mergeSelected()">🔗 執行勾選併單</button>` + 
+        entries.sort((a, b) => a[1].time - b[1].time).map(([k, o]) => {
             const itemsHtml = (o.items || []).map((it, idx) => {
-                const limit = (products[it.pid]||{}).limit||999, rank = pool[`${it.pid}_${it.sel}`].indexOf(it)+1, isWin = it.fWin || rank <= limit;
+                const originP = products.find(p => p.n === it.n && p.e === it.e) || { limit: 999 };
+                const limit = originP.limit || 999;
+                const rank = pool[`${it.n}_${it.sel}`].indexOf(it) + 1;
+                const isWin = it.fWin || rank <= limit;
                 return `<div style="font-size:13px; border-bottom:1px solid #F0F0F0; padding:6px 0; display:flex; justify-content:space-between;">
-                    <div><input type="checkbox" class="msg-item-check-${k}" value="${idx}" checked> [${it.e}] ${it.n}(${it.sel}) $${it.p} <b onclick="db.ref('orders/${k}/items/${idx}').update({fWin:${!it.fWin}})" style="color:${isWin?'green':'orange'}; cursor:pointer;">${isWin?'[正]':'[補'+(rank-limit)+']'}</b></div>
+                    <div>
+                        <input type="checkbox" class="msg-item-check-${k}" value="${idx}" checked> 
+                        [${it.e}] ${it.n}(${it.sel}) $${it.p} 
+                        <b onclick="toggleItemWin('${k}', ${idx})" style="color:${isWin ? 'green' : 'orange'}; cursor:pointer;">
+                            ${isWin ? '[正]' : '[補' + (rank - limit) + ']'}
+                        </b>
+                    </div>
                     <span onclick="removeOrderItem('${k}', ${idx})" style="color:red; cursor:pointer;">🗑️</span>
                 </div>`;
             }).join('');
+
             return `<div class="admin-order-card">
                 <b>👤 ${o.nick}</b>
                 <div style="margin:8px 0;">${itemsHtml}</div>
                 <div style="display:flex; gap:10px;">
                     <button class="btn-add" style="flex:2; background:#4CAF50;" onclick="copyToLine('${k}')">📋 複製對帳明細</button>
                     <label class="status-label" style="flex:1;"><input type="checkbox" class="merge-check" value="${k}"> 併單</label>
-                    <label class="status-label" style="flex:1;"><input type="checkbox" ${o.isUnlocked?'checked':''} onchange="db.ref('orders/${k}').update({isUnlocked:this.checked})"> 解鎖</label>
+                    <label class="status-label" style="flex:1;"><input type="checkbox" ${o.isUnlocked ? 'checked' : ''} onchange="db.ref('orders/${k}').update({isUnlocked:this.checked})"> 解鎖</label>
                 </div>
-            </div>`}).join('');
-    }
-    function removeOrderItem(k, idx) { 
-        if(confirm('刪除此項商品？')) { 
-            let o=orders[k]; o.items.splice(idx,1); 
-            if(o.items.length===0) db.ref(`orders/${k}`).remove(); 
-            else db.ref(`orders/${k}`).update({items:o.items, total:o.items.reduce((a,b)=>a+b.p,0)}); 
-        } 
+            </div>`;
+        }).join('');
     }
 
-    // 管理員：商品維護
+    function toggleItemWin(ok, idx) {
+        const current = orders[ok].items[idx].fWin || false;
+        db.ref(`orders/${ok}/items/${idx}`).update({ fWin: !current });
+    }
+
+    function removeOrderItem(k, idx) {
+        if (confirm('確定刪除此商品？')) {
+            let o = orders[k];
+            o.items.splice(idx, 1);
+            if (o.items.length === 0) {
+                db.ref(`orders/${k}`).remove();
+            } else {
+                db.ref(`orders/${k}`).update({ items: o.items, total: o.items.reduce((a, b) => a + b.p, 0) });
+            }
+        }
+    }
+
     function renderAdminProds() {
         const main = document.getElementById('admin-main');
         main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px;" onclick="openEdit(-1)">＋ 新增商品</button>` + 
-            products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between; align-items:center;"><div><b>[${p.e}] ${p.n}</b><br><span style="color:#888;">¥${p.p_jpy||0}</span> / <span style="color:var(--caramel);">$${p.p}</span></div><button class="btn-add" style="background:var(--caramel);" onclick="openEdit(${i})">編輯</button></div>`).join('');
+            products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between; align-items:center;">
+                <div><b>[${p.e}] ${p.n}</b><br><span style="color:#888;">¥${p.p_jpy || 0} / $${p.p}</span></div>
+                <button class="btn-add" style="background:var(--caramel);" onclick="openEdit(${i})">編輯</button>
+            </div>`).join('');
     }
+
     function openEdit(index) {
-        const isNew = index === -1, p = isNew ? {e:'', n:'', p:0, p_jpy:0, limit:999, s:''} : products[index];
+        const isNew = index === -1;
+        const p = isNew ? { e: '', n: '', p: 0, p_jpy: 0, limit: 999, s: '' } : products[index];
         document.getElementById('modal-title').innerText = isNew ? "新增商品" : "編輯商品";
         document.getElementById('modal-body').innerHTML = `
-            活動場次：<input id="inp-e" class="input-std" value="${p.e}" placeholder="例如：日本超市">
-            商品名稱：<input id="inp-n" class="input-std" value="${p.n}">
-            台幣售價：<input id="inp-p" type="number" class="input-std" value="${p.p}">
-            日幣單價(滿額用)：<input id="inp-pj" type="number" class="input-std" value="${p.p_jpy||0}">
-            限購數量：<input id="inp-l" type="number" class="input-std" value="${p.limit}">
-            規格選項：<input id="inp-s" class="input-std" value="${p.s}" placeholder="紅,藍 (逗號隔開)">
+            場次：<input id="inp-e" class="input-std" value="${p.e}">
+            名稱：<input id="inp-n" class="input-std" value="${p.n}">
+            台幣：<input id="inp-p" type="number" class="input-std" value="${p.p}">
+            日幣：<input id="inp-pj" type="number" class="input-std" value="${p.p_jpy || 0}">
+            限購：<input id="inp-l" type="number" class="input-std" value="${p.limit}">
+            規格：<input id="inp-s" class="input-std" value="${p.s}" placeholder="規格用逗號隔開">
         `;
-        document.getElementById('edit-modal').style.display='flex';
+        document.getElementById('edit-modal').style.display = 'flex';
         document.getElementById('modal-save').onclick = () => {
-            let nP = [...products], obj = { e:document.getElementById('inp-e').value, n:document.getElementById('inp-n').value, p:parseInt(document.getElementById('inp-p').value), p_jpy:parseInt(document.getElementById('inp-pj').value), limit:parseInt(document.getElementById('inp-l').value), s:document.getElementById('inp-s').value };
-            if(isNew) nP.push(obj); else nP[index] = obj;
-            db.ref('products').set(nP).then(()=> { alert("儲存成功"); document.getElementById('edit-modal').style.display='none'; });
+            let nP = [...products];
+            let obj = {
+                e: document.getElementById('inp-e').value,
+                n: document.getElementById('inp-n').value,
+                p: parseInt(document.getElementById('inp-p').value),
+                p_jpy: parseInt(document.getElementById('inp-pj').value),
+                limit: parseInt(document.getElementById('inp-l').value),
+                s: document.getElementById('inp-s').value
+            };
+            if (isNew) nP.push(obj); else nP[index] = obj;
+            db.ref('products').set(nP).then(() => {
+                document.getElementById('edit-modal').style.display = 'none';
+            });
         };
     }
 
-    // 分類對帳複製
-    function copyToLine(k) {
-        const o = orders[k]; if(!o) return;
-        let pool = {}; Object.values(orders).forEach(ord => (ord.items||[]).forEach(it => { let sk=`${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk]=[]; pool[sk].push(it); }));
-        for(let sk in pool) pool[sk].sort((a,b)=>(a.t||0)-(b.t||0));
-        let win = [], wait = [];
-        (o.items || []).forEach(it => {
-            const limit = (products[it.pid]||{}).limit||999, rank = pool[`${it.pid}_${it.sel}`].indexOf(it)+1, isWin = it.fWin || rank <= limit;
-            if(isWin) win.push(`- [${it.e}] ${it.n}(${it.sel}) $${it.p}`); else wait.push(`- [${it.e}] ${it.n}(${it.sel})`);
-        });
-        let txt = `🌟 【33日本動物園 - 訂單明細】 🌟\n\n👤 暱稱：${o.nick}\n\n✅ 【已成功訂購】：\n${win.length?win.join('\n'):'(無)'}\n`;
-        if(wait.length) txt += `\n⏳ 【尚在等候中】：\n${wait.join('\n')}\n`;
-        txt += `\n💰 總計：$${o.total}\n\n以上資訊請核對，如有誤請告知唷！謝謝您 🙏`;
-        navigator.clipboard.writeText(txt).then(()=>alert("明細已複製"));
-    }
-
-    // 配貨助手：正補位判斷核心
+    // 配貨助手核心邏輯
     function openPackAssistant() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
         document.getElementById('modal-title').innerText = "📦 配貨助手";
-        document.getElementById('modal-body').innerHTML = `<div id="step0-area"><b>選擇場次：</b><br>${evts.map(e=>`<div><input type="checkbox" class="evt-sel" value="${e}"> ${e}</div>`).join('')}</div><div id="step1-area" style="display:none;"></div><div id="step2-area" style="display:none;"></div>`;
-        document.getElementById('edit-modal').style.display='flex';
+        document.getElementById('modal-body').innerHTML = `
+            <div id="step0-area">
+                <b>選擇場次：</b><br>
+                ${evts.map(e => `<div><input type="checkbox" class="evt-sel" value="${e}"> ${e}</div>`).join('')}
+            </div>
+            <div id="step1-area" style="display:none;"></div>
+            <div id="step2-area" style="display:none;"></div>
+        `;
+        document.getElementById('edit-modal').style.display = 'flex';
         document.getElementById('modal-save').innerText = "下一步";
         document.getElementById('modal-save').onclick = () => {
-            const selEvts = Array.from(document.querySelectorAll('.evt-sel:checked')).map(el=>el.value);
-            if(!selEvts.length) return alert("請選場次");
+            const selEvts = Array.from(document.querySelectorAll('.evt-sel:checked')).map(el => el.value);
+            if (!selEvts.length) return alert("請選擇場次");
             showPackOrders(selEvts);
         };
     }
+
     function showPackOrders(selEvts) {
         let html = `<b>選擇訂單：</b><div style="max-height:300px; overflow-y:auto; margin-top:10px;">`;
-        Object.entries(orders).forEach(([k,o]) => { if((o.items||[]).some(it=>selEvts.includes(it.e))) html += `<div><input type="checkbox" class="ord-sel" value="${k}"> ${o.nick}</div>`; });
-        document.getElementById('step0-area').style.display='none';
-        const s1 = document.getElementById('step1-area'); s1.innerHTML = html+'</div>'; s1.style.display='block';
+        Object.entries(orders).forEach(([k, o]) => {
+            if ((o.items || []).some(it => selEvts.includes(it.e))) {
+                html += `<div><input type="checkbox" class="ord-sel" value="${k}"> ${o.nick}</div>`;
+            }
+        });
+        document.getElementById('step0-area').style.display = 'none';
+        const s1 = document.getElementById('step1-area');
+        s1.innerHTML = html + '</div>';
+        s1.style.display = 'block';
         document.getElementById('modal-save').onclick = () => {
-            const keys = Array.from(document.querySelectorAll('.ord-sel:checked')).map(el=>el.value);
-            if(!keys.length) return alert("請選訂單");
+            const keys = Array.from(document.querySelectorAll('.ord-sel:checked')).map(el => el.value);
+            if (!keys.length) return alert("請選擇訂單");
             renderPackDetail(keys, selEvts);
         };
     }
+
     function renderPackDetail(keys, selEvts) {
         let html = "";
         keys.forEach(k => {
-            const o = orders[k]; let catT = {};
-            (o.items||[]).forEach(it => { if(selEvts.includes(it.e)){ let mP = products.find(p=>p.n===it.n && p.e===it.e) || products[it.pid] || {}; catT[it.e] = (catT[it.e]||0) + (mP.p_jpy||0); } });
-            let bonus = ""; for(let e in catT) { let c = Math.floor(catT[e]/6000); if(c>0) bonus += `🎁 ${e}: 滿 ¥${catT[e]} 送 ${c} 張卡<br>`; }
+            const o = orders[k];
+            let catT = {};
+            (o.items || []).forEach(it => {
+                if (selEvts.includes(it.e)) {
+                    let mP = products.find(p => p.n === it.n && p.e === it.e) || {};
+                    catT[it.e] = (catT[it.e] || 0) + (it.p_jpy || mP.p_jpy || 0);
+                }
+            });
+            let bonus = "";
+            for (let e in catT) {
+                let count = Math.floor(catT[e] / 6000);
+                if (count > 0) bonus += `🎁 ${e}: 滿 ¥${catT[e]} 送 ${count} 張卡<br>`;
+            }
             html += `<div style="background:#FFF; padding:12px; margin-bottom:15px; border-radius:12px; border:1px solid #EAE2D1;">
-                <div style="display:flex; justify-content:space-between; align-items:center;"><b>👤 ${o.nick}</b><button onclick="copyPackCheck('${k}', '${selEvts.join(",")}')">📋 複製對帳卡</button></div>
-                <div style="color:red; font-size:12px; font-weight:bold; margin-top:5px;">${bonus}</div><hr style="border:0; border-top:1px solid #EEE; margin:8px 0;">`;
-            (o.items||[]).forEach((it, idx) => {
-                if(selEvts.includes(it.e)){
-                    const isS = it.isShipped === true; if(tempPackStatus[`${k}_${idx}`]===undefined) tempPackStatus[`${k}_${idx}`]=isS;
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <b>👤 ${o.nick}</b>
+                    <button onclick="copyPackCheck('${k}', '${selEvts.join(",")}')">📋 複製對帳卡</button>
+                </div>
+                <div style="color:red; font-size:12px; font-weight:bold; margin-top:5px;">${bonus}</div>
+                <hr style="border:0; border-top:1px solid #EEE; margin:8px 0;">`;
+            
+            (o.items || []).forEach((it, idx) => {
+                if (selEvts.includes(it.e)) {
+                    if (tempPackStatus[`${k}_${idx}`] === undefined) tempPackStatus[`${k}_${idx}`] = it.isShipped || false;
                     const isC = tempPackStatus[`${k}_${idx}`];
-                    html += `<div onclick="tempPackStatus['${k}_${idx}']=!${isC};renderPackDetail(['${keys.join("','")}'],['${selEvts.join("','")}'])" style="cursor:pointer; padding:8px; border:1px solid ${isC?'#BC6C25':'#EEE'}; margin:5px 0; border-radius:6px; background:${isC?'#FEF9EF':'#FFF'};">
-                        <span style="font-size:16px;">${isC?'✅':'⬜'}</span> ${it.n} (${it.sel})
+                    html += `<div onclick="togglePackStatus('${k}', ${idx}, '${keys.join("','")}', '${selEvts.join("','")}')" 
+                        style="cursor:pointer; padding:8px; border:1px solid ${isC ? '#BC6C25' : '#EEE'}; margin:5px 0; border-radius:6px; background:${isC ? '#FEF9EF' : '#FFF'};">
+                        <span style="font-size:16px;">${isC ? '✅' : '⬜'}</span> ${it.n} (${it.sel})
                     </div>`;
                 }
             });
             html += `</div>`;
         });
-        document.getElementById('step1-area').style.display='none';
-        const s2 = document.getElementById('step2-area'); s2.innerHTML = html; s2.style.display='block';
-        document.getElementById('modal-save').innerText = "🚀 更新狀態";
+        document.getElementById('step1-area').style.display = 'none';
+        const s2 = document.getElementById('step2-area');
+        s2.innerHTML = html;
+        s2.style.display = 'block';
+        document.getElementById('modal-save').innerText = "🚀 更新出貨狀態";
         document.getElementById('modal-save').onclick = () => {
-            let ups = {}; for(let key in tempPackStatus) { let [ok, idx] = key.split('_'); ups[`orders/${ok}/items/${idx}/isShipped`] = tempPackStatus[key]; }
-            db.ref().update(ups).then(()=> { alert("狀態更新成功！"); location.reload(); });
+            let updates = {};
+            for (let key in tempPackStatus) {
+                let [ok, idx] = key.split('_');
+                updates[`orders/${ok}/items/${idx}/isShipped`] = tempPackStatus[key];
+            }
+            db.ref().update(updates).then(() => {
+                alert("狀態更新成功！");
+                location.reload();
+            });
         };
     }
 
+    function togglePackStatus(k, idx, keysStr, evtsStr) {
+        tempPackStatus[`${k}_${idx}`] = !tempPackStatus[`${k}_${idx}`];
+        renderPackDetail(keysStr.split("','"), evtsStr.split("','"));
+    }
+
     function copyPackCheck(k, evtsStr) {
-        const o = orders[k], evts = evtsStr.split(','), JPY_LIMIT = 6000;
-        let pool = {}; Object.values(orders).forEach(ord => (ord.items || []).forEach(it => { let sk = `${it.pid}_${it.sel}`; if (!pool[sk]) pool[sk] = []; pool[sk].push(it); }));
+        const o = orders[k];
+        const evts = evtsStr.split(',');
+        const JPY_LIMIT = 6000;
+        
+        // 全域排隊池
+        let pool = {};
+        Object.values(orders).forEach(ord => {
+            (ord.items || []).forEach(it => {
+                let sk = `${it.n}_${it.sel}`;
+                if (!pool[sk]) pool[sk] = [];
+                pool[sk].push(it);
+            });
+        });
         for (let sk in pool) pool[sk].sort((a, b) => (a.t || 0) - (b.t || 0));
 
         let win = [], wait = [], totals = {};
+
         (o.items || []).forEach((it, idx) => {
-            if (evts.includes(it.e) && tempPackStatus[`${k}_${idx}`]) {
-                const pInfo = products[it.pid] || {};
-                const limit = pInfo.limit || 999, rank = pool[`${it.pid}_${it.sel}`].indexOf(it) + 1, isWin = it.fWin || rank <= limit;
-                if (isWin) {
+            // 只處理本次場次且園長在配貨助手中有勾選(✅)的商品
+            if (evts.includes(it.e) && tempPackStatus[`${k}_${idx}`] === true) {
+                const originP = products.find(p => p.n === it.n && p.e === it.e) || { limit: 999 };
+                const limit = originP.limit || 999;
+                const sk = `${it.n}_${it.sel}`;
+                const rank = pool[sk].indexOf(it) + 1;
+                const isActuallyWin = it.fWin === true || rank <= limit;
+
+                if (isActuallyWin) {
                     win.push(`- [${it.e}] ${it.n}(${it.sel})`);
-                    let mP = products.find(p => p.n === it.n && p.e === it.e) || products[it.pid] || {};
-                    totals[it.e] = (totals[it.e] || 0) + (mP.p_jpy || 0);
+                    totals[it.e] = (totals[it.e] || 0) + (it.p_jpy || originP.p_jpy || 0);
                 } else {
                     wait.push(`- [${it.e}] ${it.n}(${it.sel})`);
                 }
             }
         });
-        let bonusTxt = ""; for (let e in totals) { let c = Math.floor(totals[e] / JPY_LIMIT); if (c > 0) bonusTxt += `- ${e}：滿 ¥${totals[e]} 送 ${c} 張卡\n`; }
+
+        let bonusTxt = "";
+        for (let e in totals) {
+            let count = Math.floor(totals[e] / JPY_LIMIT);
+            if (count > 0) bonusTxt += `- ${e}：滿 ¥${totals[e]} 送 ${count} 張卡\n`;
+        }
+
         let txt = `🌟 【33日本動物園 - 出貨對帳】 🌟\n\n👤 暱稱：${o.nick}\n\n✅ 【已成功訂購】：\n${win.length ? win.join('\n') : '(無)'}\n`;
-        if (wait.length > 0) txt += `\n⏳ 【尚在等候中】：\n${wait.join('\n')}\n`;
+        if (wait.length > 0) {
+            txt += `\n⏳ 【尚在等候中】：\n${wait.join('\n')}\n`;
+        }
         txt += `\n🎁 滿額禮：\n${bonusTxt || '(未達滿額門檻)'}\n\n以上資訊請核對，如有誤請告知唷！謝謝您 🙏`;
-        navigator.clipboard.writeText(txt).then(() => alert("出貨對帳卡已分類複製！"));
+        
+        navigator.clipboard.writeText(txt).then(() => alert("出貨對帳卡已複製！"));
     }
 
-    // 併單與其他
+    // 併單與其他工具
     function mergeSelected() {
-        const checks = Array.from(document.querySelectorAll('.merge-check:checked')); if(checks.length<2) return alert("請至少勾選兩筆");
-        const keys = checks.map(el => el.value); let items = [], total = 0;
-        keys.forEach(k => { items = items.concat(orders[k].items||[]); total += (orders[k].total||0); });
-        db.ref('orders').push({ nick: orders[keys[0]].nick, items, total, time: Date.now(), isUnlocked: true }).then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); alert("併單完成"); });
+        const checks = Array.from(document.querySelectorAll('.merge-check:checked'));
+        if (checks.length < 2) return alert("請至少勾選兩筆訂單");
+        const keys = checks.map(el => el.value);
+        let items = [], total = 0;
+        keys.forEach(k => {
+            items = items.concat(orders[k].items || []);
+            total += (orders[k].total || 0);
+        });
+        db.ref('orders').push({
+            nick: orders[keys[0]].nick,
+            items: items,
+            total: total,
+            time: Date.now(),
+            isUnlocked: true
+        }).then(() => {
+            keys.forEach(k => db.ref(`orders/${k}`).remove());
+            alert("併單成功！");
+        });
     }
-    function unlockAllOrders() { if(confirm("一鍵解鎖？")) { let ups = {}; Object.keys(orders).forEach(k => ups[`${k}/isUnlocked`] = true); db.ref('orders').update(ups); } }
-    function adminLogin() { if(prompt("管理員密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; renderAdminProds(); } }
+
+    function unlockAllOrders() {
+        if (confirm("確定一鍵解鎖所有訂單？")) {
+            let ups = {};
+            Object.keys(orders).forEach(k => ups[`${k}/isUnlocked`] = true);
+            db.ref('orders').update(ups);
+        }
+    }
+
+    function adminLogin() {
+        if (prompt("請輸入管理員密碼") === "1239") {
+            document.getElementById('admin-panel').style.display = 'flex';
+            renderAdminProds();
+        }
+    }
+
+    function copyToLine(k) {
+        const o = orders[k];
+        let pool = {};
+        Object.values(orders).forEach(ord => {
+            (ord.items || []).forEach(it => {
+                let sk = `${it.n}_${it.sel}`;
+                if (!pool[sk]) pool[sk] = [];
+                pool[sk].push(it);
+            });
+        });
+        for (let sk in pool) pool[sk].sort((a, b) => (a.t || 0) - (b.t || 0));
+
+        let win = [], wait = [];
+        (o.items || []).forEach(it => {
+            const originP = products.find(p => p.n === it.n && p.e === it.e) || { limit: 999 };
+            const limit = originP.limit || 999;
+            const rank = pool[`${it.n}_${it.sel}`].indexOf(it) + 1;
+            const isWin = it.fWin || rank <= limit;
+            if (isWin) win.push(`- [${it.e}] ${it.n}(${it.sel}) $${it.p}`);
+            else wait.push(`- [${it.e}] ${it.n}(${it.sel})`);
+        });
+
+        let txt = `🌟 【33日本動物園 - 訂單明細】 🌟\n\n👤 暱稱：${o.nick}\n\n✅ 【已成功訂購】：\n${win.length ? win.join('\n') : '(無)'}\n`;
+        if (wait.length) txt += `\n⏳ 【尚在等候中】：\n${wait.join('\n')}\n`;
+        txt += `\n💰 總計：$${o.total}\n\n以上資訊請核對，如有誤請告知唷！謝謝您 🙏`;
+        navigator.clipboard.writeText(txt).then(() => alert("訂單明細已複製"));
+    }
+
     function performSearch() {
         const n = document.getElementById('search-nick').value.trim().toLowerCase();
         let res = Object.entries(orders).filter(([k, o]) => o.nick.toLowerCase() === n);
-        document.getElementById('search-results-area').innerHTML = res.map(([k, o]) => `<div style="background:#FFF; padding:10px; margin-top:5px; border-radius:8px;">${new Date(o.time).toLocaleString()}<br>總計:$${o.total}</div>`).join('');
+        document.getElementById('search-results-area').innerHTML = res.map(([k, o]) => 
+            `<div style="background:#FFF; padding:10px; margin-top:5px; border-radius:8px;">
+                ${new Date(o.time).toLocaleString()}<br>總計: $${o.total}
+            </div>`
+        ).join('');
     }
+
     function askExport(type) { alert("統計功能開發中"); }
 </script>
 </body>
