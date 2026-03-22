@@ -13,7 +13,7 @@
         html, body { height: 100%; margin: 0; padding: 0; background: var(--rice); overflow: hidden; }
         body { display: flex; flex-direction: column; }
 
-        /* 首頁入口 (對照圖五) */
+        /* 首頁入口 */
         .hall { position: fixed; inset: 0; background: var(--rice); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .hall h1 { color: var(--matcha); margin-bottom: 35px; font-size: 32px; font-weight: bold; letter-spacing: 3px; }
         .grid-hall { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 20px; width: 100%; max-width: 600px; margin-bottom: 30px; }
@@ -35,7 +35,7 @@
         .admin-nav { padding: 12px; display: flex; gap: 8px; border-bottom: 1px solid #DDD; background: #EEE; flex-wrap: wrap; }
         .btn-nav { border: none; padding: 10px 16px; border-radius: 8px; color: #FFF; font-weight: bold; cursor: pointer; font-size: 14px; }
 
-        /* 訂單明細卡片 (單品刪除 + 滿額卡) */
+        /* 訂單卡片 */
         .admin-order-card { background: #FFF; border: 1px solid #E0E0E0; border-radius: 12px; padding: 15px; margin: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .order-title { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gray); padding-bottom: 10px; margin-bottom: 10px; }
         .order-item-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; padding: 6px 0; border-bottom: 1px dashed #EEE; }
@@ -138,8 +138,11 @@
 
     function renderAdminOrders() {
         let html = "";
-        Object.entries(orders).sort((a,b)=>b[1].time - a[1].time).forEach(([k, o]) => {
-            const jpyTotal = o.items.reduce((acc, it) => acc + (parseInt(it.jp) || 0), 0);
+        // 核心修正：使用 Object.keys 遍歷，新下單會按順序排在最後面
+        const keys = Object.keys(orders);
+        keys.forEach(k => {
+            const o = orders[k];
+            const jpyTotal = (o.items || []).reduce((acc, it) => acc + (parseInt(it.jp) || 0), 0);
             const giftCards = Math.floor(jpyTotal / 6000); 
             
             let itemsList = (o.items || []).map((it, idx) => `
@@ -160,7 +163,7 @@
                     </div>
                     <div>${itemsList}</div>
                     <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
-                        <span style="background:#E1F5FE; padding:2px 8px; border-radius:4px; font-size:12px; color:#01579B;">🎟️ 滿額卡(¥6000)：${giftCards} 張 (日幣共 ¥${jpyTotal})</span>
+                        <span style="background:#E1F5FE; padding:2px 8px; border-radius:4px; font-size:12px; color:#01579B;">🎟️ 滿額卡(¥6000)：${giftCards} 張 (日幣 ¥${jpyTotal})</span>
                         <b style="color:var(--caramel);">台幣總計：$${o.total}</b>
                     </div>
                 </div>
@@ -174,14 +177,14 @@
         const o = orders[orderKey];
         o.items.splice(itemIdx, 1);
         o.total = o.items.reduce((a,b) => a + (parseInt(b.p) || 0), 0);
-        db.ref('orders/' + orderKey).set(o);
+        db.ref('orders/' + orderKey).set(o); 
     }
 
     function deleteOrder(k) { if(confirm("確定整筆刪除？")) db.ref('orders/'+k).remove(); }
 
     function copyToLine(k) {
         const o = orders[k];
-        const jpyTotal = o.items.reduce((acc, it) => acc + (parseInt(it.jp) || 0), 0);
+        const jpyTotal = (o.items || []).reduce((acc, it) => acc + (parseInt(it.jp) || 0), 0);
         const giftCards = Math.floor(jpyTotal / 6000);
         let txt = `👤 ${o.nick}\n` + o.items.map(it => `- ${it.n} $${it.p}`).join('\n') + `\n💰 台幣總計：$${o.total}\n🎟️ 滿額卡：${giftCards} 張 (日幣 ¥${jpyTotal})`;
         navigator.clipboard.writeText(txt).then(() => alert("明細已複製"));
@@ -190,7 +193,7 @@
     function renderAdminProds() {
         let html = `<div style="padding:15px;"><button class="btn-main" onclick="editProd(null)">+ 新增商品</button></div>`;
         products.forEach((p, idx) => {
-            html += `<div class="order-row" style="background:#FFF; margin:0 10px 5px 10px; border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #EEE;">
+            html += `<div style="background:#FFF; margin:5px 10px; border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center;">
                 <span>[${p.e}] ${p.n} ($${p.p} / ¥${p.jp || 0})</span>
                 <div><button class="btn-action-sm" onclick="editProd(${idx})">改</button><button class="btn-action-sm" style="color:red;" onclick="deleteProd(${idx})">刪</button></div>
             </div>`;
@@ -237,7 +240,8 @@
 
     function startPacking(selEvts) {
         let html = "";
-        Object.entries(orders).forEach(([k, o]) => {
+        Object.keys(orders).forEach(k => {
+            const o = orders[k];
             if (o.items && o.items.some(it => selEvts.includes(it.e))) {
                 html += `<div style="margin-bottom:15px; border:1px solid #CCC; padding:15px; border-radius:10px; background:#FFF;">
                     <div style="display:flex; justify-content:space-between; margin-bottom:10px;"><b>👤 ${o.nick}</b> <button class="btn-action-sm" onclick="copyPackCard('${k}', '${selEvts.join(',')}')">複製通知</button></div>`;
