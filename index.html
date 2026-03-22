@@ -90,9 +90,9 @@
         <button class="btn-add" onclick="renderAdminOrders()">訂單管理</button>
         <button class="btn-add" style="background:#BC6C25;" onclick="unlockAllOrders()">🔓 一鍵全開</button>
         <button class="btn-add" style="background:#888;" onclick="renderAdminProds()">商品維護</button>
-        <button class="btn-add" style="background:#E07A5F;" onclick="openPackAssistant()">📦 配貨出貨助手</button>
-        <button class="btn-add" style="background:#4361EE;" onclick="askExport('summary')">📊 統計採購</button>
-        <button class="btn-add" style="background:#7209B7;" onclick="askExport('detail')">📋 匯出明細</button>
+        <button class="btn-add" style="background:#E07A5F;" onclick="openPackAssistant()">📦 配貨助手</button>
+        <button class="btn-add" style="background:#4361EE;" onclick="askExport('summary')">📊 統計</button>
+        <button class="btn-add" style="background:#7209B7;" onclick="askExport('detail')">📋 明細</button>
     </div>
     <div id="admin-main" style="flex:1; overflow-y:auto; padding:15px; background:var(--gray);"></div>
 </div>
@@ -131,13 +131,12 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let products = [], orders = {}, cart = [], curS = {}, curQty = {}, currentEvent = "";
-    let tempPackStatus = {}; 
+    let products = [], orders = {}, cart = [], curS = {}, curQty = {}, currentEvent = "", tempPackStatus = {};
 
     db.ref('products').on('value', snap => { 
         products = snap.val() || []; 
         renderHall(); 
-        updateAdminFilter();
+        updateAdminFilter(); 
         if(currentEvent) openShop(currentEvent); 
     });
     db.ref('orders').on('value', snap => { 
@@ -174,13 +173,11 @@
     
     function addToCart(rid) {
         const p = products[rid], sA = p.s ? p.s.split(/,|，/).filter(x=>x.trim()) : [];
-        if(sA.length > 0 && !curS[rid]) return alert("選規格");
-        const t = Date.now(); 
-        // 提交訂單時帶入當下的日幣單價備份
+        if(sA.length > 0 && !curS[rid]) return alert("請選擇規格");
+        const t = Date.now();
         for(let i=0; i<curQty[rid]; i++) cart.push({...p, sel: curS[rid]||"一般", pid: rid, t, p_jpy: p.p_jpy||0});
         renderCart();
     }
-
     function renderCart() {
         let summ = {}; cart.forEach(it => { let k = `${it.pid}_${it.sel}`; summ[k] = (summ[k]||0)+1; });
         document.getElementById('cart-items').innerHTML = Object.keys(summ).map(k => {
@@ -188,250 +185,206 @@
         }).join('');
         document.getElementById('cart-total').innerText = cart.reduce((a,b)=>a+b.p,0);
     }
-
     function submitOrder() {
         const n = document.getElementById('nick').value.trim(); if(!n || cart.length===0) return alert("請填寫完整");
-        db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), isUnlocked: false }).then(() => { alert("成功"); location.reload(); });
+        db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), isUnlocked: false }).then(() => { alert("提交成功"); location.reload(); });
     }
 
-    function removeOrderItem(orderKey, itemIdx) {
-        if(!confirm('確定要從訂單中刪除此項商品嗎？')) return;
-        let o = orders[orderKey]; o.items.splice(itemIdx, 1);
-        if(o.items.length === 0) { db.ref(`orders/${orderKey}`).remove(); }
-        else { o.total = o.items.reduce((a, b) => a + (b.p || 0), 0); db.ref(`orders/${orderKey}`).update({ items: o.items, total: o.total }); }
-    }
+    // --- 管理員：訂單管理 ---
 
     function renderAdminOrders() {
         const main = document.getElementById('admin-main'), filterEvt = document.getElementById('admin-event-filter').value;
         let pool = {}; Object.values(orders).forEach(o => (o.items||[]).forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; pool[sk].push(it); }));
         for(let k in pool) pool[k].sort((a,b) => (a.t||0) - (b.t||0));
-        let orderEntries = Object.entries(orders); if (filterEvt !== "ALL") orderEntries = orderEntries.filter(([k, o]) => (o.items || []).some(it => it.e === filterEvt));
         
-        main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%;" onclick="mergeSelected()">🔗 併單</button>` + orderEntries.sort((a,b)=>a[1].time-b[1].time).map(([k, o]) => {
+        let entries = Object.entries(orders);
+        if(filterEvt !== "ALL") entries = entries.filter(([k, o]) => (o.items||[]).some(it => it.e === filterEvt));
+        
+        main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%;" onclick="mergeSelected()">🔗 執行勾選併單</button>` + entries.sort((a,b)=>a[1].time-b[1].time).map(([k, o]) => {
             const itemsHtml = (o.items || []).map((it, idx) => {
                 const limit = (products[it.pid]||{}).limit||999, rank = pool[`${it.pid}_${it.sel}`].indexOf(it)+1, isWin = it.fWin || rank <= limit;
-                const isShipped = it.isShipped === true; 
-                return `<div style="font-size:13px; border-bottom:1px solid #F0F0F0; padding:6px 0; display:flex; justify-content:space-between; align-items:center; ${isShipped ? 'background:#F9F9F9; opacity:0.8;' : ''}">
-                    <div style="${isShipped ? 'text-decoration:line-through; color:#AAA;' : ''}">
-                        <input type="checkbox" class="msg-item-check-${k}" value="${idx}" checked>
-                        <span>[${it.e}] ${it.n}(${it.sel}) $${it.p} ${isShipped ? '<b>[已出]</b>' : ''} <b onclick="db.ref('orders/${k}/items/${idx}').update({fWin:${!it.fWin}})" style="color:${isWin?'green':'orange'}; cursor:pointer;">${isWin?'[正]':'[補'+(rank-limit)+']'}</b></span>
-                    </div>
-                    <span onclick="removeOrderItem('${k}', ${idx})" style="color:red; cursor:pointer; font-size:11px; padding:2px 5px; border:1px solid red; border-radius:4px;">🗑️ 刪除</span>
+                return `<div style="font-size:13px; border-bottom:1px solid #F0F0F0; padding:6px 0; display:flex; justify-content:space-between;">
+                    <div><input type="checkbox" class="msg-item-check-${k}" value="${idx}" checked> [${it.e}] ${it.n}(${it.sel}) $${it.p} <b onclick="db.ref('orders/${k}/items/${idx}').update({fWin:${!it.fWin}})" style="color:${isWin?'green':'orange'}; cursor:pointer;">${isWin?'[正]':'[補'+(rank-limit)+']'}</b></div>
+                    <span onclick="removeOrderItem('${k}', ${idx})" style="color:red; cursor:pointer;">🗑️</span>
                 </div>`;
             }).join('');
             return `<div class="admin-order-card">
-                <div style="display:flex; justify-content:space-between;"><span><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> <b>${o.nick}</b></span><button onclick="if(confirm('整筆刪除？'))db.ref('orders/${k}').remove()" style="color:red; background:none; border:none;">✕</button></div>
+                <b>👤 ${o.nick}</b>
                 <div style="margin:8px 0;">${itemsHtml}</div>
-                <button class="btn-add" style="width:100%; margin-bottom:5px; background:#4CAF50;" onclick="copyToLine('${k}')">📋 複製明細</button>
-                <div style="display:flex; gap:5px;"><label class="status-label"><input type="checkbox" ${o.isUnlocked?'checked':''} onchange="db.ref('orders/${k}').update({isUnlocked:this.checked})">解鎖</label></div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-add" style="flex:2; background:#4CAF50;" onclick="copyToLine('${k}')">📋 複製對帳明細</button>
+                    <label class="status-label" style="flex:1;"><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> 併單</label>
+                    <label class="status-label" style="flex:1;"><input type="checkbox" ${o.isUnlocked?'checked':''} onchange="db.ref('orders/${k}').update({isUnlocked:this.checked})"> 解鎖</label>
+                </div>
             </div>`}).join('');
     }
 
+    function removeOrderItem(k, idx) { 
+        if(confirm('刪除此項商品？')) { 
+            let o=orders[k]; o.items.splice(idx,1); 
+            if(o.items.length===0) db.ref(`orders/${k}`).remove(); 
+            else db.ref(`orders/${k}`).update({items:o.items, total:o.items.reduce((a,b)=>a+b.p,0)}); 
+        } 
+    }
+
+    // --- 管理員：商品維護 ---
+
     function renderAdminProds() {
         const main = document.getElementById('admin-main');
-        main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px;" onclick="openEdit(-1)">＋ 新增上架</button>` + 
-            products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between; align-items:center;"><div><b>[${p.e}] ${p.n}</b><br>$${p.p} <span style="color:#888;">(¥${p.p_jpy || 0})</span></div><button class="btn-add" style="background:var(--caramel);" onclick="openEdit(${i})">編輯</button></div>`).join('');
+        main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px;" onclick="openEdit(-1)">＋ 新增商品上架</button>` + 
+            products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between; align-items:center;"><div><b>[${p.e}] ${p.n}</b><br><span style="color:#888;">¥${p.p_jpy||0}</span> / <span style="color:var(--caramel);">$${p.p}</span></div><button class="btn-add" style="background:var(--caramel);" onclick="openEdit(${i})">編輯</button></div>`).join('');
     }
 
     function openEdit(index) {
-        const isNew = index === -1;
-        const p = isNew ? {e:'', n:'', p:0, p_jpy:0, limit:999, s:''} : products[index];
-        document.getElementById('modal-title').innerText = isNew ? "新增上架" : "編輯商品";
+        const isNew = index === -1, p = isNew ? {e:'', n:'', p:0, p_jpy:0, limit:999, s:''} : products[index];
+        document.getElementById('modal-title').innerText = isNew ? "新增商品" : "編輯商品";
         document.getElementById('modal-body').innerHTML = `
-            活動場次：<input id="inp-e" class="input-std" value="${p.e || ''}" placeholder="例如：日本超市">
-            商品名稱：<input id="inp-n" class="input-std" value="${p.n || ''}">
-            台幣售價：<input id="inp-p" type="number" class="input-std" value="${p.p || 0}">
-            日幣單價(滿額試算)：<input id="inp-pj" type="number" class="input-std" value="${p.p_jpy || 0}">
-            限購數量：<input id="inp-l" type="number" class="input-std" value="${p.limit || 999}">
-            規格選項：<input id="inp-s" class="input-std" value="${p.s || ''}" placeholder="紅,藍 (逗號隔開)">
+            活動場次：<input id="inp-e" class="input-std" value="${p.e}" placeholder="例如：日本超市">
+            商品名稱：<input id="inp-n" class="input-std" value="${p.n}">
+            台幣售價：<input id="inp-p" type="number" class="input-std" value="${p.p}">
+            日幣單價(滿額用)：<input id="inp-pj" type="number" class="input-std" value="${p.p_jpy||0}">
+            限購數量：<input id="inp-l" type="number" class="input-std" value="${p.limit}">
+            規格選項：<input id="inp-s" class="input-std" value="${p.s}" placeholder="紅,藍 (逗號隔開)">
         `;
-        document.getElementById('edit-modal').style.display = 'flex';
+        document.getElementById('edit-modal').style.display='flex';
         document.getElementById('modal-save').onclick = () => {
-            const vE = document.getElementById('inp-e').value.trim(), vN = document.getElementById('inp-n').value.trim(), vP = parseInt(document.getElementById('inp-p').value)||0, vPJ = parseInt(document.getElementById('inp-pj').value)||0, vL = parseInt(document.getElementById('inp-l').value)||999, vS = document.getElementById('inp-s').value.trim();
-            if (!vN) return alert("請輸入名稱");
-            let nP = [...products]; const obj = { e: vE, n: vN, p: vP, p_jpy: vPJ, limit: vL, s: vS };
-            if (isNew) nP.push(obj); else nP[index] = obj;
-            db.ref('products').set(nP).then(() => { alert("成功"); document.getElementById('edit-modal').style.display = 'none'; });
+            let nP = [...products], obj = { e:document.getElementById('inp-e').value, n:document.getElementById('inp-n').value, p:parseInt(document.getElementById('inp-p').value), p_jpy:parseInt(document.getElementById('inp-pj').value), limit:parseInt(document.getElementById('inp-l').value), s:document.getElementById('inp-s').value };
+            if(isNew) nP.push(obj); else nP[index] = obj;
+            db.ref('products').set(nP).then(()=> { alert("成功"); document.getElementById('edit-modal').style.display='none'; });
         };
     }
 
-    // --- 配貨助手相關核心邏輯 (含分場次滿額計算) ---
+    // --- 核心功能：分類對帳複製 (包含⏳ 【尚在等候中】) ---
+
+    function copyToLine(k) {
+        const o = orders[k]; if(!o) return;
+        let pool = {}; Object.values(orders).forEach(ord => (ord.items||[]).forEach(it => { let sk=`${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk]=[]; pool[sk].push(it); }));
+        for(let sk in pool) pool[sk].sort((a,b)=>(a.t||0)-(b.t||0));
+
+        let winItems = [], waitItems = [];
+        (o.items || []).forEach(it => {
+            const limit = (products[it.pid]||{}).limit||999, rank = pool[`${it.pid}_${it.sel}`].indexOf(it)+1, isWin = it.fWin || rank <= limit;
+            if(isWin) winItems.push(`- [${it.e}] ${it.n}(${it.sel}) $${it.p}`);
+            else waitItems.push(`- [${it.e}] ${it.n}(${it.sel})`);
+        });
+
+        let txt = `🌟 【33日本動物園 - 訂單明細】 🌟\n\n👤 暱稱：${o.nick}\n\n✅ 【已成功訂購】：\n${winItems.length?winItems.join('\n'):'(無)'}\n`;
+        if(waitItems.length) {
+            txt += `\n⏳ 【尚在等候中】：\n${waitItems.join('\n')}\n`;
+        }
+        txt += `\n💰 總計：$${o.total}\n\n以上資訊請核對，如有誤請告知唷！謝謝您 🙏`;
+        navigator.clipboard.writeText(txt).then(()=>alert("明細已分類複製！"));
+    }
+
+    // --- 核心功能：配貨助手 (分場次滿額禮) ---
 
     function openPackAssistant() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
-        tempPackStatus = {}; 
-        document.getElementById('modal-title').innerText = "📦 配貨出貨助手 (分場次滿額)";
-        let html = `<div id="step0-area"><div style="font-size:13px; color:var(--caramel); margin-bottom:10px;"><b>第 0 步：勾選處理場次</b></div><div style="background:#FFF; padding:10px; border-radius:10px; border:1px solid #EEE; max-height:200px; overflow-y:auto;">${evts.map(e => `<div style="padding:5px 0;"><input type="checkbox" class="evt-select-chk" value="${e}" id="evt-${e}"><label for="evt-${e}"> ${e}</label></div>`).join('')}</div></div><div id="step1-area" style="display:none; margin-top:15px;"></div><div id="step2-area" style="display:none; margin-top:15px;"></div>`;
-        document.getElementById('modal-body').innerHTML = html;
-        document.getElementById('edit-modal').style.display = 'flex';
-        const btn = document.getElementById('modal-save'); btn.innerText = "選擇訂單 →";
-        btn.onclick = () => {
-            const selEvts = Array.from(document.querySelectorAll('.evt-select-chk:checked')).map(el => el.value);
-            if(selEvts.length === 0) return alert("請勾選場次");
-            showOrderSelect(selEvts);
+        document.getElementById('modal-title').innerText = "📦 配貨出貨助手";
+        document.getElementById('modal-body').innerHTML = `<div id="step0-area"><b>第一步：選擇處理場次</b><br><div style="margin-top:10px;">${evts.map(e=>`<div><input type="checkbox" class="evt-sel" value="${e}" id="chk-${e}"><label for="chk-${e}"> ${e}</label></div>`).join('')}</div></div><div id="step1-area" style="display:none;"></div><div id="step2-area" style="display:none;"></div>`;
+        document.getElementById('edit-modal').style.display='flex';
+        document.getElementById('modal-save').innerText = "下一步 →";
+        document.getElementById('modal-save').onclick = () => {
+            const selEvts = Array.from(document.querySelectorAll('.evt-sel:checked')).map(el=>el.value);
+            if(!selEvts.length) return alert("請至少選擇一個場次");
+            showPackOrders(selEvts);
         };
     }
 
-    function showOrderSelect(selEvts) {
-        let html = `<div style="font-size:13px; color:var(--caramel); margin-bottom:10px;"><b>第一步：勾選訂單</b></div><div style="max-height:400px; overflow-y:auto; background:#FFF; border-radius:10px; border:1px solid #EEE;">`;
-        Object.entries(orders).forEach(([k, o]) => {
-            if ((o.items || []).some(it => selEvts.includes(it.e))) {
-                html += `<div style="padding:12px; border-bottom:1px solid #F5F5F5;"><input type="checkbox" class="order-select-chk" value="${k}" id="sel-${k}"><label for="sel-${k}"> <b>${o.nick}</b></label></div>`;
-            }
-        });
-        html += `</div>`;
-        document.getElementById('step0-area').style.display = 'none';
-        const s1 = document.getElementById('step1-area'); s1.innerHTML = html; s1.style.display = 'block';
-        const btn = document.getElementById('modal-save'); btn.innerText = "開始核對 →";
-        btn.onclick = () => {
-            const selectedKeys = Array.from(document.querySelectorAll('.order-select-chk:checked')).map(el => el.value);
-            if (selectedKeys.length === 0) return alert("請先勾選訂單");
-            startDetailPacking(selectedKeys, selEvts);
+    function showPackOrders(selEvts) {
+        let html = `<b>第二步：選擇訂單</b><div style="max-height:300px; overflow-y:auto; margin-top:10px; border:1px solid #EEE; padding:5px;">`;
+        Object.entries(orders).forEach(([k,o]) => { if((o.items||[]).some(it=>selEvts.includes(it.e))) html += `<div style="padding:5px;"><input type="checkbox" class="ord-sel" value="${k}" id="ord-${k}"><label for="ord-${k}"> ${o.nick}</label></div>`; });
+        document.getElementById('step0-area').style.display='none';
+        const s1 = document.getElementById('step1-area'); s1.innerHTML = html+'</div>'; s1.style.display='block';
+        document.getElementById('modal-save').onclick = () => {
+            const keys = Array.from(document.querySelectorAll('.ord-sel:checked')).map(el=>el.value);
+            if(!keys.length) return alert("請選擇訂單");
+            renderPackDetail(keys, selEvts);
         };
     }
 
-    function startDetailPacking(keys, selEvts) {
-        const JPY_THRESHOLD = 6000;
-        let html = `<div style="font-size:12px; color:red; margin-bottom:10px;">核對完畢後請按最下方「確認出貨更新狀態」</div>`;
-        
+    function renderPackDetail(keys, selEvts) {
+        const JPY_LIMIT = 6000; let html = `<div style="font-size:12px; color:red; margin-bottom:10px;">核對完畢後請按最下方更新狀態</div>`;
         keys.forEach(k => {
-            const o = orders[k];
-            let categoryTotals = {}; 
-            
-            // 累計各場次日幣總額 (相容併單與最新設定)
-            (o.items || []).forEach(it => {
-                if (selEvts.includes(it.e)) {
-                    let mP = products[it.pid];
-                    if (!mP || mP.n !== it.n || mP.e !== it.e) {
-                        mP = products.find(p => p.n === it.n && p.e === it.e);
-                    }
-                    const jpyPrice = mP ? (mP.p_jpy || 0) : (it.p_jpy || 0);
-                    categoryTotals[it.e] = (categoryTotals[it.e] || 0) + jpyPrice;
-                }
+            const o = orders[k]; let catT = {};
+            (o.items||[]).forEach(it => { 
+                if(selEvts.includes(it.e)){ 
+                    let mP = products.find(p=>p.n===it.n && p.e===it.e) || products[it.pid] || {};
+                    catT[it.e] = (catT[it.e]||0) + (mP.p_jpy||0); 
+                } 
             });
-
-            let bonusInfo = "";
-            for (let evtName in categoryTotals) {
-                let total = categoryTotals[evtName];
-                let cards = Math.floor(total / JPY_THRESHOLD);
-                if (cards > 0) bonusInfo += `<div style="font-size:12px; color:#D62828; font-weight:bold; margin-bottom:2px;">🎁 ${evtName}：滿 ¥${total} ➔ 送 ${cards} 張卡</div>`;
-                else bonusInfo += `<div style="font-size:11px; color:#999;">⚪ ${evtName}：¥${total} (未達)</div>`;
-            }
-
-            html += `<div style="background:#FFF; border:1px solid #EAE2D1; border-radius:12px; padding:12px; margin-bottom:15px;">
-                <div style="border-bottom:1px solid #F4F1EA; padding-bottom:8px; margin-bottom:10px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <b>👤 ${o.nick}</b>
-                        <button onclick="copyShippingCard('${k}', '${selEvts.join(',')}')" style="background:var(--caramel); color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:11px;">📋 複製對帳卡</button>
-                    </div>
-                    <div style="margin-top:8px; padding:8px; background:#FEF9EF; border-left:4px solid #BC6C25; border-radius:4px;">${bonusInfo || '無相符場次'}</div>
-                </div>`;
-            
-            (o.items || []).forEach((it, idx) => {
-                if (selEvts.includes(it.e)) {
-                    const isShipped = it.isShipped === true;
-                    if (tempPackStatus[`${k}_${idx}`] === undefined) tempPackStatus[`${k}_${idx}`] = isShipped;
-                    const isChecked = tempPackStatus[`${k}_${idx}`];
-                    
-                    let mP = products[it.pid];
-                    if (!mP || mP.n !== it.n || mP.e !== it.e) {
-                        mP = products.find(p => p.n === it.n && p.e === it.e);
-                    }
-                    const dJPY = mP ? (mP.p_jpy || 0) : (it.p_jpy || 0);
-
-                    html += `<div onclick="toggleTempCheck('${k}', ${idx}, ${!isChecked}, '${selEvts.join(',')}', '${keys.join(',')}')" style="cursor:pointer; display:flex; align-items:center; gap:10px; padding:8px; margin-bottom:5px; border-radius:6px; background:${isChecked ? '#FEF9EF' : '#FFF'}; border:1px solid ${isChecked ? '#BC6C25' : '#DDD'};">
-                        <span style="font-size:18px;">${isChecked ? '☑️' : '⬜'}</span>
-                        <div style="flex:1;"><div style="font-size:10px; color:#888;">[${it.e}] 單價: ¥${dJPY}</div><span style="${isShipped ? 'color:#AAA; text-decoration:line-through;' : ''}">${it.n} (${it.sel})</span></div>
+            let bonus = ""; for(let e in catT) { let c = Math.floor(catT[e]/JPY_LIMIT); if(c>0) bonus += `<div style="margin-bottom:2px;">🎁 ${e}: 滿 ¥${catT[e]} 送 ${c} 張卡</div>`; }
+            html += `<div style="background:#FFF; padding:12px; margin-bottom:15px; border-radius:12px; border:1px solid #EAE2D1;">
+                <div style="display:flex; justify-content:space-between; align-items:center;"><b>👤 ${o.nick}</b><button onclick="copyPackCheck('${k}', '${selEvts.join(",")}')" style="font-size:10px; padding:2px 5px;">📋 複製對帳卡</button></div>
+                <div style="color:#D62828; font-size:12px; font-weight:bold; margin-top:5px;">${bonus}</div><hr style="border:0; border-top:1px solid #EEE; margin:8px 0;">`;
+            (o.items||[]).forEach((it, idx) => {
+                if(selEvts.includes(it.e)){
+                    const isS = it.isShipped === true;
+                    if(tempPackStatus[`${k}_${idx}`]===undefined) tempPackStatus[`${k}_${idx}`]=isS;
+                    const isC = tempPackStatus[`${k}_${idx}`];
+                    html += `<div onclick="tempPackStatus['${k}_${idx}']=!${isC};renderPackDetail(['${keys.join("','")}'],['${selEvts.join("','")}'])" style="cursor:pointer; padding:8px; border:1px solid ${isC?'#BC6C25':'#EEE'}; margin:5px 0; border-radius:6px; background:${isC?'#FEF9EF':'#FFF'};">
+                        <span style="font-size:16px;">${isC?'☑️':'⬜'}</span> ${it.n} (${it.sel})
                     </div>`;
                 }
             });
             html += `</div>`;
         });
-        document.getElementById('step1-area').style.display = 'none';
-        const s2 = document.getElementById('step2-area'); s2.innerHTML = html; s2.style.display = 'block';
-        const btn = document.getElementById('modal-save'); btn.innerText = "🚀 確認出貨並更新狀態";
-        btn.onclick = () => { if(confirm("確定更新勾選商品為已出貨？")) saveShippingUpdates(); };
-    }
-
-    function toggleTempCheck(k, idx, status, selEvtsStr, keysStr) {
-        tempPackStatus[`${k}_${idx}`] = status;
-        startDetailPacking(keysStr.split(','), selEvtsStr.split(','));
-    }
-
-    function saveShippingUpdates() {
-        const updates = {};
-        for (let key in tempPackStatus) {
-            const [orderKey, itemIdx] = key.split('_');
-            updates[`orders/${orderKey}/items/${itemIdx}/isShipped`] = tempPackStatus[key];
-        }
-        db.ref().update(updates).then(() => { alert("已連動更新狀態！"); document.getElementById('edit-modal').style.display = 'none'; renderAdminOrders(); });
-    }
-
-    function copyShippingCard(orderKey, selEvtsStr) {
-        const o = orders[orderKey], selEvts = selEvtsStr.split(','), JPY_THRESHOLD = 6000;
-        let nowShipping = [], totals = {};
-        (o.items || []).forEach((it, idx) => {
-            if (selEvts.includes(it.e)) {
-                if (tempPackStatus[`${orderKey}_${idx}`]) {
-                    nowShipping.push(`- [${it.e}] ${it.n}(${it.sel})`);
-                    
-                    let mP = products[it.pid];
-                    if (!mP || mP.n !== it.n || mP.e !== it.e) {
-                        mP = products.find(p => p.n === it.n && p.e === it.e);
-                    }
-                    const jpyPrice = mP ? (mP.p_jpy || 0) : (it.p_jpy || 0);
-                    totals[it.e] = (totals[it.e] || 0) + jpyPrice;
-                }
-            }
-        });
-        let txt = `🌟 【33日本動物園 - 出貨對帳】 🌟\n\n👤 暱稱：${o.nick}\n\n📦 本次預計寄出：\n${nowShipping.join('\n')}\n\n🎁 滿額禮統計：\n`;
-        let hasBonus = false;
-        for(let e in totals) { 
-            let c = Math.floor(totals[e]/JPY_THRESHOLD); 
-            if(c>0) { txt += `- ${e}：滿 ¥${totals[e]} 送 ${c} 張卡\n`; hasBonus = true; }
-        }
-        if(!hasBonus) txt += `(本次寄出內容未達滿額禮門檻)\n`;
-        txt += `\n以上資訊供核對，無誤將為您安排寄出唷！`;
-        navigator.clipboard.writeText(txt).then(() => alert("對帳卡已複製！"));
-    }
-
-    // --- 原始其他功能 (併單、解鎖、匯出等) ---
-
-    function mergeSelected() {
-        const checks = Array.from(document.querySelectorAll('.merge-check:checked')); if(checks.length<2) return alert("選兩筆以上");
-        const keys = checks.map(el => el.value); let items = [], total = 0;
-        keys.forEach(k => { items = items.concat(orders[k].items||[]); total += (orders[k].total||0); });
-        db.ref('orders').push({ nick: checks[0].getAttribute('data-nick'), items, total, time: Date.now(), isUnlocked: true }).then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); });
-    }
-    function copyToLine(k) {
-        const o = orders[k]; let txt = `🌟 ${o.nick} 明細 🌟\n`;
-        (o.items||[]).forEach((it, i) => txt += `${i+1}. ${it.n}(${it.sel}) $${it.p}\n`);
-        txt += `總計：$${o.total}`; navigator.clipboard.writeText(txt).then(() => alert("已複製"));
-    }
-    function unlockAllOrders() { const ups = {}; Object.keys(orders).forEach(k => ups[`${k}/isUnlocked`] = true); db.ref('orders').update(ups); }
-    function askExport(type) {
-        const evts = [...new Set(products.map(p => p.e))].filter(e => e);
-        document.getElementById('modal-title').innerText = "匯出場次";
-        document.getElementById('modal-body').innerHTML = evts.map(e => `<div><input type="checkbox" class="evt-check" value="${e}" checked> ${e}</div>`).join('');
-        document.getElementById('edit-modal').style.display='flex';
+        document.getElementById('step1-area').style.display='none';
+        const s2 = document.getElementById('step2-area'); s2.innerHTML = html; s2.style.display='block';
+        document.getElementById('modal-save').innerText = "🚀 確認出貨並更新資料庫";
         document.getElementById('modal-save').onclick = () => {
-            const sel = Array.from(document.querySelectorAll('.evt-check:checked')).map(el => el.value);
-            let txt = `${type === 'summary' ? '採購統計' : '匯出明細'}\n`;
-            if(type === 'summary') {
-                let s = {}; Object.values(orders).forEach(o => (o.items||[]).forEach(it => { if(sel.includes(it.e)){ let k = `[${it.e}] ${it.n}(${it.sel})`; s[k]=(s[k]||0)+1; } }));
-                for(let k in s) txt += `${k} : ${s[k]}\n`;
-            } else {
-                Object.values(orders).forEach(o => { const fs = (o.items||[]).filter(it => sel.includes(it.e)); if(fs.length){ txt += `\n【${o.nick}】\n`; fs.forEach(it => txt += `- ${it.n}(${it.sel})\n`); } });
-            }
-            const blob = new Blob([txt], { type: "text/plain" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "export.txt"; a.click();
-            document.getElementById('edit-modal').style.display='none';
+            if(!confirm("確定要將勾選商品標記為「已出貨」嗎？")) return;
+            let ups = {}; for(let key in tempPackStatus) { let [ok, idx] = key.split('_'); ups[`orders/${ok}/items/${idx}/isShipped`] = tempPackStatus[key]; }
+            db.ref().update(ups).then(()=> { alert("狀態更新成功！"); location.reload(); });
         };
     }
-    function adminLogin() { if(prompt("密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; renderAdminProds(); } }
+
+    function copyPackCheck(k, evtsStr) {
+        const o = orders[k], evts = evtsStr.split(','), JPY_LIMIT = 6000;
+        let shipping = [], totals = {};
+        (o.items||[]).forEach((it, idx) => {
+            if(evts.includes(it.e) && tempPackStatus[`${k}_${idx}`]){
+                shipping.push(`- [${it.e}] ${it.n}(${it.sel})`);
+                let mP = products.find(p=>p.n===it.n && p.e===it.e) || products[it.pid] || {};
+                totals[it.e] = (totals[it.e]||0) + (mP.p_jpy||0);
+            }
+        });
+        let bonusTxt = ""; for(let e in totals){ let c = Math.floor(totals[e]/JPY_LIMIT); if(c>0) bonusTxt += `- ${e}：滿 ¥${totals[e]} 送 ${c} 張卡\n`; }
+        let txt = `🌟 【33日本動物園 - 出貨對帳】 🌟\n\n👤 暱稱：${o.nick}\n\n📦 本次預計寄出：\n${shipping.join('\n')}\n\n🎁 滿額禮：\n${bonusTxt || '(未達滿額門檻)'}\n\n如有誤請告知，無誤將安排寄出，謝謝您！`;
+        navigator.clipboard.writeText(txt).then(()=>alert("出貨對帳卡已複製！"));
+    }
+
+    // --- 其他功能：併單、解鎖、統計 ---
+
+    function mergeSelected() {
+        const checks = Array.from(document.querySelectorAll('.merge-check:checked')); if(checks.length<2) return alert("請至少勾選兩筆訂單");
+        const keys = checks.map(el => el.value); let items = [], total = 0;
+        keys.forEach(k => { items = items.concat(orders[k].items||[]); total += (orders[k].total||0); });
+        db.ref('orders').push({ nick: orders[keys[0]].nick, items, total, time: Date.now(), isUnlocked: true }).then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); alert("併單完成"); });
+    }
+    function unlockAllOrders() { if(confirm("確定一鍵解鎖所有訂單？")) { let ups = {}; Object.keys(orders).forEach(k => ups[`${k}/isUnlocked`] = true); db.ref('orders').update(ups); } }
+    function adminLogin() { if(prompt("管理員密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; renderAdminProds(); } }
     function performSearch() {
         const n = document.getElementById('search-nick').value.trim().toLowerCase();
-        let res = Object.values(orders).filter(o => o.nick.toLowerCase() === n);
-        document.getElementById('search-results-area').innerHTML = res.map(o => `<div style="background:#FFF; padding:10px; margin-top:5px; border-radius:8px;">${new Date(o.time).toLocaleString()}<br>總計:$${o.total}</div>`).join('');
+        let res = Object.entries(orders).filter(([k, o]) => o.nick.toLowerCase() === n);
+        document.getElementById('search-results-area').innerHTML = res.map(([k, o]) => `<div style="background:#FFF; padding:10px; margin-top:5px; border-radius:8px;">${new Date(o.time).toLocaleString()}<br>總計:$${o.total}</div>`).join('');
+    }
+    function askExport(type) { 
+        const evts = [...new Set(products.map(p => p.e))].filter(e => e);
+        document.getElementById('modal-title').innerText = "匯出場次選擇";
+        document.getElementById('modal-body').innerHTML = evts.map(e => `<div><input type="checkbox" class="exp-evt" value="${e}" checked> ${e}</div>`).join('');
+        document.getElementById('edit-modal').style.display='flex';
+        document.getElementById('modal-save').onclick = () => {
+            const sel = Array.from(document.querySelectorAll('.exp-evt:checked')).map(el => el.value);
+            let txt = `${type==='summary'?'採購統計':'出貨明細'}\n`;
+            if(type==='summary'){
+                let s={}; Object.values(orders).forEach(o=>(o.items||[]).forEach(it=>{ if(sel.includes(it.e)){ let k=`[${it.e}] ${it.n}(${it.sel})`; s[k]=(s[k]||0)+1; } }));
+                for(let k in s) txt += `${k} : ${s[k]}\n`;
+            } else {
+                Object.values(orders).forEach(o=>{ const fs=(o.items||[]).filter(it=>sel.includes(it.e)); if(fs.length){ txt+=`\n【${o.nick}】\n`; fs.forEach(it=>txt+=`- ${it.n}(${it.sel})\n`); } });
+            }
+            console.log(txt); alert("資料已產生，請查看控制台或自行擴充下載邏輯"); document.getElementById('edit-modal').style.display='none';
+        };
     }
 </script>
 </body>
