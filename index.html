@@ -200,11 +200,16 @@
         let pool = {}; Object.values(orders).forEach(o => (o.items||[]).forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; pool[sk].push(it); }));
         for(let k in pool) pool[k].sort((a,b) => (a.t||0) - (b.t||0));
         let orderEntries = Object.entries(orders); if (filterEvt !== "ALL") orderEntries = orderEntries.filter(([k, o]) => (o.items || []).some(it => it.e === filterEvt));
+        
         main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%;" onclick="mergeSelected()">🔗 併單</button>` + orderEntries.sort((a,b)=>a[1].time-b[1].time).map(([k, o]) => {
             const itemsHtml = (o.items || []).map((it, idx) => {
                 const limit = (products[it.pid]||{}).limit||999, rank = pool[`${it.pid}_${it.sel}`].indexOf(it)+1, isWin = it.fWin || rank <= limit;
-                return `<div style="font-size:13px; border-bottom:1px solid #F0F0F0; padding:6px 0; display:flex; justify-content:space-between; align-items:center;">
-                    <div><input type="checkbox" class="msg-item-check-${k}" value="${idx}" checked><span>${it.n}(${it.sel}) $${it.p} <b onclick="db.ref('orders/${k}/items/${idx}').update({fWin:${!it.fWin}})" style="color:${isWin?'green':'orange'}; cursor:pointer;">${isWin?'[正]':'[補'+(rank-limit)+']'}</b></span></div>
+                const isShipped = it.isShipped === true; 
+                return `<div style="font-size:13px; border-bottom:1px solid #F0F0F0; padding:6px 0; display:flex; justify-content:space-between; align-items:center; ${isShipped ? 'background:#F9F9F9; opacity:0.8;' : ''}">
+                    <div style="${isShipped ? 'text-decoration:line-through; color:#AAA;' : ''}">
+                        <input type="checkbox" class="msg-item-check-${k}" value="${idx}" checked>
+                        <span>[${it.e}] ${it.n}(${it.sel}) $${it.p} ${isShipped ? '<b>[已出]</b>' : ''} <b onclick="db.ref('orders/${k}/items/${idx}').update({fWin:${!it.fWin}})" style="color:${isWin?'green':'orange'}; cursor:pointer;">${isWin?'[正]':'[補'+(rank-limit)+']'}</b></span>
+                    </div>
                     <span onclick="removeOrderItem('${k}', ${idx})" style="color:red; cursor:pointer; font-size:11px; padding:2px 5px; border:1px solid red; border-radius:4px;">🗑️ 刪除</span>
                 </div>`;
             }).join('');
@@ -246,112 +251,86 @@
         };
     }
 
-    // 園長修正：配貨出貨管理助手 (兩階段：選訂單 -> 勾商品 -> 對帳卡片)
     function openPackAssistant() {
-        const curE = document.getElementById('admin-event-filter').value;
-        if(curE === 'ALL') return alert("請先在上方選擇「場次」");
-
-        document.getElementById('modal-title').innerText = "📦 " + curE + " 出貨管理";
-        
-        let html = `
-            <div id="step1-area">
-                <div style="font-size:13px; color:var(--caramel); margin-bottom:10px;"><b>第一步：勾選要處理的訂單</b></div>
-                <div style="max-height:400px; overflow-y:auto; background:#FFF; border-radius:10px; border:1px solid #EEE;">
-        `;
-
-        Object.entries(orders).forEach(([k, o]) => {
-            const hasWaitItem = (o.items || []).some(it => it.e === curE && !it.isShipped);
-            if ((o.items || []).some(it => it.e === curE)) {
-                html += `
-                    <div style="padding:12px; border-bottom:1px solid #F5F5F5; display:flex; align-items:center; gap:10px;">
-                        <input type="checkbox" class="order-select-chk" value="${k}" id="sel-${k}">
-                        <label for="sel-${k}" style="flex:1; cursor:pointer;">
-                            <b>${o.nick}</b> 
-                            <span style="font-size:11px; color:${hasWaitItem?'#BC6C25':'#888'};">
-                                (${hasWaitItem ? '有待出貨' : '已全數出完'})
-                            </span>
-                        </label>
-                    </div>
-                `;
-            }
-        });
-
-        html += `</div></div><div id="step2-area" style="display:none; margin-top:15px;"></div>`;
-        
+        const evts = [...new Set(products.map(p => p.e))].filter(e => e);
+        document.getElementById('modal-title').innerText = "📦 配貨出貨助手 (可複選場次)";
+        let html = `<div id="step0-area"><div style="font-size:13px; color:var(--caramel); margin-bottom:10px;"><b>第 0 步：勾選要處理的「場次」</b></div><div style="background:#FFF; padding:10px; border-radius:10px; border:1px solid #EEE; max-height:200px; overflow-y:auto;">${evts.map(e => `<div style="padding:5px 0;"><input type="checkbox" class="evt-select-chk" value="${e}" id="evt-${e}"><label for="evt-${e}" style="cursor:pointer;"> ${e}</label></div>`).join('')}</div></div><div id="step1-area" style="display:none; margin-top:15px;"></div><div id="step2-area" style="display:none; margin-top:15px;"></div>`;
         document.getElementById('modal-body').innerHTML = html;
         document.getElementById('edit-modal').style.display = 'flex';
-
-        const nextBtn = document.getElementById('modal-save');
-        nextBtn.innerText = "確認訂單，開始配貨 →";
-        nextBtn.onclick = () => {
-            const selectedKeys = Array.from(document.querySelectorAll('.order-select-chk:checked')).map(el => el.value);
-            if (selectedKeys.length === 0) return alert("請先勾選訂單");
-            startDetailPacking(selectedKeys, curE);
+        const btn = document.getElementById('modal-save');
+        btn.innerText = "確認場次，選擇訂單 →";
+        btn.onclick = () => {
+            const selEvts = Array.from(document.querySelectorAll('.evt-select-chk:checked')).map(el => el.value);
+            if(selEvts.length === 0) return alert("請至少勾選一個場次");
+            showOrderSelect(selEvts);
         };
     }
 
-    function startDetailPacking(keys, curE) {
-        let html = `<div style="font-size:13px; color:var(--matcha); margin-bottom:10px;"><b>第二步：核對商品（點擊方框標記寄出）</b></div>`;
-        
+    function showOrderSelect(selEvts) {
+        let html = `<div style="font-size:13px; color:var(--caramel); margin-bottom:10px;"><b>第一步：勾選要處理的訂單</b></div><div style="max-height:400px; overflow-y:auto; background:#FFF; border-radius:10px; border:1px solid #EEE;">`;
+        Object.entries(orders).forEach(([k, o]) => {
+            const relevantItems = (o.items || []).filter(it => selEvts.includes(it.e));
+            if (relevantItems.length > 0) {
+                const hasWaitItem = relevantItems.some(it => !it.isShipped);
+                html += `<div style="padding:12px; border-bottom:1px solid #F5F5F5; display:flex; align-items:center; gap:10px;"><input type="checkbox" class="order-select-chk" value="${k}" id="sel-${k}"><label for="sel-${k}" style="flex:1; cursor:pointer;"><b>${o.nick}</b> <span style="font-size:11px; color:${hasWaitItem?'#BC6C25':'#888'};">(${hasWaitItem ? '有待出貨' : '已全數出完'})</span></label></div>`;
+            }
+        });
+        html += `</div>`;
+        document.getElementById('step0-area').style.display = 'none';
+        const s1 = document.getElementById('step1-area');
+        s1.innerHTML = html; s1.style.display = 'block';
+        const btn = document.getElementById('modal-save');
+        btn.innerText = "開始配貨 →";
+        btn.onclick = () => {
+            const selectedKeys = Array.from(document.querySelectorAll('.order-select-chk:checked')).map(el => el.value);
+            if (selectedKeys.length === 0) return alert("請先勾選訂單");
+            startDetailPacking(selectedKeys, selEvts);
+        };
+    }
+
+    function startDetailPacking(keys, selEvts) {
+        let html = `<div style="font-size:13px; color:var(--matcha); margin-bottom:10px;"><b>第二步：核對商品 (跨場次自動彙整)</b></div>`;
         keys.forEach(k => {
             const o = orders[k];
-            html += `
-                <div style="background:#FFF; border:1px solid #EAE2D1; border-radius:12px; padding:12px; margin-bottom:15px; position:relative;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid #F4F1EA; padding-bottom:8px; margin-bottom:10px;">
-                        <b style="color:var(--matcha); font-size:16px;">👤 ${o.nick}</b>
-                        <button onclick="copyShippingCard('${k}', '${curE}')" style="background:var(--caramel); color:#fff; border:none; padding:5px 10px; border-radius:6px; font-size:11px; cursor:pointer;">📋 複製對帳卡片</button>
-                    </div>
-            `;
-            
+            html += `<div style="background:#FFF; border:1px solid #EAE2D1; border-radius:12px; padding:12px; margin-bottom:15px; position:relative;"><div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid #F4F1EA; padding-bottom:8px; margin-bottom:10px;"><b style="color:var(--matcha); font-size:16px;">👤 ${o.nick}</b><button onclick="copyShippingCard('${k}', '${selEvts.join(',')}')" style="background:var(--caramel); color:#fff; border:none; padding:5px 10px; border-radius:6px; font-size:11px; cursor:pointer;">📋 複製對帳卡片</button></div>`;
             o.items.forEach((it, idx) => {
-                if (it.e === curE) {
+                if (selEvts.includes(it.e)) {
                     const isDone = it.isShipped === true;
-                    html += `
-                        <div onclick="toggleItemShipped('${k}', ${idx}, ${!isDone}, '${curE}', '${keys.join(',')}')" 
-                             style="cursor:pointer; display:flex; align-items:center; gap:10px; padding:8px; margin-bottom:5px; border-radius:6px; background:${isDone ? '#F5F5F5' : '#FEF9EF'}; border:1px solid ${isDone ? '#DDD' : '#BC6C25'};">
-                            <span style="font-size:18px;">${isDone ? '☑️' : '⬜'}</span>
-                            <span style="flex:1; ${isDone ? 'text-decoration:line-through; color:#999;' : 'font-weight:500;'}">${it.n} (${it.sel})</span>
-                            <span style="font-size:11px; color:${isDone ? '#999' : '#BC6C25'};">${isDone ? '已出貨' : '待出貨'}</span>
-                        </div>
-                    `;
+                    html += `<div onclick="toggleItemShipped('${k}', ${idx}, ${!isDone}, '${selEvts.join(',')}', '${keys.join(',')}')" style="cursor:pointer; display:flex; align-items:center; gap:10px; padding:8px; margin-bottom:5px; border-radius:6px; background:${isDone ? '#F5F5F5' : '#FEF9EF'}; border:1px solid ${isDone ? '#DDD' : '#BC6C25'};"><span style="font-size:18px;">${isDone ? '☑️' : '⬜'}</span><div style="flex:1;"><div style="font-size:10px; color:#888;">[${it.e}]</div><span style="${isDone ? 'text-decoration:line-through; color:#999;' : 'font-weight:500;'}">${it.n} (${it.sel})</span></div><span style="font-size:11px; color:${isDone ? '#999' : '#BC6C25'};">${isDone ? '已出' : '待出'}</span></div>`;
                 }
             });
             html += `</div>`;
         });
-
         document.getElementById('step1-area').style.display = 'none';
         const s2 = document.getElementById('step2-area');
-        s2.innerHTML = html;
-        s2.style.display = 'block';
-
+        s2.innerHTML = html; s2.style.display = 'block';
         const btn = document.getElementById('modal-save');
         btn.innerText = "← 返回選訂單";
-        btn.onclick = () => openPackAssistant();
+        btn.onclick = () => showOrderSelect(selEvts);
     }
 
-    function toggleItemShipped(orderKey, itemIdx, status, curE, activeKeysStr) {
+    function toggleItemShipped(orderKey, itemIdx, status, selEvtsStr, activeKeysStr) {
         db.ref(`orders/${orderKey}/items/${itemIdx}`).update({ isShipped: status }).then(() => {
-            startDetailPacking(activeKeysStr.split(','), curE);
+            startDetailPacking(activeKeysStr.split(','), selEvtsStr.split(','));
             renderAdminOrders();
         });
     }
 
-    function copyShippingCard(orderKey, curE) {
-        const o = orders[orderKey];
+    function copyShippingCard(orderKey, selEvtsStr) {
+        const o = orders[orderKey], selEvts = selEvtsStr.split(',');
         let nowShipping = [], stillWaiting = [];
         (o.items || []).forEach(it => {
-            if (it.e === curE) {
-                if (it.isShipped) nowShipping.push(`- ${it.n}(${it.sel})`);
-                else stillWaiting.push(`- ${it.n}(${it.sel})`);
+            if (selEvts.includes(it.e)) {
+                let label = `[${it.e}] ${it.n}(${it.sel})`;
+                if (it.isShipped) nowShipping.push(`- ${label}`);
+                else stillWaiting.push(`- ${label}`);
             }
         });
-
-        let txt = `🌟 【33日本動物園 - 出貨明細】 🌟\n\n👤 暱稱：${o.nick}\n📅 活動：${curE}\n\n`;
+        let txt = `🌟 【33日本動物園 - 出貨明細】 🌟\n\n👤 暱稱：${o.nick}\n📅 場次：${selEvts.join('、')}\n\n`;
         txt += `📦 【本次預計寄出】：\n${nowShipping.length > 0 ? nowShipping.join('\n') : '(無)'}\n\n`;
         if (stillWaiting.length > 0) txt += `⏳ 【尚在等候中】：\n${stillWaiting.join('\n')}\n\n`;
         txt += `以上資訊請核對，如有誤請告知園長唷！謝謝您 🙏`;
-
-        navigator.clipboard.writeText(txt).then(() => alert("✨ 對帳卡片已複製！"));
+        navigator.clipboard.writeText(txt).then(() => alert("✨ 跨場次對帳卡片已複製！"));
     }
 
     function mergeSelected() {
