@@ -200,6 +200,16 @@
         else { o.total = o.items.reduce((a, b) => a + (b.p || 0), 0); db.ref(`orders/${orderKey}`).update({ items: o.items, total: o.total }); }
     }
 
+    function editItemPrice(orderKey, itemIdx) {
+        const o = orders[orderKey], it = o.items[itemIdx];
+        const newP = prompt(`修改 [${it.n}] 的台幣單價`, it.p);
+        if(newP !== null) {
+            o.items[itemIdx].p = parseInt(newP) || 0;
+            o.total = o.items.reduce((a, b) => a + (b.p || 0), 0);
+            db.ref(`orders/${orderKey}`).update({ items: o.items, total: o.total });
+        }
+    }
+
     function renderAdminOrders() {
         const main = document.getElementById('admin-main'), filterEvt = document.getElementById('admin-event-filter').value;
         let pool = {}; Object.values(orders).forEach(o => (o.items||[]).forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; pool[sk].push(it); }));
@@ -213,7 +223,7 @@
                 return `<div style="font-size:13px; border-bottom:1px solid #F0F0F0; padding:6px 0; display:flex; justify-content:space-between; align-items:center; ${isShipped ? 'background:#F9F9F9; opacity:0.8;' : ''}">
                     <div style="${isShipped ? 'text-decoration:line-through; color:#AAA;' : ''}">
                         <input type="checkbox" class="msg-item-check-${k}" value="${idx}" checked>
-                        <span>[${it.e}] ${it.n}(${it.sel}) $${it.p} ${isShipped ? '<b>[已出]</b>' : ''} <b onclick="db.ref('orders/${k}/items/${idx}').update({fWin:${!it.fWin}})" style="color:${isWin?'green':'orange'}; cursor:pointer;">${isWin?'[正]':'[補'+(rank-limit)+']'}</b></span>
+                        <span>[${it.e}] ${it.n}(${it.sel}) <b style="color:var(--caramel); cursor:pointer;" onclick="editItemPrice('${k}', ${idx})">$${it.p}</b> ${isShipped ? '<b>[已出]</b>' : ''} <b onclick="db.ref('orders/${k}/items/${idx}').update({fWin:${!it.fWin}})" style="color:${isWin?'green':'orange'}; cursor:pointer;">${isWin?'[正]':'[補'+(rank-limit)+']'}</b></span>
                     </div>
                     <span onclick="removeOrderItem('${k}', ${idx})" style="color:red; cursor:pointer; font-size:11px; padding:2px 5px; border:1px solid red; border-radius:4px;">🗑️ 刪除</span>
                 </div>`;
@@ -257,7 +267,7 @@
     function openPackAssistant() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
         tempPackStatus = {}; 
-        document.getElementById('modal-title').innerText = "📦 配貨出貨助手 (分場次滿額)";
+        document.getElementById('modal-title').innerText = "📦 配貨出貨助手 (同品項合併)";
         let html = `<div id="step0-area"><div style="font-size:13px; color:var(--caramel); margin-bottom:10px;"><b>第 0 步：勾選處理場次</b></div><div style="background:#FFF; padding:10px; border-radius:10px; border:1px solid #EEE; max-height:200px; overflow-y:auto;">${evts.map(e => `<div style="padding:5px 0;"><input type="checkbox" class="evt-select-chk" value="${e}" id="evt-${e}"><label for="evt-${e}"> ${e}</label></div>`).join('')}</div></div><div id="step1-area" style="display:none; margin-top:15px;"></div><div id="step2-area" style="display:none; margin-top:15px;"></div>`;
         document.getElementById('modal-body').innerHTML = html;
         document.getElementById('edit-modal').style.display = 'flex';
@@ -294,15 +304,20 @@
         keys.forEach(k => {
             const o = orders[k];
             let categoryTotals = {}; 
-            
-            (o.items || []).forEach(it => {
+            let groupItems = {}; // 用於合併同品項顯示
+
+            (o.items || []).forEach((it, idx) => {
                 if (selEvts.includes(it.e)) {
-                    let mP = products[it.pid];
-                    if (!mP || mP.n !== it.n || mP.e !== it.e) {
-                        mP = products.find(p => p.n === it.n && p.e === it.e);
-                    }
+                    // 計算滿額禮
+                    let mP = products[it.pid] || products.find(p => p.n === it.n && p.e === it.e);
                     const jpyPrice = mP ? (mP.p_jpy || 0) : (it.p_jpy || 0);
                     categoryTotals[it.e] = (categoryTotals[it.e] || 0) + jpyPrice;
+
+                    // 分組合併
+                    let groupKey = `${it.e}_${it.n}_${it.sel}`;
+                    if(!groupItems[groupKey]) groupItems[groupKey] = { it, indices: [], count: 0, jpy: jpyPrice };
+                    groupItems[groupKey].indices.push(idx);
+                    groupItems[groupKey].count++;
                 }
             });
 
@@ -323,24 +338,22 @@
                     <div style="margin-top:8px; padding:8px; background:#FEF9EF; border-left:4px solid #BC6C25; border-radius:4px;">${bonusInfo || '無相符場次'}</div>
                 </div>`;
             
-            (o.items || []).forEach((it, idx) => {
-                if (selEvts.includes(it.e)) {
-                    const isShipped = it.isShipped === true;
-                    if (tempPackStatus[`${k}_${idx}`] === undefined) tempPackStatus[`${k}_${idx}`] = isShipped;
-                    const isChecked = tempPackStatus[`${k}_${idx}`];
-                    
-                    let mP = products[it.pid];
-                    if (!mP || mP.n !== it.n || mP.e !== it.e) {
-                        mP = products.find(p => p.n === it.n && p.e === it.e);
-                    }
-                    const dJPY = mP ? (mP.p_jpy || 0) : (it.p_jpy || 0);
+            for (let gKey in groupItems) {
+                let g = groupItems[gKey];
+                // 只要組內任一項被勾選，整個組就視為處理中 (此邏輯可依園長需求調整，目前點擊會同步組內所有 index)
+                let allChecked = g.indices.every(idx => {
+                    if (tempPackStatus[`${k}_${idx}`] === undefined) tempPackStatus[`${k}_${idx}`] = g.it.isShipped === true;
+                    return tempPackStatus[`${k}_${idx}`];
+                });
 
-                    html += `<div onclick="toggleTempCheck('${k}', ${idx}, ${!isChecked}, '${selEvts.join(',')}', '${keys.join(',')}')" style="cursor:pointer; display:flex; align-items:center; gap:10px; padding:8px; margin-bottom:5px; border-radius:6px; background:${isChecked ? '#FEF9EF' : '#FFF'}; border:1px solid ${isChecked ? '#BC6C25' : '#DDD'};">
-                        <span style="font-size:18px;">${isChecked ? '☑️' : '⬜'}</span>
-                        <div style="flex:1;"><div style="font-size:10px; color:#888;">[${it.e}] 單價: ¥${dJPY}</div><span style="${isShipped ? 'color:#AAA; text-decoration:line-through;' : ''}">${it.n} (${it.sel})</span></div>
-                    </div>`;
-                }
-            });
+                html += `<div onclick="toggleGroupCheck('${k}', '${g.indices.join(',')}', ${!allChecked}, '${selEvts.join(',')}', '${keys.join(',')}')" style="cursor:pointer; display:flex; align-items:center; gap:10px; padding:10px; margin-bottom:5px; border-radius:6px; background:${allChecked ? '#FEF9EF' : '#FFF'}; border:1px solid ${allChecked ? '#BC6C25' : '#DDD'};">
+                    <span style="font-size:18px;">${allChecked ? '☑️' : '⬜'}</span>
+                    <div style="flex:1;">
+                        <div style="font-size:10px; color:#888;">[${g.it.e}] 單價: ¥${g.jpy}</div>
+                        <span style="${g.it.isShipped ? 'color:#AAA; text-decoration:line-through;' : ''}"><b>${g.it.n} (${g.it.sel})</b> <span style="color:var(--caramel); font-weight:bold;">x${g.count}</span></span>
+                    </div>
+                </div>`;
+            }
             html += `</div>`;
         });
         document.getElementById('step1-area').style.display = 'none';
@@ -349,8 +362,10 @@
         btn.onclick = () => { if(confirm("確定更新勾選商品為已出貨？")) saveShippingUpdates(); };
     }
 
-    function toggleTempCheck(k, idx, status, selEvtsStr, keysStr) {
-        tempPackStatus[`${k}_${idx}`] = status;
+    function toggleGroupCheck(k, idxsStr, status, selEvtsStr, keysStr) {
+        idxsStr.split(',').forEach(idx => {
+            tempPackStatus[`${k}_${idx}`] = status;
+        });
         startDetailPacking(keysStr.split(','), selEvtsStr.split(','));
     }
 
@@ -365,27 +380,32 @@
 
     function copyShippingCard(orderKey, selEvtsStr) {
         const o = orders[orderKey], selEvts = selEvtsStr.split(','), JPY_THRESHOLD = 6000;
-        let nowShipping = [], totals = {}, stillWaiting = [];
+        let nowShipping = {}, totals = {}, stillWaiting = {};
+        
         (o.items || []).forEach((it, idx) => {
             if (selEvts.includes(it.e)) {
+                let mP = products[it.pid] || products.find(p => p.n === it.n && p.e === it.e);
+                const jpyPrice = mP ? (mP.p_jpy || 0) : (it.p_jpy || 0);
+                let gKey = `[${it.e}] ${it.n}(${it.sel})`;
+
                 if (tempPackStatus[`${orderKey}_${idx}`]) {
-                    nowShipping.push(`- [${it.e}] ${it.n}(${it.sel})`);
-                    let mP = products[it.pid];
-                    if (!mP || mP.n !== it.n || mP.e !== it.e) {
-                        mP = products.find(p => p.n === it.n && p.e === it.e);
-                    }
-                    const jpyPrice = mP ? (mP.p_jpy || 0) : (it.p_jpy || 0);
+                    nowShipping[gKey] = (nowShipping[gKey] || 0) + 1;
                     totals[it.e] = (totals[it.e] || 0) + jpyPrice;
                 } else {
-                    stillWaiting.push(`- [${it.e}] ${it.n}(${it.sel})`);
+                    stillWaiting[gKey] = (stillWaiting[gKey] || 0) + 1;
                 }
             }
         });
-        let txt = `🌟 【33日本動物園 - 出貨對帳】 🌟\n\n👤 暱稱：${o.nick}\n\n📦 本次預計寄出：\n${nowShipping.join('\n')}\n\n`;
-        if (stillWaiting.length > 0) {
-            txt += `⏳ 【尚在等候中】：\n${stillWaiting.join('\n')}\n\n`;
+        
+        let txt = `🌟 【33日本動物園 - 出貨對帳】 🌟\n\n👤 暱稱：${o.nick}\n\n📦 本次預計寄出：\n`;
+        for(let k in nowShipping) txt += `- ${k} x${nowShipping[k]}\n`;
+        
+        if (Object.keys(stillWaiting).length > 0) {
+            txt += `\n⏳ 【尚在等候中】：\n`;
+            for(let k in stillWaiting) txt += `- ${k} x${stillWaiting[k]}\n`;
         }
-        txt += `🎁 滿額禮統計：\n`;
+        
+        txt += `\n🎁 滿額禮統計：\n`;
         let hasBonus = false;
         for(let e in totals) { 
             let c = Math.floor(totals[e]/JPY_THRESHOLD); 
