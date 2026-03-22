@@ -117,6 +117,7 @@
         <button onclick="document.getElementById('search-modal').style.display='none'" style="width:100%; margin-top:10px; background:none; border:none; color:#666;">關閉</button>
     </div>
 </div>
+
 <script>
     const firebaseConfig = {
         apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",
@@ -131,7 +132,7 @@
     const db = firebase.database();
 
     let products = [], orders = {}, cart = [], curS = {}, curQty = {}, currentEvent = "";
-    let tempPackStatus = {}; // 用於配貨助手的暫時勾選狀態
+    let tempPackStatus = {}; // 暫存配貨勾選狀態
 
     db.ref('products').on('value', snap => { 
         products = snap.val() || []; 
@@ -153,7 +154,6 @@
         const filter = document.getElementById('admin-event-filter');
         filter.innerHTML = '<option value="ALL">所有場次</option>' + evts.map(e => `<option value="${e}">${e}</option>`).join('');
     }
-
     function openShop(e) {
         currentEvent = e; document.getElementById('hall-screen').style.display='none'; document.getElementById('main-app').style.display='flex';
         const list = products.filter(p => p.e === e);
@@ -222,10 +222,38 @@
             </div>`}).join('');
     }
 
+    function renderAdminProds() {
+        const main = document.getElementById('admin-main');
+        main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px;" onclick="openEdit(-1)">＋ 新增上架</button>` + 
+            products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between; align-items:center;"><div><b>[${p.e}] ${p.n}</b><br>$${p.p} (¥${p.p_jpy||0})</div><button class="btn-add" style="background:var(--caramel);" onclick="openEdit(${i})">編輯</button></div>`).join('');
+    }
+
+    function openEdit(index) {
+        const isNew = index === -1;
+        const p = isNew ? {e:'', n:'', p:0, p_jpy:0, limit:999, s:''} : products[index];
+        document.getElementById('modal-title').innerText = isNew ? "新增上架" : "編輯商品";
+        document.getElementById('modal-body').innerHTML = `
+            活動場次：<input id="inp-e" class="input-std" value="${p.e || ''}" placeholder="例如：日本超市">
+            商品名稱：<input id="inp-n" class="input-std" value="${p.n || ''}">
+            台幣售價：<input id="inp-p" type="number" class="input-std" value="${p.p || 0}">
+            日幣單價(滿額試算)：<input id="inp-pj" type="number" class="input-std" value="${p.p_jpy || 0}">
+            限購數量：<input id="inp-l" type="number" class="input-std" value="${p.limit || 999}">
+            規格選項：<input id="inp-s" class="input-std" value="${p.s || ''}" placeholder="紅,藍 (逗號隔開)">
+        `;
+        document.getElementById('edit-modal').style.display = 'flex';
+        document.getElementById('modal-save').onclick = () => {
+            const vE = document.getElementById('inp-e').value.trim(), vN = document.getElementById('inp-n').value.trim(), vP = parseInt(document.getElementById('inp-p').value)||0, vPJ = parseInt(document.getElementById('inp-pj').value)||0, vL = parseInt(document.getElementById('inp-l').value)||999, vS = document.getElementById('inp-s').value.trim();
+            if (!vN) return alert("請輸入名稱");
+            let nP = [...products]; const obj = { e: vE, n: vN, p: vP, p_jpy: vPJ, limit: vL, s: vS };
+            if (isNew) nP.push(obj); else nP[index] = obj;
+            db.ref('products').set(nP).then(() => { alert("成功"); document.getElementById('edit-modal').style.display = 'none'; });
+        };
+    }
+
     function openPackAssistant() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
-        tempPackStatus = {}; // 重置暫存
-        document.getElementById('modal-title').innerText = "📦 配貨出貨助手 (核對模式)";
+        tempPackStatus = {}; 
+        document.getElementById('modal-title').innerText = "📦 配貨出貨助手 (分場次滿額)";
         let html = `<div id="step0-area"><div style="font-size:13px; color:var(--caramel); margin-bottom:10px;"><b>第 0 步：勾選處理場次</b></div><div style="background:#FFF; padding:10px; border-radius:10px; border:1px solid #EEE; max-height:200px; overflow-y:auto;">${evts.map(e => `<div style="padding:5px 0;"><input type="checkbox" class="evt-select-chk" value="${e}" id="evt-${e}"><label for="evt-${e}"> ${e}</label></div>`).join('')}</div></div><div id="step1-area" style="display:none; margin-top:15px;"></div><div id="step2-area" style="display:none; margin-top:15px;"></div>`;
         document.getElementById('modal-body').innerHTML = html;
         document.getElementById('edit-modal').style.display = 'flex';
@@ -256,20 +284,39 @@
     }
 
     function startDetailPacking(keys, selEvts) {
+        const JPY_THRESHOLD = 6000;
         let html = `<div style="font-size:12px; color:red; margin-bottom:10px;">核對完畢後請按最下方「確認出貨更新狀態」</div>`;
+        
         keys.forEach(k => {
             const o = orders[k];
+            let categoryTotals = {}; 
+            o.items.forEach(it => { if (selEvts.includes(it.e)) { categoryTotals[it.e] = (categoryTotals[it.e] || 0) + (it.p_jpy || 0); } });
+
+            let bonusInfo = "";
+            for (let evtName in categoryTotals) {
+                let total = categoryTotals[evtName];
+                let cards = Math.floor(total / JPY_THRESHOLD);
+                if (cards > 0) bonusInfo += `<div style="font-size:12px; color:#D62828; font-weight:bold;">🎁 ${evtName}：¥${total} ➔ 送 ${cards} 張卡</div>`;
+                else bonusInfo += `<div style="font-size:11px; color:#999;">⚪ ${evtName}：¥${total} (未達)</div>`;
+            }
+
             html += `<div style="background:#FFF; border:1px solid #EAE2D1; border-radius:12px; padding:12px; margin-bottom:15px;">
-                <div style="display:flex; justify-content:space-between; border-bottom:1px solid #F4F1EA; padding-bottom:8px; margin-bottom:10px;"><b>👤 ${o.nick}</b><button onclick="copyShippingCard('${k}', '${selEvts.join(',')}')" style="background:var(--caramel); color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:11px;">📋 複製對帳卡</button></div>`;
+                <div style="border-bottom:1px solid #F4F1EA; padding-bottom:8px; margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <b>👤 ${o.nick}</b>
+                        <button onclick="copyShippingCard('${k}', '${selEvts.join(',')}')" style="background:var(--caramel); color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:11px;">📋 複製對帳卡</button>
+                    </div>
+                    <div style="margin-top:8px; padding:8px; background:#FEF9EF; border-left:4px solid #BC6C25; border-radius:4px;">${bonusInfo || '無資料'}</div>
+                </div>`;
+            
             o.items.forEach((it, idx) => {
                 if (selEvts.includes(it.e)) {
                     const isShipped = it.isShipped === true;
-                    // 初始化暫存勾選狀態
                     if (tempPackStatus[`${k}_${idx}`] === undefined) tempPackStatus[`${k}_${idx}`] = isShipped;
                     const isChecked = tempPackStatus[`${k}_${idx}`];
                     html += `<div onclick="toggleTempCheck('${k}', ${idx}, ${!isChecked}, '${selEvts.join(',')}', '${keys.join(',')}')" style="cursor:pointer; display:flex; align-items:center; gap:10px; padding:8px; margin-bottom:5px; border-radius:6px; background:${isChecked ? '#FEF9EF' : '#FFF'}; border:1px solid ${isChecked ? '#BC6C25' : '#DDD'};">
                         <span style="font-size:18px;">${isChecked ? '☑️' : '⬜'}</span>
-                        <div style="flex:1;"><div style="font-size:10px; color:#888;">[${it.e}]</div><span style="${isShipped ? 'color:#999; text-decoration:line-through;' : ''}">${it.n} (${it.sel})</span></div>
+                        <div style="flex:1;"><div style="font-size:10px; color:#888;">[${it.e}] ¥${it.p_jpy||0}</div><span style="${isShipped ? 'color:#999; text-decoration:line-through;' : ''}">${it.n} (${it.sel})</span></div>
                     </div>`;
                 }
             });
@@ -278,10 +325,7 @@
         document.getElementById('step1-area').style.display = 'none';
         const s2 = document.getElementById('step2-area'); s2.innerHTML = html; s2.style.display = 'block';
         const btn = document.getElementById('modal-save'); btn.innerText = "🚀 確認出貨並更新狀態";
-        btn.onclick = () => {
-            if(!confirm("即將更新勾選商品的狀態為「已出貨」，確定嗎？")) return;
-            saveShippingUpdates();
-        };
+        btn.onclick = () => { if(confirm("確定更新勾選商品為已出貨？")) saveShippingUpdates(); };
     }
 
     function toggleTempCheck(k, idx, status, selEvtsStr, keysStr) {
@@ -295,47 +339,24 @@
             const [orderKey, itemIdx] = key.split('_');
             updates[`orders/${orderKey}/items/${itemIdx}/isShipped`] = tempPackStatus[key];
         }
-        db.ref().update(updates).then(() => {
-            alert("出貨狀態已成功連動至資料庫！");
-            document.getElementById('edit-modal').style.display = 'none';
-            renderAdminOrders();
-        });
+        db.ref().update(updates).then(() => { alert("已連動更新狀態！"); document.getElementById('edit-modal').style.display = 'none'; renderAdminOrders(); });
     }
 
     function copyShippingCard(orderKey, selEvtsStr) {
-        const o = orders[orderKey], selEvts = selEvtsStr.split(',');
-        let nowShipping = [], stillWaiting = [];
+        const o = orders[orderKey], selEvts = selEvtsStr.split(','), JPY_THRESHOLD = 6000;
+        let nowShipping = [], totals = {};
         (o.items || []).forEach((it, idx) => {
             if (selEvts.includes(it.e)) {
-                let label = `[${it.e}] ${it.n}(${it.sel})`;
-                if (tempPackStatus[`${orderKey}_${idx}`]) nowShipping.push(`- ${label}`);
-                else stillWaiting.push(`- ${label}`);
+                if (tempPackStatus[`${orderKey}_${idx}`]) nowShipping.push(`- [${it.e}] ${it.n}(${it.sel})`);
+                totals[it.e] = (totals[it.e] || 0) + (it.p_jpy || 0);
             }
         });
-        let txt = `🌟 【33日本動物園 - 出貨明細】 🌟\n\n👤 暱稱：${o.nick}\n📅 場次：${selEvts.join('、')}\n\n`;
-        txt += `📦 【本次預計寄出】：\n${nowShipping.length > 0 ? nowShipping.join('\n') : '(無)'}\n\n`;
-        if (stillWaiting.length > 0) txt += `⏳ 【等候中】：\n${stillWaiting.join('\n')}\n\n`;
-        txt += `以上資訊請核對，如有誤請告知唷！謝謝您 🙏`;
-        navigator.clipboard.writeText(txt).then(() => alert("✨ 跨場次對帳卡片已複製！"));
+        let txt = `🌟 【33日本動物園 - 出貨對帳】 🌟\n\n👤 暱稱：${o.nick}\n\n📦 本次預計寄出：\n${nowShipping.join('\n')}\n\n🎁 滿額禮統計：\n`;
+        for(let e in totals) { let c = Math.floor(totals[e]/JPY_THRESHOLD); if(c>0) txt += `- ${e}：滿 ¥${totals[e]} 送 ${c} 張卡\n`; }
+        txt += `\n以上資訊供核對，無誤將為您安排寄出唷！`;
+        navigator.clipboard.writeText(txt).then(() => alert("對帳卡已複製！"));
     }
 
-    // 商品維護、統計等其餘邏輯維持不變...
-    function renderAdminProds() {
-        const main = document.getElementById('admin-main');
-        main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px;" onclick="openEdit(-1)">＋ 新增上架</button>` + 
-            products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between; align-items:center;"><div><b>[${p.e}] ${p.n}</b><br>$${p.p}</div><button class="btn-add" style="background:var(--caramel);" onclick="openEdit(${i})">編輯</button></div>`).join('');
-    }
-    function openEdit(index) {
-        const isNew = index === -1; const p = isNew ? {e:'', n:'', p:0, limit:999, s:''} : products[index];
-        document.getElementById('modal-title').innerText = isNew ? "新增上架" : "編輯商品";
-        document.getElementById('modal-body').innerHTML = `活動：<input id="inp-e" class="input-std" value="${p.e||''}">名稱：<input id="inp-n" class="input-std" value="${p.n||''}">價格：<input id="inp-p" type="number" class="input-std" value="${p.p||0}">限購：<input id="inp-l" type="number" class="input-std" value="${p.limit||999}">規格：<input id="inp-s" class="input-std" value="${p.s||''}" placeholder="紅,藍">`;
-        document.getElementById('edit-modal').style.display = 'flex';
-        document.getElementById('modal-save').onclick = () => {
-            const vE = document.getElementById('inp-e').value, vN = document.getElementById('inp-n').value, vP = parseInt(document.getElementById('inp-p').value), vL = parseInt(document.getElementById('inp-l').value), vS = document.getElementById('inp-s').value;
-            let nP = [...products]; if(isNew) nP.push({e:vE,n:vN,p:vP,limit:vL,s:vS}); else nP[index]={e:vE,n:vN,p:vP,limit:vL,s:vS};
-            db.ref('products').set(nP).then(()=> { document.getElementById('edit-modal').style.display='none'; });
-        };
-    }
     function mergeSelected() {
         const checks = Array.from(document.querySelectorAll('.merge-check:checked')); if(checks.length<2) return alert("選兩筆以上");
         const keys = checks.map(el => el.value); let items = [], total = 0;
