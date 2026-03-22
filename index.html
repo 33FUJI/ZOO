@@ -6,6 +6,7 @@
     <title>33日本動物園</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --matcha: #606C38;
@@ -15,257 +16,117 @@
             --gray: #F4F1EA;
         }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            font-family: 'Noto Sans TC', sans-serif;
-        }
+        * { box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; margin: 0; padding: 0; background: var(--gray); overflow: hidden; color: #333; }
+        body { display: flex; flex-direction: column; }
 
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            background: var(--gray);
-            overflow: hidden;
-            color: var(--wood);
-        }
+        /* 大廳入口 */
+        .hall { position: fixed; inset: 0; background: var(--rice); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; transition: 0.3s; }
+        .hall h1 { color: var(--matcha); margin-bottom: 30px; font-size: 28px; letter-spacing: 2px; }
+        .grid-hall { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; width: 100%; max-width: 500px; }
+        .card-hall { background: #FFF; padding: 25px 10px; border-radius: 15px; border: 1px solid #EAE2D1; text-align: center; cursor: pointer; box-shadow: 0 4px 0 #EAE2D1; font-weight: bold; color: var(--matcha); font-size: 16px; }
+        .card-hall:active { transform: translateY(2px); box-shadow: 0 2px 0 #EAE2D1; }
 
-        body {
-            display: flex;
-            flex-direction: column;
-        }
+        /* 主應用區域 */
+        .app-container { display: none; flex: 1; overflow: hidden; flex-direction: row; }
+        
+        .list-area { flex: 1; overflow-y: auto; padding: 15px; background: var(--gray); -webkit-overflow-scrolling: touch; }
+        .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding-bottom: 50px; }
+        .prod-card { background: #FFF; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(0,0,0,0.08); position: relative; min-height: 200px; justify-content: space-between; }
+        .prod-card b { font-size: 16px; color: var(--wood); }
+        .prod-card p { margin: 5px 0; font-size: 14px; color: var(--caramel); font-weight: bold; }
+        .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; }
 
-        /* 大廳 */
-        .hall {
-            position: fixed;
-            inset: 0;
-            background: var(--rice);
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .grid-hall {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 15px;
-            width: 100%;
-            max-width: 500px;
-            margin-top: 20px;
-        }
-
-        .card-hall {
-            background: #FFF;
-            padding: 25px 10px;
-            border-radius: 15px;
-            border: 1px solid #EAE2D1;
-            text-align: center;
-            cursor: pointer;
-            box-shadow: 0 4px 0 #EAE2D1;
-            font-weight: bold;
-            color: var(--matcha);
-            font-size: 16px;
-        }
-
-        /* 商店主程式 */
-        .app-container {
-            display: none;
-            flex: 1;
-            overflow: hidden;
-            flex-direction: row;
-        }
-
-        .list-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            background: var(--gray);
-        }
-
-        .prod-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 15px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .prod-card {
-            background: #FFF;
-            border-radius: 12px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            min-height: 280px;
-        }
-
-        .cart-area {
-            width: 360px;
-            background: #FFF;
-            border-left: 1px solid #DDD;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .cart-bottom {
-            padding: 15px;
-            border-top: 1px solid #EEE;
-            background: #FFF;
-            padding-bottom: calc(15px + env(safe-area-inset-bottom));
-        }
-
-        .btn-add {
-            background: var(--matcha);
-            color: #FFF;
-            border: none;
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
+        .cart-area { width: 360px; background: #FFF; border-left: 1px solid #DDD; display: flex; flex-direction: column; z-index: 1000; }
+        .cart-header { padding: 15px; background: var(--wood); color: #FFF; font-weight: bold; display: flex; justify-content: space-between; }
+        #cart-items { flex: 1; overflow-y: auto; padding: 10px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #F0F0F0; font-size: 14px; }
+        .cart-footer { padding: 15px; border-top: 1px solid #EEE; background: #FAFAFA; padding-bottom: calc(15px + env(safe-area-inset-bottom)); }
+        .total-box { font-size: 18px; font-weight: bold; color: var(--caramel); margin-bottom: 10px; display: flex; justify-content: space-between; }
+        
         /* 管理面板 */
-        #admin-panel {
-            position: fixed;
-            inset: 0;
-            background: #F8F9FA;
-            z-index: 4000;
-            display: none;
-            flex-direction: column;
-        }
+        #admin-panel { position: fixed; inset: 0; background: #F4F1EA; z-index: 4000; display: none; flex-direction: column; }
+        .admin-header { background: #283618; color: #FFF; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; }
+        .admin-nav { padding: 10px; display: flex; gap: 8px; border-bottom: 1px solid #DDD; background: #EEE; flex-wrap: wrap; }
+        .btn-nav { border: none; padding: 10px 16px; border-radius: 6px; color: #FFF; font-weight: bold; cursor: pointer; font-size: 13px; }
 
-        .admin-header {
-            background: var(--wood);
-            color: #FFF;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        /* 訂單列表文字樣式 (圖三) */
+        .admin-order-line { padding: 8px 15px; font-size: 15px; color: #333; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #E0E0E0; }
+        .btn-copy-sm { background: #EEE; border: 1px solid #CCC; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; }
 
-        .admin-nav {
-            padding: 10px;
-            background: #EEE;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            border-bottom: 1px solid #DDD;
-        }
-
-        /* 彈窗恢復原始樣式 */
-        .modal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.7);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 5000;
-            padding: 15px;
-        }
-
-        .modal-box {
-            background: var(--rice);
-            padding: 25px;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 500px;
-            max-height: 85vh;
-            overflow-y: auto;
-        }
-
-        .input-std {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border: 1px solid #DDD;
-            border-radius: 10px;
-        }
-
-        .pack-item {
-            cursor: pointer;
-            padding: 12px;
-            border: 1px solid #EAE2D1;
-            margin: 8px 0;
-            border-radius: 12px;
-            background: #FFF;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .pack-item.active {
-            border-color: var(--caramel);
-            background: #FEF9EF;
-        }
+        /* 配貨助手彈窗 (圖一樣式) */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 15px; }
+        .modal-box { background: #FFFCF5; padding: 30px; border-radius: 25px; width: 100%; max-width: 550px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-height: 85vh; overflow-y: auto; }
+        .pack-item { cursor: pointer; border: 1px solid #BC6C25; border-radius: 10px; padding: 12px; margin: 8px 0; background: #FFF; display: flex; align-items: center; gap: 10px; font-size: 16px; transition: none; }
+        .checkbox-custom { width: 22px; height: 22px; border: 2px solid #BC6C25; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #FFF; flex-shrink: 0; }
+        .pack-item.active .checkbox-custom { background: #7FB069; border-color: #7FB069; }
+        .pack-item.active .checkbox-custom::after { content: "✓"; font-weight: bold; }
+        
+        .btn-main { background: #606C38; color: #FFF; border: none; padding: 14px 25px; border-radius: 10px; font-weight: bold; cursor: pointer; flex: 1; font-size: 16px; }
+        .btn-gray { background: #999; color: #FFF; border: none; padding: 14px 25px; border-radius: 10px; font-weight: bold; cursor: pointer; flex: 1; font-size: 16px; }
 
         @media (max-width: 768px) {
             .app-container { flex-direction: column; }
-            .cart-area { width: 100%; }
+            .cart-area { width: 100%; height: 45%; border-left: none; border-top: 1px solid #DDD; }
         }
     </style>
 </head>
 <body>
 
 <div id="hall-screen" class="hall">
-    <h1 style="color:var(--matcha);">33 日本動物園</h1>
+    <h1>33 日本動物園</h1>
     <div id="hall-grid" class="grid-hall"></div>
     <button onclick="document.getElementById('search-modal').style.display='flex'" style="background:var(--caramel); color:#FFF; border:none; padding:15px 40px; border-radius:30px; margin-top:30px; font-weight:bold; cursor:pointer;">🔍 查詢我的訂單</button>
     <div onclick="adminLogin()" style="margin-top:50px; color:#CCC; cursor:pointer; font-size:11px;">管理登入</div>
 </div>
 
 <div class="app-container" id="main-app">
-    <div class="list-area"><div id="prod-list" class="prod-grid"></div></div>
+    <div class="list-area">
+        <div style="margin-bottom:15px;"><button onclick="location.reload()" style="background:#FFF; border:1px solid #DDD; padding:5px 15px; border-radius:5px; cursor:pointer;">← 返回大廳</button></div>
+        <div id="prod-list" class="prod-grid"></div>
+    </div>
     <div class="cart-area">
-        <div style="padding:15px; font-weight:bold; background:#FDFDFD; border-bottom:1px solid #EEE;">🛒 購物清單</div>
-        <div id="cart-items" style="flex:1; overflow-y:auto; padding:10px;"></div>
-        <div class="cart-bottom">
-            <p style="display:flex; justify-content:space-between; font-weight:bold; font-size:18px; margin:5px 0;">總計: <span style="color:var(--caramel);">$ <span id="cart-total">0</span></span></p>
-            <input id="nick" class="input-std" placeholder="您的 LINE 暱稱">
-            <button class="btn-add" style="width:100%; padding:16px; font-size:18px;" onclick="submitOrder()">確認提交訂單</button>
-            <button onclick="backToHall()" style="width:100%; margin-top:10px; border:none; background:none; color:#999; font-size:13px;">← 返回目錄</button>
+        <div class="cart-header"><span>🛒 購物清單</span><span id="cart-count">0</span></div>
+        <div id="cart-items"></div>
+        <div class="cart-footer">
+            <div class="total-box"><span>總計</span><span id="cart-total">$0</span></div>
+            <input type="text" id="nick" style="width:100%; padding:12px; border:1px solid #DDD; border-radius:8px; margin-bottom:10px;" placeholder="LINE 暱稱 (必填)">
+            <button class="btn-main" style="width:100%;" onclick="submitOrder()">確認提交訂單</button>
         </div>
     </div>
 </div>
 
 <div id="admin-panel">
-    <div class="admin-header">
-        <b>33 園長工作台</b>
-        <button onclick="document.getElementById('admin-panel').style.display='none'">關閉</button>
-    </div>
+    <div class="admin-header"><b>33 園長工作台</b> <button onclick="location.reload()" style="background:none; border:1px solid #FFF; color:#FFF; padding:2px 10px; border-radius:4px; cursor:pointer;">關閉</button></div>
     <div class="admin-nav">
-        <button class="btn-add" onclick="renderAdminOrders()">訂單管理</button>
-        <button class="btn-add" style="background:#BC6C25;" onclick="unlockAllOrders()">🔓 一鍵全開</button>
-        <button class="btn-add" style="background:#888;" onclick="renderAdminProds()">商品維護</button>
-        <button class="btn-add" style="background:#E07A5F;" onclick="openPackAssistant()">📦 配貨助手</button>
+        <button class="btn-nav" style="background:#606C38;" onclick="renderAdminOrders()">訂單管理</button>
+        <button class="btn-nav" style="background:#BC6C25;" onclick="unlockAllOrders()">🔓 一鍵全開</button>
+        <button class="btn-nav" style="background:#829399;" onclick="renderAdminProds()">商品維護</button>
+        <button class="btn-nav" style="background:#D98E73;" onclick="openPackAssistant()">📦 配貨助手</button>
     </div>
-    <div id="admin-main" style="flex:1; overflow-y:auto; padding:15px; background:var(--gray);"></div>
+    <div id="admin-main" style="flex:1; overflow-y:auto; padding-bottom:50px;"></div>
 </div>
 
-<div id="edit-modal" class="modal">
+<div id="pack-modal" class="modal">
     <div class="modal-box">
-        <h3 id="modal-title">標題</h3>
-        <div id="modal-body"></div>
-        <div style="display:flex; gap:10px; margin-top:20px;">
-            <button class="btn-add" id="modal-save" style="flex:1;">儲存</button>
-            <button class="btn-add" style="flex:1; background:#999;" onclick="document.getElementById('edit-modal').style.display='none'">取消</button>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+            <span style="font-size:24px;">📦</span> <h2 style="margin:0; font-size:20px;">配貨助手</h2>
+        </div>
+        <div id="pack-body"></div>
+        <div style="display:flex; gap:15px; margin-top:25px;">
+            <button class="btn-main" id="save-pack-btn">🚀 更新出貨狀態</button>
+            <button class="btn-gray" onclick="document.getElementById('pack-modal').style.display='none'">取消</button>
         </div>
     </div>
 </div>
 
 <div id="search-modal" class="modal">
     <div class="modal-box">
-        <h2 style="text-align:center;">個人訂單查詢</h2>
-        <input id="search-nick" class="input-std" placeholder="您的 LINE 暱稱">
-        <div id="search-results-area"></div>
-        <button class="btn-add" style="width:100%; padding:15px;" onclick="performSearch()">開始查詢</button>
-        <button onclick="document.getElementById('search-modal').style.display='none'" style="background:none; border:none; color:#666; width:100%; margin-top:10px;">關閉</button>
+        <h2 style="text-align:center;">訂單查詢</h2>
+        <input id="search-nick" style="width:100%; padding:12px; border:1px solid #DDD; border-radius:8px; margin-bottom:15px;" placeholder="輸入您的 LINE 暱稱">
+        <div id="search-results" style="max-height:300px; overflow-y:auto; margin-bottom:15px;"></div>
+        <button class="btn-main" style="width:100%;" onclick="performSearch()">開始查詢</button>
+        <button onclick="document.getElementById('search-modal').style.display='none'" style="width:100%; background:none; border:none; color:#666; margin-top:15px; cursor:pointer;">取消</button>
     </div>
 </div>
 
@@ -282,8 +143,9 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let products = [], orders = {}, cart = [], curQty = {}, tempPackStatus = {};
+    let products = [], orders = {}, cart = [], tempPackStatus = {};
 
+    // 監聽數據
     db.ref('products').on('value', snap => { products = snap.val() || []; renderHall(); });
     db.ref('orders').on('value', snap => { orders = snap.val() || {}; if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); });
 
@@ -293,101 +155,107 @@
     }
 
     function openShop(e) {
-        document.getElementById('hall-screen').style.display='none'; document.getElementById('main-app').style.display='flex';
+        document.getElementById('hall-screen').style.display='none';
+        document.getElementById('main-app').style.display='flex';
         const list = products.filter(p => p.e === e);
-        document.getElementById('prod-list').innerHTML = list.map(p => {
-            const rid = products.indexOf(p); if(!curQty[rid]) curQty[rid] = 1;
-            return `<div class="prod-card">
-                <div class="prod-name">${p.n}</div><div class="prod-price">$${p.p}</div>
-                <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin:10px 0;">
-                    <button class="btn-add" style="padding:5px 12px; background:#DDD; color:#333;" onclick="updateQty(${rid},-1)">-</button>
-                    <span id="qty-val-${rid}">${curQty[rid]}</span>
-                    <button class="btn-add" style="padding:5px 12px; background:#DDD; color:#333;" onclick="updateQty(${rid},1)">+</button>
-                </div>
-                <button class="btn-add" onclick="addToCart(${rid})">加入購物車</button>
-            </div>`;
-        }).join('');
-    }
-
-    function updateQty(rid, d) { let v = (curQty[rid] || 1) + d; if(v < 1) v = 1; curQty[rid] = v; document.getElementById(`qty-val-${rid}`).innerText = v; }
-    function backToHall() { document.getElementById('main-app').style.display='none'; document.getElementById('hall-screen').style.display='flex'; }
-    function addToCart(rid) { const p = products[rid]; for(let i=0; i<curQty[rid]; i++) cart.push({...p, sel: "一般", pid: rid, t: Date.now()+i}); renderCart(); }
-    function renderCart() {
-        let summ = {}; cart.forEach(it => { summ[it.n] = (summ[it.n]||0)+1; });
-        document.getElementById('cart-items').innerHTML = Object.keys(summ).map(k => `<div>${k} x ${summ[k]}</div>`).join('');
-        document.getElementById('cart-total').innerText = cart.reduce((a,b)=>a+b.p,0);
-    }
-    function submitOrder() {
-        const n = document.getElementById('nick').value.trim();
-        if(!n || cart.length===0) return alert("填寫暱稱及選購");
-        db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now() }).then(() => location.reload());
-    }
-
-    function adminLogin() { if(prompt("密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; renderAdminOrders(); } }
-    function renderAdminOrders() {
-        document.getElementById('admin-main').innerHTML = Object.entries(orders).map(([k, o]) => `
-            <div class="admin-order-card"><b>${o.nick}</b> ($${o.total}) <button onclick="copyToLine('${k}')">複製明細</button></div>
+        document.getElementById('prod-list').innerHTML = list.map(p => `
+            <div class="prod-card">
+                <div><b>${p.n}</b><p>$${p.p}</p></div>
+                <button class="btn-add" onclick="addToCart(${products.indexOf(p)})">加入購物車</button>
+            </div>
         `).join('');
     }
 
-    // 配貨助手 - 恢復原本的彈窗排版
+    function addToCart(idx) {
+        cart.push({...products[idx], id: idx, t: Date.now()});
+        renderCart();
+    }
+
+    function renderCart() {
+        document.getElementById('cart-count').innerText = cart.length;
+        document.getElementById('cart-total').innerText = '$' + cart.reduce((a,b)=>a+b.p, 0);
+        document.getElementById('cart-items').innerHTML = cart.map((it, idx) => `
+            <div class="cart-item">
+                <span>${it.n}</span>
+                <button onclick="cart.splice(${idx},1);renderCart()" style="border:none;background:none;color:red;">✕</button>
+            </div>
+        `).join('');
+    }
+
+    function submitOrder() {
+        const n = document.getElementById('nick').value.trim();
+        if(!n || cart.length === 0) return alert("請填寫暱稱並選擇商品");
+        db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now() })
+        .then(() => { alert("訂單已提交！"); location.reload(); });
+    }
+
+    function adminLogin() { if(prompt("管理員密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; renderAdminOrders(); } }
+
+    function renderAdminOrders() {
+        let html = "";
+        Object.entries(orders).sort((a,b)=>b[1].time - a[1].time).forEach(([k, o]) => {
+            html += `<div class="admin-order-line">
+                <b>${o.nick}</b> <span style="color:#888;">($${o.total})</span>
+                <button class="btn-copy-sm" onclick="copyToLine('${k}')">複製明細</button>
+                <button class="btn-copy-sm" style="background:#FFEEEE; border-color:#FFCCCC;" onclick="deleteOrder('${k}')">刪除</button>
+            </div>`;
+        });
+        document.getElementById('admin-main').innerHTML = html || "<p style='padding:20px;text-align:center;'>目前沒有訂單</p>";
+    }
+
     function openPackAssistant() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
-        document.getElementById('modal-title').innerText = "📦 配貨助手";
-        document.getElementById('modal-body').innerHTML = `
-            <div id="p-step1">
-                ${evts.map(e => `<div><input type="checkbox" class="evt-sel" value="${e}"> ${e}</div>`).join('')}
-                <button class="btn-add" style="width:100%; margin-top:15px;" onclick="packStep2()">下一步</button>
-            </div>
-            <div id="p-step2" style="display:none;"></div>
-        `;
-        document.getElementById('edit-modal').style.display = 'flex';
-        document.getElementById('modal-save').style.display = 'none';
+        let html = "<div style='padding:15px;'><h3>1. 選擇場次</h3>";
+        evts.forEach(e => html += `<label style='display:block;padding:10px;background:#FFF;margin-bottom:5px;border-radius:8px;'><input type="checkbox" class="evt-sel" value="${e}"> ${e}</label>`);
+        html += `<button class="btn-main" style="width:100%;margin-top:15px;" onclick="packStep2()">下一步：選擇訂單</button></div>`;
+        document.getElementById('admin-main').innerHTML = html;
     }
 
     function packStep2() {
         const selEvts = Array.from(document.querySelectorAll('.evt-sel:checked')).map(el => el.value);
-        let html = `<b>選擇訂單：</b>`;
+        if(selEvts.length === 0) return alert("請至少選擇一個場次");
+        let html = "<div style='padding:15px;'><h3>2. 選擇訂單</h3>";
         Object.entries(orders).forEach(([k, o]) => {
             if ((o.items || []).some(it => selEvts.includes(it.e))) {
-                html += `<div><input type="checkbox" class="ord-sel" value="${k}" checked> ${o.nick}</div>`;
+                html += `<label style='display:block;padding:10px;background:#FFF;margin-bottom:5px;border-radius:8px;'><input type="checkbox" class="ord-sel" value="${k}" checked> ${o.nick}</label>`;
             }
         });
-        html += `<button class="btn-add" style="width:100%; margin-top:15px;" onclick="packFinal('${selEvts.join(',')}')">開始配貨</button>`;
-        document.getElementById('p-step1').style.display = 'none';
-        document.getElementById('p-step2').innerHTML = html;
-        document.getElementById('p-step2').style.display = 'block';
+        html += `<button class="btn-main" style="width:100%;margin-top:15px;" onclick="packFinal('${selEvts.join(',')}')">開始配貨</button></div>`;
+        document.getElementById('admin-main').innerHTML = html;
     }
 
     function packFinal(evtsStr) {
         const selEvts = evtsStr.split(',');
         const keys = Array.from(document.querySelectorAll('.ord-sel:checked')).map(el => el.value);
+        if(keys.length === 0) return alert("請至少選擇一張訂單");
         let html = "";
         keys.forEach(k => {
             const o = orders[k];
-            html += `<div style="margin-bottom:15px; border-bottom:1px solid #EEE; padding-bottom:10px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <b>👤 ${o.nick}</b>
-                    <button class="btn-add" style="font-size:11px;" onclick="copyPackCheck('${k}', '${evtsStr}')">📋 複製對帳卡</button>
+            html += `<div style="margin-bottom:20px; border-bottom:1px solid #EEE; padding-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <div>👤 <b>${o.nick}</b></div>
+                    <button class="btn-copy-sm" onclick="copyPackCheck('${k}', '${evtsStr}')">📋 複製對帳卡</button>
                 </div>`;
             (o.items || []).forEach((it, idx) => {
                 if (selEvts.includes(it.e)) {
                     const nodeKey = `${k}_${idx}`;
                     tempPackStatus[nodeKey] = it.isShipped || false;
                     html += `<div id="pack-${nodeKey}" class="pack-item ${tempPackStatus[nodeKey] ? 'active' : ''}" onclick="togglePackNode('${k}', ${idx})">
-                        <span id="icon-${nodeKey}">${tempPackStatus[nodeKey] ? '✅' : '⬜'}</span> ${it.n}
+                        <div class="checkbox-custom"></div> <span>[${it.e}] ${it.n}</span>
                     </div>`;
                 }
             });
             html += `</div>`;
         });
-        document.getElementById('p-step2').innerHTML = html;
-        document.getElementById('modal-save').style.display = 'block';
-        document.getElementById('modal-save').innerText = "🚀 保存出貨狀態";
-        document.getElementById('modal-save').onclick = () => {
+        document.getElementById('pack-body').innerHTML = html;
+        document.getElementById('pack-modal').style.display = 'flex';
+        document.getElementById('save-pack-btn').onclick = () => {
             let updates = {};
-            for(let key in tempPackStatus) { let [ok, idx] = key.split('_'); updates[`orders/${ok}/items/${idx}/isShipped`] = tempPackStatus[key]; }
-            db.ref().update(updates).then(() => { alert("已保存"); location.reload(); });
+            for(let key in tempPackStatus) {
+                let [ok, idx] = key.split('_');
+                updates[`orders/${ok}/items/${idx}/isShipped`] = tempPackStatus[key];
+            }
+            db.ref().update(updates).then(() => { alert("狀態已更新！"); location.reload(); });
         };
     }
 
@@ -395,26 +263,20 @@
         const key = `${k}_${idx}`;
         tempPackStatus[key] = !tempPackStatus[key];
         const node = document.getElementById(`pack-${key}`);
-        const icon = document.getElementById(`icon-${key}`);
-        if(tempPackStatus[key]) { node.classList.add('active'); icon.innerText = '✅'; }
-        else { node.classList.remove('active'); icon.innerText = '⬜'; }
+        if(tempPackStatus[key]) node.classList.add('active');
+        else node.classList.remove('active');
     }
 
-    // 複製對帳卡：有勾 ✅ 出現在「到貨」，沒勾 ⬜ 出現在「等候」
     function copyPackCheck(k, evtsStr) {
         const o = orders[k];
         const selEvts = evtsStr.split(',');
-        let arrived = [];
-        let waiting = [];
-
+        let arrived = [], waiting = [];
         (o.items || []).forEach((it, idx) => {
             if (selEvts.includes(it.e)) {
-                const nodeKey = `${k}_${idx}`;
-                if (tempPackStatus[nodeKey]) arrived.push(`- [${it.e}] ${it.n}`);
+                if (tempPackStatus[`${k}_${idx}`]) arrived.push(`- [${it.e}] ${it.n}`);
                 else waiting.push(`- [${it.e}] ${it.n}`);
             }
         });
-
         let txt = `🌟 【33日本動物園 - 出貨對帳】 🌟\n\n👤 暱稱：${o.nick}\n\n✅ 【本批到貨商品】：\n${arrived.join('\n') || '(無)'}\n`;
         if (waiting.length > 0) txt += `\n⏳ 【尚在等候中】：\n${waiting.join('\n')}\n`;
         txt += `\n以上資訊請核對，謝謝您 🙏`;
@@ -423,14 +285,59 @@
 
     function copyToLine(k) {
         const o = orders[k];
-        let txt = `👤 ${o.nick}\n💰 $${o.total}\n` + o.items.map(it => `- ${it.n}`).join('\n');
+        let txt = `👤 ${o.nick}\n💰 總額：$${o.total}\n---\n` + (o.items || []).map(it => `- ${it.n}`).join('\n');
         navigator.clipboard.writeText(txt).then(() => alert("明細已複製"));
     }
-    
+
+    function deleteOrder(k) { if(confirm("確定刪除此訂單？")) db.ref('orders/'+k).remove(); }
+
     function performSearch() {
         const n = document.getElementById('search-nick').value.trim().toLowerCase();
-        let res = Object.entries(orders).filter(([k, o]) => o.nick.toLowerCase() === n);
-        document.getElementById('search-results-area').innerHTML = res.map(([k, o]) => `<div style="padding:10px; background:#FFF; margin-top:5px; border-radius:8px;">${new Date(o.time).toLocaleString()}<br>金額: $${o.total}</div>`).join('');
+        if(!n) return alert("請輸入暱稱");
+        const res = Object.values(orders).filter(o => o.nick.toLowerCase() === n);
+        document.getElementById('search-results').innerHTML = res.length ? res.map(o => `
+            <div style="background:#FFF;padding:10px;margin-bottom:5px;border-radius:8px;border:1px solid #EEE;">
+                <small>${new Date(o.time).toLocaleString()}</small><br>
+                <b>金額: $${o.total}</b><br>
+                ${o.items.map(i => `<span style="font-size:12px;color:#666;">· ${i.n}</span>`).join('<br>')}
+            </div>
+        `).join('') : "<p style='text-align:center;'>查無訂單</p>";
+    }
+
+    // 商品維護功能 (完整保留)
+    function renderAdminProds() {
+        let html = "<div style='padding:15px;'><button class='btn-main' onclick='editProd(-1)' style='margin-bottom:15px;width:100%;'>+ 新增商品</button>";
+        products.forEach((p, idx) => {
+            html += `<div style='background:#FFF;padding:10px;margin-bottom:5px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;'>
+                <span>[${p.e}] ${p.n} - $${p.p}</span>
+                <button onclick='editProd(${idx})' style='border:none;background:#EEE;padding:5px 10px;border-radius:4px;'>編</button>
+            </div>`;
+        });
+        document.getElementById('admin-main').innerHTML = html + "</div>";
+    }
+
+    function editProd(idx) {
+        const p = idx === -1 ? {n:"", p:0, e:""} : products[idx];
+        const n = prompt("商品名稱", p.n);
+        const price = prompt("價格", p.p);
+        const evt = prompt("場次名稱", p.e);
+        if(n && price && evt) {
+            const newP = {n:n, p:parseInt(price), e:evt};
+            if(idx === -1) products.push(newP); else products[idx] = newP;
+            db.ref('products').set(products).then(() => renderAdminProds());
+        }
+    }
+
+    function unlockAllOrders() {
+        if(confirm("確定要將所有訂單標記為已出貨？")) {
+            let updates = {};
+            Object.keys(orders).forEach(ok => {
+                (orders[ok].items || []).forEach((it, idx) => {
+                    updates[`orders/${ok}/items/${idx}/isShipped`] = true;
+                });
+            });
+            db.ref().update(updates).then(() => alert("已全部解鎖！"));
+        }
     }
 </script>
 </body>
