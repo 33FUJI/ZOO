@@ -480,10 +480,36 @@
         };
     }
     function adminLogin() { if(prompt("密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; renderAdminProds(); } }
+
+    // 園長修正處：強化查詢功能，防止 undefined 報錯導致沒反應
     function performSearch() {
         const n = document.getElementById('search-nick').value.trim().toLowerCase();
-        let res = Object.values(orders).filter(o => o.nick.toLowerCase() === n);
-        document.getElementById('search-results-area').innerHTML = res.map(o => `<div style="background:#FFF; padding:10px; margin-top:5px; border-radius:8px;">${new Date(o.time).toLocaleString()}<br>總計:$${o.total}</div>`).join('');
+        if (!n) return alert("請輸入暱稱");
+
+        // 排除掉資料不全的訂單，避免 toLowerCase 報錯
+        let res = Object.values(orders).filter(o => {
+            return o && o.nick && typeof o.nick === 'string' && o.nick.toLowerCase() === n;
+        });
+
+        const resultsArea = document.getElementById('search-results-area');
+        if (res.length === 0) {
+            resultsArea.innerHTML = `<div style="text-align:center; padding:20px; color:#999;">查無訂單資訊</div>`;
+            return;
+        }
+
+        resultsArea.innerHTML = res.sort((a,b) => b.time - a.time).map(o => {
+            const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
+            const itemsHtml = itemList.map(it => `<li>${it.n}(${it.sel})</li>`).join('');
+            
+            return `
+                <div style="background:#FFF; padding:15px; margin-top:10px; border-radius:12px; border:1px solid #EAE2D1; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                    <div style="font-size:12px; color:#888; margin-bottom:5px;">📅 ${new Date(o.time).toLocaleString()}</div>
+                    <ul style="margin:5px 0; padding-left:20px; font-size:14px; color:var(--matcha);">${itemsHtml}</ul>
+                    <div style="text-align:right; font-weight:bold; color:var(--caramel); border-top:1px dotted #EEE; padding-top:5px; margin-top:5px;">
+                        總計：$${o.total} ${o.isUnlocked ? '🔓' : '🔒'}
+                    </div>
+                </div>`;
+        }).join('');
     }
 </script>
 
