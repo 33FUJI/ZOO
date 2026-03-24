@@ -455,7 +455,11 @@
 
     function performSearch() {
         const q = document.getElementById('search-nick').value.trim().toLowerCase(); if(!q) return alert("請輸入暱稱");
-        const results = Object.values(orders).filter(o => o && o.nick && o.nick.toLowerCase().includes(q) && o.isUnlocked && o.items);
+        const results = Object.values(orders).filter(o => {
+            // 救援邏輯：確保 o 存在且 nick 為字符串
+            if(!o || typeof o.nick !== 'string') return false;
+            return o.nick.toLowerCase().includes(q) && o.isUnlocked && o.items;
+        });
         const area = document.getElementById('search-results-area');
         if(results.length === 0) { area.innerHTML = "<p style='text-align:center; color:#999;'>查無已解鎖明細，請聯繫園長。</p>"; return; }
         area.innerHTML = results.map(o => {
