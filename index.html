@@ -220,27 +220,31 @@
     function renderAdminOrders() {
         const main = document.getElementById('admin-main'), filterEvt = document.getElementById('admin-event-filter').value;
         let pool = {}; 
-        Object.values(orders).forEach(o => {
+        let orderEntries = Object.entries(orders).filter(([k, o]) => o && o.nick && o.items);
+        orderEntries.forEach(([k, o]) => {
             const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-            itemList.forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; pool[sk].push(it); });
+            itemList.forEach(it => { 
+                if(!it) return;
+                let sk = `${it.pid}_${it.sel}`; 
+                if(!pool[sk]) pool[sk] = []; 
+                pool[sk].push(it); 
+            });
         });
         for(let k in pool) pool[k].sort((a,b) => (a.t||0) - (b.t||0));
-        
-        let orderEntries = Object.entries(orders); 
         if (filterEvt !== "ALL") orderEntries = orderEntries.filter(([k, o]) => {
             const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-            return itemList.some(it => it.e === filterEvt);
+            return itemList.some(it => it && it.e === filterEvt);
         });
-        
         main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%;" onclick="mergeSelected()">🔗 併單</button>` + orderEntries.sort((a,b)=>a[1].time-b[1].time).map(([k, o]) => {
             const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
             const itemsHtml = itemList.map((it, idx) => {
+                if(!it) return '';
                 const limit = (products[it.pid]||{}).limit||999, rank = pool[`${it.pid}_${it.sel}`].indexOf(it)+1, isWin = it.fWin || rank <= limit;
                 const isShipped = it.isShipped === true; 
-                return `<div style="font-size:13px; border-bottom:1px solid #F0F0F0; padding:6px 0; display:flex; justify-content:space-between; align-items:center; ${isShipped ? 'background:#F9F9F9; opacity:0.8;' : ''}">
-                    <div style="${isShipped ? 'text-decoration:line-through; color:#AAA;' : ''}">
+                return `<div style="font-size:13px; border-bottom:1px solid #F0F0F0; padding:6px 0; display:flex; justify-content:space-between; align-items:center; ${isShipped ? 'background:#F9F9F9;' : ''}">
+                    <div style="${isShipped ? 'color:#AAA;' : ''}">
                         <input type="checkbox" class="msg-item-check-${k}" value="${idx}" checked>
-                        <span>[${it.e}] ${it.n}(${it.sel}) <b style="color:var(--caramel); cursor:pointer;" onclick="editItemPrice('${k}', ${idx})">$${it.p}</b> ${isShipped ? '<b>[已出]</b>' : ''} <b onclick="db.ref('orders/${k}/items/${idx}').update({fWin:${!it.fWin}})" style="color:${isWin?'green':'orange'}; cursor:pointer;">${isWin?'[正]':'[補'+(rank-limit)+']'}</b></span>
+                        <span>[${it.e}] ${it.n}(${it.sel}) <b style="color:${isShipped ? '#AAA' : 'var(--caramel)'}; cursor:pointer;" onclick="editItemPrice('${k}', ${idx})">$${it.p}</b> ${isShipped ? '<b>[已出]</b>' : ''} <b onclick="db.ref('orders/${k}/items/${idx}').update({fWin:${!it.fWin}})" style="color:${isWin?'green':'orange'}; cursor:pointer;">${isWin?'[正]':'[補'+(rank-limit)+']'}</b></span>
                     </div>
                     <span onclick="removeOrderItem('${k}', ${idx})" style="color:red; cursor:pointer; font-size:11px; padding:2px 5px; border:1px solid red; border-radius:4px;">🗑️ 刪除</span>
                 </div>`;
@@ -299,8 +303,9 @@
     function showOrderSelect(selEvts) {
         let html = `<div style="font-size:13px; color:var(--caramel); margin-bottom:10px;"><b>第一步：勾選訂單</b></div><div style="max-height:400px; overflow-y:auto; background:#FFF; border-radius:10px; border:1px solid #EEE;">`;
         Object.entries(orders).forEach(([k, o]) => {
+            if(!o || !o.nick || !o.items) return;
             const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-            if (itemList.some(it => selEvts.includes(it.e))) {
+            if (itemList.some(it => it && selEvts.includes(it.e))) {
                 html += `<div style="padding:12px; border-bottom:1px solid #F5F5F5;"><input type="checkbox" class="order-select-chk" value="${k}" id="sel-${k}"><label for="sel-${k}"> <b>${o.nick}</b></label></div>`;
             }
         });
@@ -318,56 +323,40 @@
     function startDetailPacking(keys, selEvts) {
         const JPY_THRESHOLD = 6000;
         let html = `<div style="font-size:12px; color:red; margin-bottom:10px;">核對完畢後請按最下方「確認出貨更新狀態」</div>`;
-        
         keys.forEach(k => {
-            const o = orders[k];
-            let categoryTotals = {}; 
-            let groupItems = {}; 
+            const o = orders[k]; if(!o) return;
+            let categoryTotals = {}, groupItems = {}; 
             const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-
             itemList.forEach((it, idx) => {
-                if (selEvts.includes(it.e)) {
+                if (it && selEvts.includes(it.e)) {
                     let mP = products[it.pid] || products.find(p => p.n === it.n && p.e === it.e);
                     const jpyPrice = mP ? (mP.p_jpy || 0) : (it.p_jpy || 0);
                     categoryTotals[it.e] = (categoryTotals[it.e] || 0) + jpyPrice;
-
                     let groupKey = `${it.e}_${it.n}_${it.sel}`;
                     if(!groupItems[groupKey]) groupItems[groupKey] = { it, indices: [], count: 0, jpy: jpyPrice };
-                    groupItems[groupKey].indices.push(idx);
-                    groupItems[groupKey].count++;
+                    groupItems[groupKey].indices.push(idx); groupItems[groupKey].count++;
                 }
             });
-
             let bonusInfo = "";
             for (let evtName in categoryTotals) {
-                let total = categoryTotals[evtName];
-                let cards = Math.floor(total / JPY_THRESHOLD);
+                let total = categoryTotals[evtName], cards = Math.floor(total / JPY_THRESHOLD);
                 if (cards > 0) bonusInfo += `<div style="font-size:12px; color:#D62828; font-weight:bold; margin-bottom:2px;">🎁 ${evtName}：滿 ¥${total} ➔ 送 ${cards} 張卡</div>`;
                 else bonusInfo += `<div style="font-size:11px; color:#999;">⚪ ${evtName}：¥${total} (未達)</div>`;
             }
-
             html += `<div style="background:#FFF; border:1px solid #EAE2D1; border-radius:12px; padding:12px; margin-bottom:15px;">
                 <div style="border-bottom:1px solid #F4F1EA; padding-bottom:8px; margin-bottom:10px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <b>👤 ${o.nick}</b>
-                        <button onclick="copyShippingCard('${k}', '${selEvts.join(',')}')" style="background:var(--caramel); color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:11px;">📋 複製對帳卡</button>
-                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center;"><b>👤 ${o.nick}</b><button onclick="copyShippingCard('${k}', '${selEvts.join(',')}')" style="background:var(--caramel); color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:11px;">📋 複製對帳卡</button></div>
                     <div style="margin-top:8px; padding:8px; background:#FEF9EF; border-left:4px solid #BC6C25; border-radius:4px;">${bonusInfo || '無相符場次'}</div>
                 </div>`;
-            
             for (let gKey in groupItems) {
                 let g = groupItems[gKey];
                 let allChecked = g.indices.every(idx => {
                     if (tempPackStatus[`${k}_${idx}`] === undefined) tempPackStatus[`${k}_${idx}`] = g.it.isShipped === true;
                     return tempPackStatus[`${k}_${idx}`];
                 });
-
                 html += `<div onclick="toggleGroupCheck('${k}', '${g.indices.join(',')}', ${!allChecked}, '${selEvts.join(',')}', '${keys.join(',')}')" style="cursor:pointer; display:flex; align-items:center; gap:10px; padding:10px; margin-bottom:5px; border-radius:6px; background:${allChecked ? '#FEF9EF' : '#FFF'}; border:1px solid ${allChecked ? '#BC6C25' : '#DDD'};">
                     <span style="font-size:18px;">${allChecked ? '☑️' : '⬜'}</span>
-                    <div style="flex:1;">
-                        <div style="font-size:10px; color:#888;">[${g.it.e}] 單價: ¥${g.jpy}</div>
-                        <span style="${g.it.isShipped ? 'color:#AAA; text-decoration:line-through;' : ''}"><b>${g.it.n} (${g.it.sel})</b> <span style="color:var(--caramel); font-weight:bold;">x${g.count}</span></span>
-                    </div>
+                    <div style="flex:1;"><div style="font-size:10px; color:#888;">[${g.it.e}] 單價: ¥${g.jpy}</div><span style="${g.it.isShipped ? 'color:#AAA;' : ''}"><b>${g.it.n} (${g.it.sel})</b> <span style="color:${allChecked ? '#BC6C25' : 'var(--caramel)'}; font-weight:bold;">x${g.count}</span></span></div>
                 </div>`;
             }
             html += `</div>`;
@@ -379,9 +368,7 @@
     }
 
     function toggleGroupCheck(k, idxsStr, status, selEvtsStr, keysStr) {
-        idxsStr.split(',').forEach(idx => {
-            tempPackStatus[`${k}_${idx}`] = status;
-        });
+        idxsStr.split(',').forEach(idx => { tempPackStatus[`${k}_${idx}`] = status; });
         startDetailPacking(keysStr.split(','), selEvtsStr.split(','));
     }
 
@@ -395,42 +382,23 @@
     }
 
     function copyShippingCard(orderKey, selEvtsStr) {
-        const o = orders[orderKey], selEvts = selEvtsStr.split(','), JPY_THRESHOLD = 6000;
+        const o = orders[orderKey], selEvts = selEvtsStr.split(','), JPY_THRESHOLD = 6000; if(!o) return;
         let nowShipping = {}, totals = {}, stillWaiting = {};
         const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-        
         itemList.forEach((it, idx) => {
-            if (selEvts.includes(it.e)) {
+            if (it && selEvts.includes(it.e)) {
                 let mP = products[it.pid] || products.find(p => p.n === it.n && p.e === it.e);
                 const jpyPrice = mP ? (mP.p_jpy || 0) : (it.p_jpy || 0);
                 let gKey = `[${it.e}] ${it.n}(${it.sel})`;
-
-                if (tempPackStatus[`${orderKey}_${idx}`]) {
-                    nowShipping[gKey] = (nowShipping[gKey] || 0) + 1;
-                    totals[it.e] = (totals[it.e] || 0) + jpyPrice;
-                } else {
-                    stillWaiting[gKey] = (stillWaiting[gKey] || 0) + 1;
-                }
+                if (tempPackStatus[`${orderKey}_${idx}`]) { nowShipping[gKey] = (nowShipping[gKey] || 0) + 1; totals[it.e] = (totals[it.e] || 0) + jpyPrice; }
+                else { stillWaiting[gKey] = (stillWaiting[gKey] || 0) + 1; }
             }
         });
-        
         let txt = `🌟 【33日本動物園 - 出貨對帳】 🌟\n\n👤 暱稱：${o.nick}\n\n📦 本次預計寄出：\n`;
         for(let k in nowShipping) txt += `- ${k} x${nowShipping[k]}\n`;
-        
-        if (Object.keys(stillWaiting).length > 0) {
-            txt += `\n⏳ 【尚在等候中】：\n`;
-            for(let k in stillWaiting) txt += `- ${k} x${stillWaiting[k]}\n`;
-        }
-        
-        txt += `\n🎁 滿額禮統計：\n`;
-        let hasBonus = false;
-        for(let e in totals) { 
-            let c = Math.floor(totals[e]/JPY_THRESHOLD); 
-            if(c > 0) { 
-                txt += `- ${e}：滿 ¥${totals[e]} 送 ${c} 張卡\n`; 
-                hasBonus = true; 
-            }
-        }
+        if (Object.keys(stillWaiting).length > 0) { txt += `\n⏳ 【尚在等候中】：\n`; for(let k in stillWaiting) txt += `- ${k} x${stillWaiting[k]}\n`; }
+        txt += `\n🎁 滿額禮統計：\n`; let hasBonus = false;
+        for(let e in totals) { let c = Math.floor(totals[e]/JPY_THRESHOLD); if(c > 0) { txt += `- ${e}：滿 ¥${totals[e]} 送 ${c} 張卡\n`; hasBonus = true; } }
         if(!hasBonus) txt += `(本次寄出內容未達滿額禮門檻)\n`;
         txt += `\n以上資訊供核對，無誤將為您安排寄出唷！`;
         navigator.clipboard.writeText(txt).then(() => alert("對帳卡已複製！"));
@@ -440,19 +408,22 @@
         const checks = Array.from(document.querySelectorAll('.merge-check:checked')); if(checks.length<2) return alert("選兩筆以上");
         const keys = checks.map(el => el.value); let items = [], total = 0;
         keys.forEach(k => { 
+            if(!orders[k]) return;
             const itemList = Array.isArray(orders[k].items) ? orders[k].items : Object.values(orders[k].items || {});
-            items = items.concat(itemList); 
-            total += (orders[k].total||0); 
+            items = items.concat(itemList); total += (orders[k].total||0); 
         });
         db.ref('orders').push({ nick: checks[0].getAttribute('data-nick'), items, total, time: Date.now(), isUnlocked: true }).then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); });
     }
     function copyToLine(k) {
-        const o = orders[k]; let txt = `🌟 ${o.nick} 明細 🌟\n`;
+        const o = orders[k]; if(!o) return;
+        let txt = `🌟 ${o.nick} 明細 🌟\n`;
         const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-        itemList.forEach((it, i) => txt += `${i+1}. ${it.n}(${it.sel}) $${it.p}\n`);
+        itemList.forEach((it, i) => { if(it) txt += `${i+1}. ${it.n}(${it.sel}) $${it.p}\n`; });
         txt += `總計：$${o.total}`; navigator.clipboard.writeText(txt).then(() => alert("已複製"));
     }
-    function unlockAllOrders() { const ups = {}; Object.keys(orders).forEach(k => ups[`${k}/isUnlocked`] = true); db.ref('orders').update(ups); }
+    function unlockAllOrders() { 
+        const ups = {}; Object.keys(orders).forEach(k => { if(orders[k]) ups[`${k}/isUnlocked`] = true; }); db.ref('orders').update(ups); 
+    }
     function askExport(type) {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
         document.getElementById('modal-title').innerText = "匯出場次";
@@ -462,56 +433,46 @@
             const sel = Array.from(document.querySelectorAll('.evt-check:checked')).map(el => el.value);
             let txt = `${type === 'summary' ? '採購統計' : '匯出明細'}\n`;
             if(type === 'summary') {
-                let s = {}; 
-                Object.values(orders).forEach(o => {
+                let s = {}; Object.values(orders).forEach(o => {
+                    if(!o || !o.items) return;
                     const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-                    itemList.forEach(it => { if(sel.includes(it.e)){ let k = `[${it.e}] ${it.n}(${it.sel})`; s[k]=(s[k]||0)+1; } });
+                    itemList.forEach(it => { if(it && sel.includes(it.e)) { let k = `${it.e}_${it.n}_${it.sel}`; s[k] = (s[k]||0)+1; } });
                 });
-                for(let k in s) txt += `${k} : ${s[k]}\n`;
+                for(let k in s) txt += `${k} x${s[k]}\n`;
             } else {
-                Object.values(orders).forEach(o => { 
+                Object.values(orders).sort((a,b)=>a.time-b.time).forEach(o => {
+                    if(!o || !o.items) return;
                     const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-                    const fs = itemList.filter(it => sel.includes(it.e)); 
-                    if(fs.length){ txt += `\n【${o.nick}】\n`; fs.forEach(it => txt += `- ${it.n}(${it.sel})\n`); } 
+                    if(itemList.some(it => it && sel.includes(it.e))) {
+                        txt += `\n[${o.nick}]\n`;
+                        itemList.forEach(it => { if(it && sel.includes(it.e)) txt += `- ${it.n}(${it.sel}) $${it.p}\n`; });
+                    }
                 });
             }
-            const blob = new Blob([txt], { type: "text/plain" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "export.txt"; a.click();
-            document.getElementById('edit-modal').style.display='none';
+            navigator.clipboard.writeText(txt).then(() => alert("已複製"));
         };
     }
-    function adminLogin() { if(prompt("密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; renderAdminProds(); } }
 
-    // 園長修正處：強化查詢功能，防止 undefined 報錯導致沒反應
     function performSearch() {
-        const n = document.getElementById('search-nick').value.trim().toLowerCase();
-        if (!n) return alert("請輸入暱稱");
-
-        // 排除掉資料不全的訂單，避免 toLowerCase 報錯
-        let res = Object.values(orders).filter(o => {
-            return o && o.nick && typeof o.nick === 'string' && o.nick.toLowerCase() === n;
-        });
-
-        const resultsArea = document.getElementById('search-results-area');
-        if (res.length === 0) {
-            resultsArea.innerHTML = `<div style="text-align:center; padding:20px; color:#999;">查無訂單資訊</div>`;
-            return;
-        }
-
-        resultsArea.innerHTML = res.sort((a,b) => b.time - a.time).map(o => {
+        const q = document.getElementById('search-nick').value.trim().toLowerCase(); if(!q) return alert("請輸入暱稱");
+        const results = Object.values(orders).filter(o => o && o.nick && o.nick.toLowerCase().includes(q) && o.isUnlocked && o.items);
+        const area = document.getElementById('search-results-area');
+        if(results.length === 0) { area.innerHTML = "<p style='text-align:center; color:#999;'>查無已解鎖明細，請聯繫園長。</p>"; return; }
+        area.innerHTML = results.map(o => {
             const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-            const itemsHtml = itemList.map(it => `<li>${it.n}(${it.sel})</li>`).join('');
-            
-            return `
-                <div style="background:#FFF; padding:15px; margin-top:10px; border-radius:12px; border:1px solid #EAE2D1; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                    <div style="font-size:12px; color:#888; margin-bottom:5px;">📅 ${new Date(o.time).toLocaleString()}</div>
-                    <ul style="margin:5px 0; padding-left:20px; font-size:14px; color:var(--matcha);">${itemsHtml}</ul>
-                    <div style="text-align:right; font-weight:bold; color:var(--caramel); border-top:1px dotted #EEE; padding-top:5px; margin-top:5px;">
-                        總計：$${o.total} ${o.isUnlocked ? '🔓' : '🔒'}
-                    </div>
-                </div>`;
+            const itemsHtml = itemList.map(it => {
+                if(!it) return '';
+                const isShipped = it.isShipped === true;
+                return `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px dashed #DDD; ${isShipped ? 'color:#AAA;' : ''}"><span>${it.n}(${it.sel}) ${isShipped ? '[已出]' : ''}</span><span>$${it.p}</span></div>`;
+            }).join('');
+            return `<div style="background:#FFF; padding:15px; border-radius:10px; margin-top:10px; border:1px solid #EAE2D1;">
+                <div style="font-weight:bold; color:var(--matcha); border-bottom:1px solid #EEE; padding-bottom:5px; margin-bottom:5px;">${o.nick} 的訂單</div>
+                ${itemsHtml}<div style="text-align:right; font-weight:bold; margin-top:8px; color:var(--caramel);">總計：$${o.total}</div>
+            </div>`;
         }).join('');
     }
-</script>
 
+    function adminLogin() { let pw = prompt("請輸入管理密碼"); if(pw === "1239") document.getElementById('admin-panel').style.display = 'flex'; }
+</script>
 </body>
 </html>
