@@ -183,7 +183,7 @@
     function renderCart() {
         let summ = {}; cart.forEach(it => { let k = `${it.pid}_${it.sel}`; summ[k] = (summ[k]||0)+1; });
         document.getElementById('cart-items').innerHTML = Object.keys(summ).map(k => {
-            const [pid, sel] = k.split('_'); return `<div style="padding:8px 0; border-bottom:1px solid #EEE; display:flex; justify-content:space-between;"><span>${products[pid].n}(${sel}) x ${summ[k]}</span><span onclick="cart=cart.filter(x=>!(x.pid==${pid}&&x.sel=='${sel}'));renderCart();">✕</span></div>`
+            const [pid, sel] = k.split('_'); return `<div style="padding:8px 0; border-bottom:1px solid #EEE; display:flex; justify-content:space-between;"><span>${products[pid].n}(${sel}) x ${summ[k]}</span><span onclick="cart=cart.filter(x=>!(x.pid==${pid}&&x.sel=='${sel}'));renderCart();" style="cursor:pointer;">✕</span></div>`
         }).join('');
         document.getElementById('cart-total').innerText = cart.reduce((a,b)=>a+b.p,0);
     }
@@ -267,7 +267,7 @@
     function openPackAssistant() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
         tempPackStatus = {}; 
-        document.getElementById('modal-title').innerText = "📦 配貨出貨助手 (同品項合併)";
+        document.getElementById('modal-title').innerText = "📦 配貨出貨助手";
         let html = `<div id="step0-area"><div style="font-size:13px; color:var(--caramel); margin-bottom:10px;"><b>第 0 步：勾選處理場次</b></div><div style="background:#FFF; padding:10px; border-radius:10px; border:1px solid #EEE; max-height:200px; overflow-y:auto;">${evts.map(e => `<div style="padding:5px 0;"><input type="checkbox" class="evt-select-chk" value="${e}" id="evt-${e}"><label for="evt-${e}"> ${e}</label></div>`).join('')}</div></div><div id="step1-area" style="display:none; margin-top:15px;"></div><div id="step2-area" style="display:none; margin-top:15px;"></div>`;
         document.getElementById('modal-body').innerHTML = html;
         document.getElementById('edit-modal').style.display = 'flex';
@@ -300,57 +300,39 @@
     function startDetailPacking(keys, selEvts) {
         const JPY_THRESHOLD = 6000;
         let html = `<div style="font-size:12px; color:red; margin-bottom:10px;">核對完畢後請按最下方「確認出貨更新狀態」</div>`;
-        
         keys.forEach(k => {
             const o = orders[k];
-            let categoryTotals = {}; 
-            let groupItems = {}; // 用於合併同品項顯示
-
+            let categoryTotals = {}, groupItems = {};
             (o.items || []).forEach((it, idx) => {
                 if (selEvts.includes(it.e)) {
-                    // 計算滿額禮
                     let mP = products[it.pid] || products.find(p => p.n === it.n && p.e === it.e);
                     const jpyPrice = mP ? (mP.p_jpy || 0) : (it.p_jpy || 0);
                     categoryTotals[it.e] = (categoryTotals[it.e] || 0) + jpyPrice;
-
-                    // 分組合併
                     let groupKey = `${it.e}_${it.n}_${it.sel}`;
                     if(!groupItems[groupKey]) groupItems[groupKey] = { it, indices: [], count: 0, jpy: jpyPrice };
                     groupItems[groupKey].indices.push(idx);
                     groupItems[groupKey].count++;
                 }
             });
-
             let bonusInfo = "";
             for (let evtName in categoryTotals) {
                 let total = categoryTotals[evtName];
                 let cards = Math.floor(total / JPY_THRESHOLD);
-                if (cards > 0) bonusInfo += `<div style="font-size:12px; color:#D62828; font-weight:bold; margin-bottom:2px;">🎁 ${evtName}：滿 ¥${total} ➔ 送 ${cards} 張卡</div>`;
-                else bonusInfo += `<div style="font-size:11px; color:#999;">⚪ ${evtName}：¥${total} (未達)</div>`;
+                bonusInfo += cards > 0 ? `<div style="font-size:12px; color:#D62828; font-weight:bold;">🎁 ${evtName}：送 ${cards} 張卡</div>` : `<div style="font-size:11px; color:#999;">⚪ ${evtName}：¥${total}</div>`;
             }
-
             html += `<div style="background:#FFF; border:1px solid #EAE2D1; border-radius:12px; padding:12px; margin-bottom:15px;">
-                <div style="border-bottom:1px solid #F4F1EA; padding-bottom:8px; margin-bottom:10px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <b>👤 ${o.nick}</b>
-                        <button onclick="copyShippingCard('${k}', '${selEvts.join(',')}')" style="background:var(--caramel); color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:11px;">📋 複製對帳卡</button>
-                    </div>
-                    <div style="margin-top:8px; padding:8px; background:#FEF9EF; border-left:4px solid #BC6C25; border-radius:4px;">${bonusInfo || '無相符場次'}</div>
-                </div>`;
-            
+                <div style="display:flex; justify-content:space-between; align-items:center;"><b>👤 ${o.nick}</b><button onclick="copyShippingCard('${k}', '${selEvts.join(',')}')" style="background:var(--caramel); color:#fff; border:none; padding:4px 8px; border-radius:6px; font-size:11px;">📋 複製對帳卡</button></div>
+                <div style="margin-top:8px; padding:8px; background:#FEF9EF; border-radius:4px;">${bonusInfo}</div>`;
             for (let gKey in groupItems) {
                 let g = groupItems[gKey];
-                // 只要組內任一項被勾選，整個組就視為處理中 (此邏輯可依園長需求調整，目前點擊會同步組內所有 index)
                 let allChecked = g.indices.every(idx => {
                     if (tempPackStatus[`${k}_${idx}`] === undefined) tempPackStatus[`${k}_${idx}`] = g.it.isShipped === true;
                     return tempPackStatus[`${k}_${idx}`];
                 });
-
-                html += `<div onclick="toggleGroupCheck('${k}', '${g.indices.join(',')}', ${!allChecked}, '${selEvts.join(',')}', '${keys.join(',')}')" style="cursor:pointer; display:flex; align-items:center; gap:10px; padding:10px; margin-bottom:5px; border-radius:6px; background:${allChecked ? '#FEF9EF' : '#FFF'}; border:1px solid ${allChecked ? '#BC6C25' : '#DDD'};">
-                    <span style="font-size:18px;">${allChecked ? '☑️' : '⬜'}</span>
+                html += `<div onclick="toggleGroupCheck('${k}', '${g.indices.join(',')}', ${!allChecked}, '${selEvts.join(',')}', '${keys.join(',')}')" style="cursor:pointer; display:flex; align-items:center; gap:10px; padding:10px; margin-top:5px; border-radius:6px; background:${allChecked ? '#FEF9EF' : '#FFF'}; border:1px solid ${allChecked ? '#BC6C25' : '#DDD'};">
+                    <span>${allChecked ? '☑️' : '⬜'}</span>
                     <div style="flex:1;">
-                        <div style="font-size:10px; color:#888;">[${g.it.e}] 單價: ¥${g.jpy}</div>
-                        <span style="${g.it.isShipped ? 'color:#AAA; text-decoration:line-through;' : ''}"><b>${g.it.n} (${g.it.sel})</b> <span style="color:var(--caramel); font-weight:bold;">x${g.count}</span></span>
+                        <span style="${g.it.isShipped ? 'color:#AAA; text-decoration:line-through;' : ''}"><b>${g.it.n} (${g.it.sel})</b> <span style="color:var(--caramel);">x${g.count}</span></span>
                     </div>
                 </div>`;
             }
@@ -359,13 +341,11 @@
         document.getElementById('step1-area').style.display = 'none';
         const s2 = document.getElementById('step2-area'); s2.innerHTML = html; s2.style.display = 'block';
         const btn = document.getElementById('modal-save'); btn.innerText = "🚀 確認出貨並更新狀態";
-        btn.onclick = () => { if(confirm("確定更新勾選商品為已出貨？")) saveShippingUpdates(); };
+        btn.onclick = () => { if(confirm("確定更新？")) saveShippingUpdates(); };
     }
 
     function toggleGroupCheck(k, idxsStr, status, selEvtsStr, keysStr) {
-        idxsStr.split(',').forEach(idx => {
-            tempPackStatus[`${k}_${idx}`] = status;
-        });
+        idxsStr.split(',').forEach(idx => tempPackStatus[`${k}_${idx}`] = status);
         startDetailPacking(keysStr.split(','), selEvtsStr.split(','));
     }
 
@@ -375,47 +355,29 @@
             const [orderKey, itemIdx] = key.split('_');
             updates[`orders/${orderKey}/items/${itemIdx}/isShipped`] = tempPackStatus[key];
         }
-        db.ref().update(updates).then(() => { alert("已連動更新狀態！"); document.getElementById('edit-modal').style.display = 'none'; renderAdminOrders(); });
+        db.ref().update(updates).then(() => { alert("更新成功"); document.getElementById('edit-modal').style.display = 'none'; renderAdminOrders(); });
     }
 
     function copyShippingCard(orderKey, selEvtsStr) {
         const o = orders[orderKey], selEvts = selEvtsStr.split(','), JPY_THRESHOLD = 6000;
         let nowShipping = {}, totals = {}, stillWaiting = {};
-        
         (o.items || []).forEach((it, idx) => {
             if (selEvts.includes(it.e)) {
                 let mP = products[it.pid] || products.find(p => p.n === it.n && p.e === it.e);
                 const jpyPrice = mP ? (mP.p_jpy || 0) : (it.p_jpy || 0);
                 let gKey = `[${it.e}] ${it.n}(${it.sel})`;
-
-                if (tempPackStatus[`${orderKey}_${idx}`]) {
-                    nowShipping[gKey] = (nowShipping[gKey] || 0) + 1;
-                    totals[it.e] = (totals[it.e] || 0) + jpyPrice;
-                } else {
-                    stillWaiting[gKey] = (stillWaiting[gKey] || 0) + 1;
-                }
+                if (tempPackStatus[`${orderKey}_${idx}`]) { nowShipping[gKey] = (nowShipping[gKey] || 0) + 1; totals[it.e] = (totals[it.e] || 0) + jpyPrice; } 
+                else { stillWaiting[gKey] = (stillWaiting[gKey] || 0) + 1; }
             }
         });
-        
         let txt = `🌟 【33日本動物園 - 出貨對帳】 🌟\n\n👤 暱稱：${o.nick}\n\n📦 本次預計寄出：\n`;
         for(let k in nowShipping) txt += `- ${k} x${nowShipping[k]}\n`;
-        
-        if (Object.keys(stillWaiting).length > 0) {
-            txt += `\n⏳ 【尚在等候中】：\n`;
-            for(let k in stillWaiting) txt += `- ${k} x${stillWaiting[k]}\n`;
-        }
-        
+        if (Object.keys(stillWaiting).length > 0) { txt += `\n⏳ 【尚在等候中】：\n`; for(let k in stillWaiting) txt += `- ${k} x${stillWaiting[k]}\n`; }
         txt += `\n🎁 滿額禮統計：\n`;
         let hasBonus = false;
-        for(let e in totals) { 
-            let c = Math.floor(totals[e]/JPY_THRESHOLD); 
-            if(c > 0) { 
-                txt += `- ${e}：滿 ¥${totals[e]} 送 ${c} 張卡\n`; 
-                hasBonus = true; 
-            }
-        }
+        for(let e in totals) { let c = Math.floor(totals[e]/JPY_THRESHOLD); if(c > 0) { txt += `- ${e}：滿 ¥${totals[e]} 送 ${c} 張卡\n`; hasBonus = true; } }
         if(!hasBonus) txt += `(本次寄出內容未達滿額禮門檻)\n`;
-        txt += `\n以上資訊供核對，無誤將為您安排寄出唷！`;
+        txt += `\n無誤將為您安排寄出唷！`;
         navigator.clipboard.writeText(txt).then(() => alert("對帳卡已複製！"));
     }
 
