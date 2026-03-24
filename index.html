@@ -111,9 +111,8 @@
 <div id="search-modal" class="modal">
     <div class="modal-box">
         <h2 style="text-align:center;">個人訂單查詢</h2>
-        <input id="search-nick" class="input-std" placeholder="您的 LINE 暱稱">
+        <input id="search-nick" class="input-std" placeholder="您的 LINE 暱稱" oninput="performSearch()">
         <div id="search-results-area" style="max-height:400px; overflow-y:auto; margin-bottom:15px; border-top:1px solid #EEE;"></div>
-        <button class="btn-add" style="width:100%; padding:15px;" onclick="performSearch()">開始查詢</button>
         <button onclick="document.getElementById('search-modal').style.display='none'" style="width:100%; margin-top:10px; background:none; border:none; color:#666;">關閉</button>
     </div>
 </div>
@@ -237,8 +236,14 @@
         });
         main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%;" onclick="mergeSelected()">🔗 併單</button>` + orderEntries.sort((a,b)=>a[1].time-b[1].time).map(([k, o]) => {
             const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-            const itemsHtml = itemList.map((it, idx) => {
+            // 已出貨置底排序邏輯
+            const sortedItems = [...itemList].sort((a,b) => {
+                if(a.isShipped === b.isShipped) return 0;
+                return a.isShipped ? 1 : -1;
+            });
+            const itemsHtml = sortedItems.map((it) => {
                 if(!it) return '';
+                const idx = itemList.indexOf(it);
                 const limit = (products[it.pid]||{}).limit||999, rank = pool[`${it.pid}_${it.sel}`].indexOf(it)+1, isWin = it.fWin || rank <= limit;
                 const isShipped = it.isShipped === true; 
                 return `<div style="font-size:13px; border-bottom:1px solid #F0F0F0; padding:6px 0; display:flex; justify-content:space-between; align-items:center; ${isShipped ? 'background:#F9F9F9;' : ''}">
@@ -410,7 +415,9 @@
         keys.forEach(k => { 
             if(!orders[k]) return;
             const itemList = Array.isArray(orders[k].items) ? orders[k].items : Object.values(orders[k].items || {});
-            items = items.concat(itemList); total += (orders[k].total||0); 
+            // 併單時保留原本順序
+            items = items.concat(itemList); 
+            total += (orders[k].total||0); 
         });
         db.ref('orders').push({ nick: checks[0].getAttribute('data-nick'), items, total, time: Date.now(), isUnlocked: true }).then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); });
     }
@@ -418,7 +425,12 @@
         const o = orders[k]; if(!o) return;
         let txt = `🌟 ${o.nick} 明細 🌟\n`;
         const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-        itemList.forEach((it, i) => { if(it) txt += `${i+1}. ${it.n}(${it.sel}) $${it.p}\n`; });
+        // 明細複製也遵循已出貨置底
+        const sortedItems = [...itemList].sort((a,b) => {
+            if(a.isShipped === b.isShipped) return 0;
+            return a.isShipped ? 1 : -1;
+        });
+        sortedItems.forEach((it, i) => { if(it) txt += `${i+1}. ${it.n}(${it.sel})${it.isShipped?'[已出]':''} $${it.p}\n`; });
         txt += `總計：$${o.total}`; navigator.clipboard.writeText(txt).then(() => alert("已複製"));
     }
     function unlockAllOrders() { 
@@ -454,17 +466,26 @@
     }
 
     function performSearch() {
-        const q = document.getElementById('search-nick').value.trim().toLowerCase(); if(!q) return alert("請輸入暱稱");
-        const results = Object.values(orders).filter(o => {
-            // 救援邏輯：確保 o 存在且 nick 為字符串
-            if(!o || typeof o.nick !== 'string') return false;
-            return o.nick.toLowerCase().includes(q) && o.isUnlocked && o.items;
-        });
+        const q = document.getElementById('search-nick').value.trim().toLowerCase(); 
         const area = document.getElementById('search-results-area');
-        if(results.length === 0) { area.innerHTML = "<p style='text-align:center; color:#999;'>查無已解鎖明細，請聯繫園長。</p>"; return; }
+        if(!q) { area.innerHTML = ""; return; }
+
+        const results = Object.values(orders).filter(o => {
+            // 增強檢查：nick 必須存在且為字串，避免 toLowerCase 報錯
+            const name = (o && o.nick) ? String(o.nick).toLowerCase() : "";
+            return name.includes(q) && o.isUnlocked && o.items;
+        });
+        
+        if(results.length === 0) { area.innerHTML = "<p style='text-align:center; color:#999; margin-top:10px;'>查無已解鎖明細，請聯繫園長。</p>"; return; }
+        
         area.innerHTML = results.map(o => {
             const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-            const itemsHtml = itemList.map(it => {
+            // 查詢結果也執行已出貨置底
+            const sortedItems = [...itemList].sort((a,b) => {
+                if(a.isShipped === b.isShipped) return 0;
+                return a.isShipped ? 1 : -1;
+            });
+            const itemsHtml = sortedItems.map(it => {
                 if(!it) return '';
                 const isShipped = it.isShipped === true;
                 return `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px dashed #DDD; ${isShipped ? 'color:#AAA;' : ''}"><span>${it.n}(${it.sel}) ${isShipped ? '[已出]' : ''}</span><span>$${it.p}</span></div>`;
