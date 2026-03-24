@@ -11,9 +11,13 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Noto Sans TC', sans-serif; }
         html, body { height: 100%; margin: 0; padding: 0; background: var(--gray); overflow: hidden; color: var(--wood); }
         body { display: flex; flex-direction: column; }
+        
+        /* 大廳 */
         .hall { position: fixed; inset: 0; background: var(--rice); z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
         .grid-hall { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; width: 100%; max-width: 500px; margin-top: 20px; }
         .card-hall { background: #FFF; padding: 25px 10px; border-radius: 15px; border: 1px solid #EAE2D1; text-align: center; cursor: pointer; box-shadow: 0 4px 0 #EAE2D1; font-weight: bold; color: var(--matcha); }
+        
+        /* 主介面 */
         .app-container { display: none; flex: 1; overflow: hidden; flex-direction: row; }
         .list-area { flex: 1; overflow-y: auto; padding: 15px; background: var(--gray); }
         .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; max-width: 1400px; margin: 0 auto; }
@@ -23,27 +27,35 @@
         .spec-area { min-height: 60px; margin-bottom: 8px; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
         .qty-area { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; }
         .btn-qty { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #DDD; background: #FFF; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        
+        /* 購物車 */
         .cart-area { width: 360px; background: #FFF; border-left: 1px solid #DDD; display: flex; flex-direction: column; }
         .cart-bottom { padding: 15px; border-top: 1px solid #EEE; padding-bottom: calc(15px + env(safe-area-inset-bottom)); }
         .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
+        
+        /* 管理面板 */
         #admin-panel { position: fixed; inset: 0; background: #F8F9FA; z-index: 4000; display: none; flex-direction: column; }
         .admin-header { background: var(--wood); color: #FFF; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .admin-nav { padding: 10px; background: #EEE; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #DDD; }
         .admin-order-card { background: #FFF; border: 1px solid #EEE; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
-        .status-label { cursor: pointer; background: #F0F0F0; padding: 6px; border-radius: 6px; font-size: 12px; border: 1px solid #DDD; }
+        
+        /* 彈窗 */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 15px; }
         .modal-box { background: var(--rice); padding: 25px; border-radius: 20px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
         .input-std { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #DDD; border-radius: 10px; }
+
         @media (max-width: 768px) { .app-container { flex-direction: column; } .cart-area { width: 100%; flex: 1.5; } .prod-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
     </style>
 </head>
 <body>
+
 <div id="hall-screen" class="hall">
     <h1 style="color:var(--matcha);">33 日本動物園</h1>
     <div id="hall-grid" class="grid-hall"></div>
     <button onclick="document.getElementById('search-modal').style.display='flex'" style="background:var(--caramel); color:#FFF; border:none; padding:15px 40px; border-radius:30px; margin-top:30px; font-weight:bold; cursor:pointer;">🔍 查詢我的訂單</button>
     <div onclick="adminLogin()" style="margin-top:50px; color:#CCC; cursor:pointer; font-size:11px;">管理登入</div>
 </div>
+
 <div class="app-container" id="main-app">
     <div class="list-area"><div id="prod-list" class="prod-grid"></div></div>
     <div class="cart-area">
@@ -57,8 +69,17 @@
         </div>
     </div>
 </div>
+
 <div id="admin-panel">
-    <div class="admin-header"><b>33 園長工作台</b><div><select id="admin-evt-f" onchange="renderAdminOrders()"><option value="ALL">所有場次</option></select><button onclick="document.getElementById('admin-panel').style.display='none'">關閉</button></div></div>
+    <div class="admin-header">
+        <b>33 園長工作台</b>
+        <div>
+            <select id="admin-evt-f" onchange="renderAdminOrders()">
+                <option value="ALL">所有場次</option>
+            </select>
+            <button onclick="document.getElementById('admin-panel').style.display='none'">關閉</button>
+        </div>
+    </div>
     <div class="admin-nav">
         <button class="btn-add" style="width:auto; padding:8px 15px;" onclick="renderAdminOrders()">訂單管理</button>
         <button class="btn-add" style="width:auto; padding:8px 15px; background:#BC6C25;" onclick="unlockAllOrders()">🔓 一鍵全開</button>
@@ -69,166 +90,374 @@
     </div>
     <div id="admin-main" style="flex:1; overflow-y:auto; padding:15px; background:var(--gray);"></div>
 </div>
-<div id="edit-modal" class="modal"><div class="modal-box"><h3 id="modal-title"></h3><div id="modal-body"></div><div style="display:flex; gap:10px; margin-top:20px;"><button class="btn-add" id="modal-save" style="flex:1;">儲存</button><button class="btn-add" style="flex:1; background:#999;" onclick="document.getElementById('edit-modal').style.display='none'">取消</button></div></div></div>
-<div id="search-modal" class="modal"><div class="modal-box"><h2>訂單查詢</h2><input id="search-nick" class="input-std" placeholder="LINE 暱稱"><div id="search-results-area"></div><button class="btn-add" style="width:100%;" onclick="performSearch()">搜尋</button><button onclick="document.getElementById('search-modal').style.display='none'" style="width:100%; margin-top:10px; background:none; border:none;">關閉</button></div></div>
+
+<div id="edit-modal" class="modal">
+    <div class="modal-box">
+        <h3 id="modal-title"></h3>
+        <div id="modal-body"></div>
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button class="btn-add" id="modal-save" style="flex:1;">儲存</button>
+            <button class="btn-add" style="flex:1; background:#999;" onclick="document.getElementById('edit-modal').style.display='none'">取消</button>
+        </div>
+    </div>
+</div>
+
+<div id="search-modal" class="modal">
+    <div class="modal-box">
+        <h2>訂單查詢</h2>
+        <input id="search-nick" class="input-std" placeholder="LINE 暱稱">
+        <div id="search-results-area"></div>
+        <button class="btn-add" style="width:100%;" onclick="performSearch()">搜尋</button>
+        <button onclick="document.getElementById('search-modal').style.display='none'" style="width:100%; margin-top:10px; background:none; border:none; color:#666;">關閉</button>
+    </div>
+</div>
 
 <script>
-    const firebaseConfig = { apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4", authDomain: "zoo-62638.firebaseapp.com", databaseURL: "https://zoo-62638-default-rtdb.firebaseio.com", projectId: "zoo-62638", storageBucket: "zoo-62638.firebasestorage.app", messagingSenderId: "33012710753", appId: "1:33012710753:web:318636add1f5ac2f7b5920" };
+    // 1. Firebase 初始化
+    const firebaseConfig = { 
+        apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4", 
+        authDomain: "zoo-62638.firebaseapp.com", 
+        databaseURL: "https://zoo-62638-default-rtdb.firebaseio.com", 
+        projectId: "zoo-62638", 
+        storageBucket: "zoo-62638.firebasestorage.app", 
+        messagingSenderId: "33012710753", 
+        appId: "1:33012710753:web:318636add1f5ac2f7b5920" 
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+    // 2. 全域變數
     let products = [], orders = {}, cart = [], curS = {}, curQty = {}, currentEvent = "", tempPackStatus = {};
 
-    db.ref('products').on('value', snap => { 
-        products = snap.val() || []; 
-        renderHall(); 
-        updateAF(); 
-        if(currentEvent) openShop(currentEvent); 
-    });
-    db.ref('orders').on('value', snap => { 
-        orders = snap.val() || {}; 
-        if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); 
+    // 3. 資料監聽
+    db.ref('products').on('value', function(snap) {
+        products = snap.val() || [];
+        renderHall();
+        updateAF();
+        if(currentEvent) openShop(currentEvent);
     });
 
+    db.ref('orders').on('value', function(snap) {
+        orders = snap.val() || {};
+        if(document.getElementById('admin-panel').style.display === 'flex') {
+            renderAdminOrders();
+        }
+    });
+
+    // 4. 大廳與商店功能
     function renderHall() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
-        document.getElementById('hall-grid').innerHTML = evts.map(e => `<div class="card-hall" onclick="openShop('${e}')">${e}</div>`).join('');
+        document.getElementById('hall-grid').innerHTML = evts.map(e => 
+            `<div class="card-hall" onclick="openShop('${e}')">${e}</div>`
+        ).join('');
     }
+
     function updateAF() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
-        document.getElementById('admin-evt-f').innerHTML = '<option value="ALL">所有場次</option>' + evts.map(e => `<option value="${e}">${e}</option>`).join('');
+        document.getElementById('admin-evt-f').innerHTML = '<option value="ALL">所有場次</option>' + 
+            evts.map(e => `<option value="${e}">${e}</option>`).join('');
     }
+
     function openShop(e) {
-        currentEvent = e; document.getElementById('hall-screen').style.display='none'; document.getElementById('main-app').style.display='flex';
+        currentEvent = e;
+        document.getElementById('hall-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'flex';
         const list = products.filter(p => p.e === e);
         document.getElementById('prod-list').innerHTML = list.map(p => {
-            const rid = products.indexOf(p); if(!curQty[rid]) curQty[rid] = 1;
-            const sA = p.s ? p.s.split(/,|，/).filter(x=>x.trim()) : [];
-            const specs = sA.map(v => `<button onclick="selSpec(${rid},'${v}')" style="border:1px solid #DDD; margin:2px; font-size:11px; background:${curS[rid]===v?'#EAE2D1':'#FFF'}; padding:4px 8px; border-radius:4px;">${v}</button>`).join('');
-            return `<div class="prod-card"><div><div class="prod-name">${p.n}</div><div class="prod-price">$${p.p}</div><div class="spec-area">${specs}</div></div><div class="qty-area"><button class="btn-qty" onclick="updateQty(${rid},-1)">-</button><span id="qv-${rid}">${curQty[rid]}</span><button class="btn-qty" onclick="updateQty(${rid},1)">+</button></div><button class="btn-add" onclick="addToCart(${rid})">加入購物車</button></div>`;
+            const rid = products.indexOf(p);
+            if(!curQty[rid]) curQty[rid] = 1;
+            const sA = p.s ? p.s.split(/,|，/).filter(x => x.trim()) : [];
+            const specs = sA.map(v => 
+                `<button onclick="selSpec(${rid},'${v}')" style="border:1px solid #DDD; margin:2px; font-size:11px; background:${curS[rid]===v?'#EAE2D1':'#FFF'}; padding:4px 8px; border-radius:4px;">${v}</button>`
+            ).join('');
+            return `<div class="prod-card">
+                <div>
+                    <div class="prod-name">${p.n}</div>
+                    <div class="prod-price">$${p.p}</div>
+                    <div class="spec-area">${specs}</div>
+                </div>
+                <div class="qty-area">
+                    <button class="btn-qty" onclick="updateQty(${rid},-1)">-</button>
+                    <span id="qv-${rid}">${curQty[rid]}</span>
+                    <button class="btn-qty" onclick="updateQty(${rid},1)">+</button>
+                </div>
+                <button class="btn-add" onclick="addToCart(${rid})">加入購物車</button>
+            </div>`;
         }).join('');
     }
+
     function selSpec(r, v) { curS[r] = v; openShop(currentEvent); }
-    function updateQty(r, d) { curQty[r] = Math.max(1, (curQty[r]||1) + d); document.getElementById(`qv-${r}`).innerText = curQty[r]; }
+    function updateQty(r, d) { curQty[r] = Math.max(1, (curQty[r]||1) + d); document.getElementById('qv-'+r).innerText = curQty[r]; }
     function backToHall() { currentEvent = ""; document.getElementById('main-app').style.display='none'; document.getElementById('hall-screen').style.display='flex'; }
+
     function addToCart(r) {
-        const p = products[r], sA = p.s ? p.s.split(/,|，/).filter(x=>x.trim()) : [];
+        const p = products[r];
+        const sA = p.s ? p.s.split(/,|，/).filter(x => x.trim()) : [];
         if(sA.length > 0 && !curS[r]) return alert("請選規格");
-        for(let i=0; i<(curQty[r]||1); i++) cart.push({...p, sel: curS[r]||"一般", pid: r, t: Date.now()});
+        for(let i=0; i<(curQty[r]||1); i++) {
+            cart.push({...p, sel: curS[r]||"一般", pid: r, t: Date.now()});
+        }
         renderCart();
     }
+
     function renderCart() {
-        let sm = {}; cart.forEach(it => { let k = `${it.pid}_${it.sel}`; sm[k] = (sm[k]||0)+1; });
+        let sm = {}; cart.forEach(it => { let k = it.pid + '_' + it.sel; sm[k] = (sm[k]||0)+1; });
         document.getElementById('cart-items').innerHTML = Object.keys(sm).map(k => {
-            const [pi, sl] = k.split('_'); return `<div style="padding:8px 0; border-bottom:1px solid #EEE; display:flex; justify-content:space-between;"><span>${products[pi].n}(${sl}) x ${sm[k]}</span><span onclick="cart=cart.filter(x=>!(x.pid==${pi}&&x.sel=='${sl}'));renderCart();" style="color:red; cursor:pointer;">✕</span></div>`
+            const parts = k.split('_');
+            const pi = parts[0], sl = parts[1];
+            return `<div style="padding:8px 0; border-bottom:1px solid #EEE; display:flex; justify-content:space-between;">
+                <span>${products[pi].n}(${sl}) x ${sm[k]}</span>
+                <span onclick="removeCart(${pi},'${sl}')" style="color:red; cursor:pointer;">✕</span>
+            </div>`;
         }).join('');
-        document.getElementById('cart-total').innerText = cart.reduce((a,b)=>a+b.p,0);
+        document.getElementById('cart-total').innerText = cart.reduce((a,b) => a + b.p, 0);
     }
+
+    function removeCart(pi, sl) {
+        cart = cart.filter(x => !(x.pid == pi && x.sel == sl));
+        renderCart();
+    }
+
     function submitOrder() {
-        const n = document.getElementById('nick').value.trim(); if(!n || cart.length===0) return alert("請填寫完整");
-        db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), isUnlocked: false }).then(() => { alert("成功"); location.reload(); });
+        const n = document.getElementById('nick').value.trim();
+        if(!n || cart.length === 0) return alert("請填寫暱稱並加入商品");
+        db.ref('orders').push({ 
+            nick: n, 
+            items: cart, 
+            total: cart.reduce((a,b) => a + b.p, 0), 
+            time: Date.now(), 
+            isUnlocked: false 
+        }).then(function() { 
+            alert("訂單提交成功！"); 
+            location.reload(); 
+        });
     }
+
+    // 5. 管理員後台功能
+    function adminLogin() {
+        const p = prompt("請輸入管理密碼");
+        if(p === "1239") {
+            document.getElementById('admin-panel').style.display = 'flex';
+            renderAdminOrders();
+        } else {
+            alert("密碼錯誤");
+        }
+    }
+
     function renderAdminOrders() {
         const m = document.getElementById('admin-main'), f = document.getElementById('admin-evt-f').value;
-        let pl = {}; Object.values(orders).forEach(o => (o.items||[]).forEach(it => { let sk = `${it.pid}_${it.sel}`; if(!pl[sk]) pl[sk] = []; pl[sk].push(it); }));
+        let pl = {};
+        Object.values(orders).forEach(o => {
+            (o.items||[]).forEach(it => {
+                let sk = it.pid + '_' + it.sel;
+                if(!pl[sk]) pl[sk] = [];
+                pl[sk].push(it);
+            });
+        });
         for(let k in pl) pl[k].sort((a,b) => (a.t||0) - (b.t||0));
-        let es = Object.entries(orders); if (f !== "ALL") es = es.filter(([k, o]) => (o.items || []).some(it => it.e === f));
-        m.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:10px;" onclick="mergeOrders()">🔗 併單</button>` + es.sort((a,b)=>a[1].time-b[1].time).map(([k, o]) => {
-            const ih = (o.items || []).map((it, idx) => {
-                const lim = (products[it.pid]||{}).limit||999, rk = pl[`${it.pid}_${it.sel}`].indexOf(it)+1, win = it.fWin || rk <= lim;
-                return `<div style="font-size:12px; border-bottom:1px solid #EEE; padding:4px 0; display:flex; justify-content:space-between;"><span><input type="checkbox" class="msg-chk-${k}" value="${idx}" checked> [${it.e}] ${it.n}(${it.sel}) <b>$${it.p}</b> ${it.isShipped?'[已出]':''} <b onclick="db.ref('orders/${k}/items/${idx}').update({fWin:${!it.fWin}})" style="color:${win?'green':'orange'}; cursor:pointer;">${win?'[正]':'[補]'}</b></span><span onclick="delItem('${k}',${idx})" style="color:red;">✕</span></div>`;
+
+        let es = Object.entries(orders);
+        if (f !== "ALL") es = es.filter(function(pair) {
+            return (pair[1].items || []).some(it => it.e === f);
+        });
+
+        m.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:10px;" onclick="mergeOrders()">🔗 選擇併單</button>` + 
+        es.sort((a,b) => a[1].time - b[1].time).map(function(pair) {
+            const k = pair[0], o = pair[1];
+            const ih = (o.items || []).map(function(it, idx) {
+                const lim = (products[it.pid]||{}).limit || 999;
+                const rk = pl[it.pid + '_' + it.sel].indexOf(it) + 1;
+                const win = it.fWin || rk <= lim;
+                return `<div style="font-size:12px; border-bottom:1px solid #EEE; padding:4px 0; display:flex; justify-content:space-between;">
+                    <span>[${it.e}] ${it.n}(${it.sel}) <b>$${it.p}</b> ${it.isShipped?'[已出]':''} 
+                        <b onclick="toggleWin('${k}',${idx},${!it.fWin})" style="color:${win?'green':'orange'}; cursor:pointer;">${win?'[正取]':'[補位]'}</b>
+                    </span>
+                    <span onclick="delItem('${k}',${idx})" style="color:red; cursor:pointer;">✕</span>
+                </div>`;
             }).join('');
-            return `<div class="admin-order-card"><div><input type="checkbox" class="m-chk" value="${k}" data-nick="${o.nick}"> <b>${o.nick}</b> ($${o.total})</div><div style="margin:5px 0;">${ih}</div><button class="btn-add" style="width:100%; background:#4CAF50;" onclick="copyL('${k}')">📋 複製明細</button><label class="status-label" style="display:block; margin-top:5px;"><input type="checkbox" ${o.isUnlocked?'checked':''} onchange="db.ref('orders/${k}').update({isUnlocked:this.checked})"> 解鎖訂單</label></div>`;
+            return `<div class="admin-order-card">
+                <div><input type="checkbox" class="m-chk" value="${k}" data-nick="${o.nick}"> <b>${o.nick}</b> ($${o.total})</div>
+                <div style="margin:5px 0;">${ih}</div>
+                <button class="btn-add" style="width:100%; background:#4CAF50;" onclick="copyL('${k}')">📋 複製明細</button>
+                <label style="display:block; margin-top:5px;"><input type="checkbox" ${o.isUnlocked?'checked':''} onchange="db.ref('orders/${k}').update({isUnlocked:this.checked})"> 解鎖訂單</label>
+            </div>`;
         }).join('');
     }
+
+    function toggleWin(k, idx, val) { db.ref('orders/'+k+'/items/'+idx).update({fWin: val}); }
+
+    function delItem(k, i) {
+        if(!confirm('確定要刪除這項商品嗎？')) return;
+        let o = orders[k]; o.items.splice(i, 1);
+        if(o.items.length === 0) db.ref('orders/'+k).remove();
+        else db.ref('orders/'+k).update({items: o.items, total: o.items.reduce((a,b)=>a+b.p,0)});
+    }
+
     function renderAdminProds() {
         const m = document.getElementById('admin-main');
-        m.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:10px;" onclick="openEdit(-1)">＋ 新增商品</button>` + products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between;"><span>[${p.e}] ${p.n} ($${p.p})</span><button onclick="openEdit(${i})">編輯</button></div>`).join('');
+        m.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:10px;" onclick="openEdit(-1)">＋ 新增商品</button>` + 
+        products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between;">
+            <span>[${p.e}] ${p.n} ($${p.p})</span>
+            <button onclick="openEdit(${i})">編輯</button>
+        </div>`).join('');
     }
+
     function openEdit(i) {
         const p = i === -1 ? {e:'', n:'', p:0, p_jpy:0, limit:999, s:''} : products[i];
         document.getElementById('modal-title').innerText = i === -1 ? "新增" : "編輯";
-        document.getElementById('modal-body').innerHTML = `場次：<input id="in-e" class="input-std" value="${p.e}">名稱：<input id="in-n" class="input-std" value="${p.n}">台幣：<input id="in-p" type="number" class="input-std" value="${p.p}">日幣：<input id="in-pj" type="number" class="input-std" value="${p.p_jpy||0}">限額：<input id="in-l" type="number" class="input-std" value="${p.limit||999}">規格：<input id="in-s" class="input-std" value="${p.s||''}">`;
+        document.getElementById('modal-body').innerHTML = `
+            場次：<input id="in-e" class="input-std" value="${p.e}">
+            名稱：<input id="in-n" class="input-std" value="${p.n}">
+            台幣：<input id="in-p" type="number" class="input-std" value="${p.p}">
+            日幣：<input id="in-pj" type="number" class="input-std" value="${p.p_jpy||0}">
+            限額：<input id="in-l" type="number" class="input-std" value="${p.limit||999}">
+            規格：<input id="in-s" class="input-std" value="${p.s||''}">`;
         document.getElementById('edit-modal').style.display = 'flex';
-        document.getElementById('modal-save').onclick = () => {
-            const obj = { e: document.getElementById('in-e').value, n: document.getElementById('in-n').value, p: parseInt(document.getElementById('in-p').value), p_jpy: parseInt(document.getElementById('in-pj').value), limit: parseInt(document.getElementById('in-l').value), s: document.getElementById('in-s').value };
-            let nP = [...products]; if(i===-1) nP.push(obj); else nP[i]=obj;
-            db.ref('products').set(nP).then(() => { document.getElementById('edit-modal').style.display='none'; });
+        document.getElementById('modal-save').onclick = function() {
+            const obj = { 
+                e: document.getElementById('in-e').value, 
+                n: document.getElementById('in-n').value, 
+                p: parseInt(document.getElementById('in-p').value), 
+                p_jpy: parseInt(document.getElementById('in-pj').value), 
+                limit: parseInt(document.getElementById('in-l').value), 
+                s: document.getElementById('in-s').value 
+            };
+            let nP = [...products]; 
+            if(i === -1) nP.push(obj); else nP[i] = obj;
+            db.ref('products').set(nP).then(function() { document.getElementById('edit-modal').style.display='none'; });
         };
     }
+
+    // 6. 配貨助手 (保留 ¥6000 滿額禮計算)
     function openPackAssistant() {
         const es = [...new Set(products.map(p => p.e))].filter(e => e);
         tempPackStatus = {};
         document.getElementById('modal-title').innerText = "📦 配貨助手";
         document.getElementById('modal-body').innerHTML = `勾選場次：<div style="background:#FFF; padding:10px; border-radius:10px; border:1px solid #EEE;">${es.map(e => `<div><label><input type="checkbox" class="ev-chk" value="${e}"> ${e}</label></div>`).join('')}</div>`;
         document.getElementById('edit-modal').style.display = 'flex';
-        document.getElementById('modal-save').onclick = () => {
+        document.getElementById('modal-save').onclick = function() {
             const se = Array.from(document.querySelectorAll('.ev-chk:checked')).map(el => el.value);
-            if(!se.length) return alert("選場次");
+            if(!se.length) return alert("請至少選一個場次");
             showPack2(se);
         };
     }
+
     function showPack2(se) {
         let h = `勾選訂單：<div style="max-height:300px; overflow-y:auto; background:#FFF; border-radius:10px;">`;
-        Object.entries(orders).forEach(([k, o]) => { if ((o.items || []).some(it => se.includes(it.e))) h += `<div style="padding:10px; border-bottom:1px solid #EEE;"><label><input type="checkbox" class="od-chk" value="${k}"> ${o.nick}</label></div>`; });
+        Object.entries(orders).forEach(function(pair) {
+            const k = pair[0], o = pair[1];
+            if ((o.items || []).some(it => se.includes(it.e))) {
+                h += `<div style="padding:10px; border-bottom:1px solid #EEE;"><label><input type="checkbox" class="od-chk" value="${k}"> ${o.nick}</label></div>`;
+            }
+        });
         document.getElementById('modal-body').innerHTML = h + `</div>`;
-        document.getElementById('modal-save').onclick = () => {
+        document.getElementById('modal-save').onclick = function() {
             const sks = Array.from(document.querySelectorAll('.od-chk:checked')).map(el => el.value);
-            if(!sks.length) return alert("選訂單");
+            if(!sks.length) return alert("請選訂單");
             startPack(sks, se);
         };
     }
+
     function startPack(ks, se) {
-        let h = `<div style="font-size:11px; color:red; margin-bottom:10px;">核對後點擊「確認出貨更新狀態」</div>`;
-        ks.forEach(k => {
+        let h = `<div style="font-size:11px; color:red; margin-bottom:10px;">核對完請點儲存。</div>`;
+        ks.forEach(function(k) {
             const o = orders[k]; let cats = {}, gs = {};
-            (o.items || []).forEach((it, idx) => {
+            (o.items || []).forEach(function(it, idx) {
                 if (se.includes(it.e)) {
                     let mP = products[it.pid] || {};
                     cats[it.e] = (cats[it.e] || 0) + (mP.p_jpy || 0);
-                    let gk = `${it.e}_${it.n}_${it.sel}`;
-                    if(!gs[gk]) gs[gk] = { it, ids: [], c: 0 };
+                    let gk = it.e + '_' + it.n + '_' + it.sel;
+                    if(!gs[gk]) gs[gk] = { it: it, ids: [], c: 0 };
                     gs[gk].ids.push(idx); gs[gk].c++;
                 }
             });
-            let bi = ""; for(let e in cats) { let cards = Math.floor(cats[e]/6000); bi += cards>0?`<div style="color:blue;">🎁 ${e}:送${cards}張</div>`:`<div style="color:#999;">⚪ ${e}:¥${cats[e]}</div>`; }
+            let bi = ""; 
+            for(let e in cats) { 
+                let cards = Math.floor(cats[e]/6000); 
+                bi += cards > 0 ? `<div style="color:blue; font-weight:bold;">🎁 ${e}: 滿額禮 x${cards}</div>` : `<div style="color:#999;">⚪ ${e}: ¥${cats[e]} (差 ${6000-cats[e]} 滿額)</div>`; 
+            }
             h += `<div style="border:1px solid #DDD; padding:10px; margin-bottom:10px; border-radius:10px; background:#FFF;"><b>${o.nick}</b><div style="margin:5px 0;">${bi}</div>`;
             for(let gK in gs) {
-                let g = gs[gK], all = g.ids.every(idx => tempPackStatus[`${k}_${idx}`] === undefined ? g.it.isShipped : tempPackStatus[`${k}_${idx}`]);
-                h += `<div onclick="tglG('${k}','${g.ids.join(',')}',${!all},'${se.join(',')}','${ks.join(',')}')" style="padding:8px; border:1px solid #EEE; margin-top:5px; background:${all?'#FEF9EF':'#FFF'};">${all?'☑️':'⬜'} ${g.it.n}(${g.it.sel}) x${g.c}</div>`;
+                let g = gs[gK];
+                let all = g.ids.every(idx => tempPackStatus[k+'_'+idx] === undefined ? g.it.isShipped : tempPackStatus[k+'_'+idx]);
+                h += `<div onclick="tglG('${k}','${g.ids.join(',')}','${!all}','${se.join(',')}','${ks.join(',')}')" style="padding:8px; border:1px solid #EEE; margin-top:5px; background:${all?'#FEF9EF':'#FFF'}; border-radius:5px; cursor:pointer;">
+                    ${all?'✅':'⬜'} ${g.it.n}(${g.it.sel}) x${g.c}
+                </div>`;
             }
             h += `</div>`;
         });
         document.getElementById('modal-body').innerHTML = h;
-        document.getElementById('modal-save').onclick = () => { if(confirm("確定更新？")) { const ups={}; for(let key in tempPackStatus) { const [ok, ix]=key.split('_'); ups[`orders/${ok}/items/${ix}/isShipped`]=tempPackStatus[key]; } db.ref().update(ups).then(()=>{ alert("成功"); document.getElementById('edit-modal').style.display='none'; }); } };
-    }
-    function tglG(k, ids, s, se, ks) { ids.split(',').forEach(id => tempPackStatus[`${k}_${id}`] = s); startPack(ks.split(','), se.split(',')); }
-    function mergeOrders() {
-        const cs = Array.from(document.querySelectorAll('.m-chk:checked')); if(cs.length<2) return alert("選兩筆以上");
-        const ks = cs.map(el => el.value); let its = [], tt = 0; ks.forEach(k => { its = its.concat(orders[k].items||[]); tt += orders[k].total; });
-        db.ref('orders').push({ nick: cs[0].dataset.nick, items: its, total: tt, time: Date.now(), isUnlocked: true }).then(() => { ks.forEach(k => db.ref(`orders/${k}`).remove()); });
-    }
-    function delItem(k, i) { if(!confirm('刪除？'))return; let o = orders[k]; o.items.splice(i, 1); if(o.items.length===0) db.ref(`orders/${k}`).remove(); else db.ref(`orders/${k}`).update({items:o.items, total:o.items.reduce((a,b)=>a+b.p,0)}); }
-    function copyL(k) { const o = orders[k]; let t = `🌟 ${o.nick} 明細 🌟\n`; (o.items||[]).forEach((it,i)=>t+=`${i+1}.${it.n}(${it.sel}) $${it.p}\n`); t+=`總計：$${o.total}`; navigator.clipboard.writeText(t).then(()=>alert("已複製")); }
-    function unlockAllOrders() { if(!confirm('全開？'))return; const ups={}; Object.keys(orders).forEach(k => ups[`${k}/isUnlocked`]=true); db.ref('orders').update(ups); }
-    function askExport(ty) {
-        const es = [...new Set(products.map(p => p.e))].filter(e => e);
-        document.getElementById('modal-title').innerText = "匯出";
-        document.getElementById('modal-body').innerHTML = es.map(e => `<div><label><input type="checkbox" class="ex-c" value="${e}" checked> ${e}</label></div>`).join('');
-        document.getElementById('edit-modal').style.display = 'flex';
-        document.getElementById('modal-save').onclick = () => {
-            const sel = Array.from(document.querySelectorAll('.ex-c:checked')).map(el => el.value);
-            let txt = "";
-            if(ty==='summary'){
-                let s = {}; Object.values(orders).forEach(o=>(o.items||[]).forEach(it=>{ if(sel.includes(it.e)){ let k=`[${it.e}] ${it.n}(${it.sel})`; s[k]=(s[k]||0)+1; } }));
-                for(let k in s) txt += `${k} : ${s[k]}\n`;
-            } else {
-                Object.values(orders).forEach(o=>{ const fs=(o.items||[]).filter(it=>sel.includes(it.e)); if(fs.length){ txt += `\n【${o.nick}】\n`; fs.forEach(it => txt += `- ${it.n}(${it.sel})\n`); } });
+        document.getElementById('modal-save').onclick = function() {
+            if(!confirm("更新出貨狀態？")) return;
+            const ups = {};
+            for(let key in tempPackStatus) {
+                const parts = key.split('_');
+                ups['orders/'+parts[0]+'/items/'+parts[1]+'/isShipped'] = tempPackStatus[key];
             }
-            const b = new Blob([txt],{type:"text/plain"}); const a = document.createElement("a"); a.href=URL.createObjectURL(b); a.download=`${ty}.txt`; a.click(); document.getElementById('edit-modal').style.display='none';
+            db.ref().update(ups).then(function() { alert("更新成功"); document.getElementById('edit-modal').style.display='none'; });
         };
     }
-    function adminLogin() { if(prompt("密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; renderAdminOrders(); } }
-    function performSearch() { const n = document.getElementById('search-nick').value.trim().toLowerCase(); let res = Object.entries(orders).filter(([k, o]) => o.nick.toLowerCase() === n); document.getElementById('search-results-area').innerHTML = res.map(([k, o]) => `<div style="background:#FFF; padding:15px; margin-top:10px; border-radius:12px; border:1px solid #EAE2D1;">${new Date(o.time).toLocaleDateString()}<br>${o.isUnlocked ? (o.items||[]).map(it=>`<div>- ${it.n}(${it.sel}) $${it.p}</div>`).join('') : '<div style="color:orange">⌛ 園長整理中</div>'}<div style="text-align:right; font-weight:bold;">總計:$${o.total}</div></div>`).join(''); }
+
+    function tglG(k, ids, s, se, ks) { 
+        ids.split(',').forEach(id => { tempPackStatus[k+'_'+id] = (s === 'true'); }); 
+        startPack(ks.split(','), se.split(',')); 
+    }
+
+    // 7. 輔助功能
+    function mergeOrders() {
+        const cs = Array.from(document.querySelectorAll('.m-chk:checked')); if(cs.length<2) return alert("請選兩筆以上");
+        const ks = cs.map(el => el.value); let its = [], tt = 0; 
+        ks.forEach(k => { its = its.concat(orders[k].items||[]); tt += orders[k].total; });
+        if(confirm('併入第一個暱稱名下？')) {
+            db.ref('orders').push({ nick: cs[0].dataset.nick, items: its, total: tt, time: Date.now(), isUnlocked: true }).then(function() {
+                ks.forEach(k => db.ref('orders/'+k).remove());
+            });
+        }
+    }
+
+    function copyL(k) {
+        const o = orders[k]; let t = "🌟 " + o.nick + " 明細 🌟\n";
+        (o.items||[]).forEach((it,i) => { t += (i+1) + ".[" + it.e + "] " + it.n + "(" + it.sel + ") $" + it.p + "\n"; });
+        t += "總計：$" + o.total; 
+        navigator.clipboard.writeText(t).then(() => alert("已複製到剪貼簿"));
+    }
+
+    function unlockAllOrders() {
+        if(!confirm('全開？')) return;
+        const ups={}; Object.keys(orders).forEach(k => { ups[k+'/isUnlocked']=true; });
+        db.ref('orders').update(ups);
+    }
+
+    function performSearch() {
+        const n = document.getElementById('search-nick').value.trim().toLowerCase();
+        let res = Object.entries(orders).filter(function(p) { return p[1].nick.toLowerCase() === n; });
+        document.getElementById('search-results-area').innerHTML = res.map(function(p) {
+            const o = p[1];
+            return `<div style="background:#FFF; padding:15px; margin-top:10px; border-radius:12px; border:1px solid #EAE2D1;">
+                ${new Date(o.time).toLocaleDateString()}<br>
+                ${o.isUnlocked ? (o.items||[]).map(it=>`<div>- ${it.n}(${it.sel}) $${it.p}</div>`).join('') : '<div style="color:orange">⌛ 園長整理中</div>'}
+                <div style="text-align:right; font-weight:bold; color:var(--caramel);">總計:$${o.total}</div>
+            </div>`;
+        }).join('');
+    }
+
+    function askExport(ty) {
+        const es = [...new Set(products.map(p => p.e))].filter(e => e);
+        document.getElementById('modal-title').innerText = "匯出資料";
+        document.getElementById('modal-body').innerHTML = es.map(e => `<div><label><input type="checkbox" class="ex-c" value="${e}" checked> ${e}</label></div>`).join('');
+        document.getElementById('edit-modal').style.display = 'flex';
+        document.getElementById('modal-save').onclick = function() {
+            const sel = Array.from(document.querySelectorAll('.ex-c:checked')).map(el => el.value);
+            let txt = "";
+            if(ty === 'summary'){
+                let s = {}; Object.values(orders).forEach(o=>(o.items||[]).forEach(it=>{ if(sel.includes(it.e)){ let k='['+it.e+'] '+it.n+'('+it.sel+')'; s[k]=(s[k]||0)+1; } }));
+                for(let k in s) txt += k + " : " + s[k] + "\n";
+            } else {
+                Object.values(orders).forEach(o=>{ const fs=(o.items||[]).filter(it=>sel.includes(it.e)); if(fs.length){ txt += "\n【" + o.nick + "】\n"; fs.forEach(it => { txt += "- " + it.n + "(" + it.sel + ")\n"; }); } });
+            }
+            const b = new Blob([txt],{type:"text/plain"}); const a = document.createElement("a"); a.href=URL.createObjectURL(b); a.download=ty+".txt"; a.click(); document.getElementById('edit-modal').style.display='none';
+        };
+    }
 </script>
 </body>
 </html>
