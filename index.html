@@ -78,8 +78,16 @@
     const db = firebase.database();
     let products = [], orders = {}, cart = [], curS = {}, curQty = {}, currentEvent = "", tempPackStatus = {};
 
-    db.ref('products').on('value', snap => { products = snap.val() || []; renderHall(); updateAF(); if(currentEvent) openShop(currentEvent); });
-    db.ref('orders').on('value', snap => { orders = snap.val() || {}; if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); });
+    db.ref('products').on('value', snap => { 
+        products = snap.val() || []; 
+        renderHall(); 
+        updateAF(); 
+        if(currentEvent) openShop(currentEvent); 
+    });
+    db.ref('orders').on('value', snap => { 
+        orders = snap.val() || {}; 
+        if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); 
+    });
 
     function renderHall() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
