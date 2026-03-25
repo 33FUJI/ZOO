@@ -20,8 +20,8 @@
         .prod-card { background: #FFF; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.08); min-height: 280px; }
         .cart-area { width: 360px; background: #FFF; border-left: 1px solid #DDD; display: flex; flex-direction: column; }
         
-        /* 變灰關鍵樣式：絕對不遺漏 */
-        .shipped-item { color: #BBB !important; text-decoration: line-through !important; opacity: 0.6; }
+        /* 變灰樣式：絕對保留 */
+        .shipped-item { color: #BBB !important; text-decoration: line-through !important; opacity: 0.7; }
         
         #admin-panel { position: fixed; inset: 0; background: #F8F9FA; z-index: 4000; display: none; flex-direction: column; }
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 15px; }
@@ -154,7 +154,7 @@
                 updates[`/orders/${oK}/items/${iIdx}/isShipped`] = tempPackStatus[key];
             });
             db.ref().update(updates).then(() => {
-                alert("✅ 狀態已同步！已勾選品項將自動變灰。");
+                alert("✅ 狀態已同步！");
                 document.getElementById('edit-modal').style.display = 'none';
             });
         };
@@ -166,12 +166,12 @@
             if(!o || !o.nick) return '';
             const items = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
             return `<div style="background:#FFF; padding:15px; margin-bottom:10px; border-radius:10px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
-                <div style="display:flex; justify-content:space-between;"><b>${o.nick}</b><span style="color:#999; font-size:11px;">$${o.total}</span></div>
+                <div style="display:flex; justify-content:space-between;"><b>${o.nick}</b><span>$${o.total}</span></div>
                 <div style="font-size:13px; margin:8px 0;">
                     ${items.map(it => `<div class="${it.isShipped?'shipped-item':''}">• [${it.e||''}] ${it.n||''} ${it.isShipped?'(已出貨)':''}</div>`).join('')}
                 </div>
-                <button onclick="db.ref('orders/${k}').update({isUnlocked:!${o.isUnlocked}})">${o.isUnlocked?'已解鎖(客可看)':'鎖定中'}</button>
-                <button onclick="if(confirm('刪除訂單?'))db.ref('orders/${k}').remove()" style="color:red; float:right; border:none; background:none;">✕ 刪除</button>
+                <button onclick="db.ref('orders/${k}').update({isUnlocked:!${o.isUnlocked}})">${o.isUnlocked?'已解鎖':'鎖定中'}</button>
+                <button onclick="if(confirm('刪除訂單?'))db.ref('orders/${k}').remove()" style="color:red; float:right;">✕</button>
             </div>`;
         }).join('');
     }
@@ -181,9 +181,9 @@
         const matched = Object.entries(orders).filter(([k, o]) => o && o.nick === nick && o.isUnlocked);
         document.getElementById('search-results-area').innerHTML = matched.map(([k, o]) => {
             const items = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-            return `<div style="padding:15px; border-bottom:1px solid #EEE; background:#FFF; margin-top:10px; border-radius:10px;">
-                ${items.map(it => `<div class="${it.isShipped?'shipped-item':''}">[${it.e||''}] ${it.n||''} $${it.p} ${it.isShipped?'(已出貨)':''}</div>`).join('')}
-                <div style="text-align:right; font-weight:bold; margin-top:10px; color:var(--caramel);">總金額: $${o.total}</div>
+            return `<div style="padding:15px; background:#FFF; margin-top:10px; border-radius:10px;">
+                ${items.map(it => `<div class="${it.isShipped?'shipped-item':''}">[${it.e||''}] ${it.n||''} $${it.p}</div>`).join('')}
+                <div style="text-align:right; font-weight:bold;">總金額: $${o.total}</div>
             </div>`;
         }).join('');
     }
