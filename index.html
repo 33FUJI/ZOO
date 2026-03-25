@@ -253,7 +253,7 @@
                     const jpyPrice = mP ? (mP.p_jpy || 0) : (it.p_jpy || 0);
                     categoryTotals[it.e] = (categoryTotals[it.e] || 0) + jpyPrice;
                     let groupKey = `${it.e}_${it.n}_${it.sel}`;
-                    if(!groupItems[groupKey]) groupItems[groupKey] = { it, indices: [], count: 0, jpy: jpyPrice };
+                    if(!groupItems[groupKey]) groupItems[groupKey] = { it, indices: [], count: 0 };
                     groupItems[groupKey].indices.push(idx); groupItems[groupKey].count++;
                 }
             });
@@ -268,7 +268,7 @@
                     if (tempPackStatus[`${k}_${idx}`] === undefined) tempPackStatus[`${k}_${idx}`] = (g.it.isShipped === true);
                     return tempPackStatus[`${k}_${idx}`];
                 });
-                html += `<div onclick="toggleGroupCheck('${k}', '${g.indices.join(',')}', ${!allChecked}, '${selEvts.join(',')}', '${keys.join(',')}')" style="padding:8px; margin:4px 0; border:1px solid #DDD; background:${allChecked?'#FEF9EF':'#FFF'};">
+                html += `<div onclick="toggleGroupCheck('${k}', '${g.indices.join(',')}', ${!allChecked}, '${selEvts.join(',')}', '${keys.join(',')}')" style="padding:8px; margin:4px 0; border:1px solid #DDD; background:${allChecked?'#FEF9EF':'#FFF'}; border-radius:5px; cursor:pointer;">
                     ${allChecked?'☑️':'⬜'} [${g.it.e}] ${g.it.n}(${g.it.sel}) x${g.count}
                 </div>`;
             }
@@ -288,13 +288,12 @@
         const batchUpdates = {};
         for (let key in tempPackStatus) {
             const [orderKey, itemIdx] = key.split('_');
-            if(!orders[orderKey] || !orders[orderKey].items) continue;
             batchUpdates[`orders/${orderKey}/items/${itemIdx}/isShipped`] = tempPackStatus[key];
         }
         if(Object.keys(batchUpdates).length === 0) return alert("沒有需要更新的內容");
         db.ref().update(batchUpdates)
             .then(() => { alert("✅ 連動成功！資料庫已同步。"); document.getElementById('edit-modal').style.display = 'none'; })
-            .catch(e => alert("❌ 同步失敗：" + e.message + "\n請重整頁面後再試一次"));
+            .catch(e => alert("❌ 同步失敗：" + e.message));
     }
 
     function copyShippingCard(orderKey, selEvtsStr) {
