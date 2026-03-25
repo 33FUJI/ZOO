@@ -118,6 +118,7 @@
 </div>
 
 <script>
+    // Firebase 設定
     const firebaseConfig = {
         apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",
         authDomain: "zoo-62638.firebaseapp.com",
@@ -133,6 +134,7 @@
     let products = [], orders = {}, cart = [], curS = {}, curQty = {}, currentEvent = "";
     let tempPackStatus = {}; 
 
+    // 資料監聽
     db.ref('products').on('value', snap => { 
         products = snap.val() || []; 
         renderHall(); 
@@ -144,6 +146,7 @@
         if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); 
     });
 
+    // 前台邏輯
     function renderHall() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e && e.trim() !== "");
         document.getElementById('hall-grid').innerHTML = evts.map(e => `<div class="card-hall" onclick="openShop('${e}')">${e}</div>`).join('');
@@ -178,7 +181,6 @@
         for(let i=0; i<curQty[rid]; i++) cart.push({...p, sel: curS[rid]||"一般", pid: rid, t, p_jpy: p.p_jpy||0});
         renderCart();
     }
-
     function renderCart() {
         let summ = {}; cart.forEach(it => { let k = `${it.pid}_${it.sel}`; summ[k] = (summ[k]||0)+1; });
         document.getElementById('cart-items').innerHTML = Object.keys(summ).map(k => {
@@ -186,12 +188,12 @@
         }).join('');
         document.getElementById('cart-total').innerText = cart.reduce((a,b)=>a+b.p,0);
     }
-
     function submitOrder() {
         const n = document.getElementById('nick').value.trim(); if(!n || cart.length===0) return alert("請填寫完整");
         db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), isUnlocked: false }).then(() => { alert("成功"); location.reload(); });
     }
 
+    // 管理員功能
     function removeOrderItem(orderKey, itemIdx) {
         if(!confirm('確定要從訂單中刪除此項商品嗎？')) return;
         let o = orders[orderKey];
@@ -203,7 +205,6 @@
             db.ref(`orders/${orderKey}`).update({ items: itemList, total: o.total }); 
         }
     }
-
     function editItemPrice(orderKey, itemIdx) {
         const o = orders[orderKey];
         let itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
@@ -222,12 +223,7 @@
         let orderEntries = Object.entries(orders).filter(([k, o]) => o && o.nick && o.items);
         orderEntries.forEach(([k, o]) => {
             const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-            itemList.forEach(it => { 
-                if(!it) return;
-                let sk = `${it.pid}_${it.sel}`; 
-                if(!pool[sk]) pool[sk] = []; 
-                pool[sk].push(it); 
-            });
+            itemList.forEach(it => { if(!it) return; let sk = `${it.pid}_${it.sel}`; if(!pool[sk]) pool[sk] = []; pool[sk].push(it); });
         });
         for(let k in pool) pool[k].sort((a,b) => (a.t||0) - (b.t||0));
         if (filterEvt !== "ALL") orderEntries = orderEntries.filter(([k, o]) => {
@@ -236,13 +232,9 @@
         });
         main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%;" onclick="mergeSelected()">🔗 併單</button>` + orderEntries.sort((a,b)=>a[1].time-b[1].time).map(([k, o]) => {
             const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-            const sortedItems = [...itemList].sort((a,b) => {
-                if(a.isShipped === b.isShipped) return 0;
-                return a.isShipped ? 1 : -1;
-            });
+            const sortedItems = [...itemList].sort((a,b) => (a.isShipped === b.isShipped ? 0 : (a.isShipped ? 1 : -1)));
             const itemsHtml = sortedItems.map((it) => {
-                if(!it) return '';
-                const idx = itemList.indexOf(it);
+                if(!it) return ''; const idx = itemList.indexOf(it);
                 const limit = (products[it.pid]||{}).limit||999, rank = pool[`${it.pid}_${it.sel}`].indexOf(it)+1, isWin = it.fWin || rank <= limit;
                 const isShipped = it.isShipped === true; 
                 return `<div style="font-size:13px; border-bottom:1px solid #F0F0F0; padding:6px 0; display:flex; justify-content:space-between; align-items:center; ${isShipped ? 'background:#F9F9F9;' : ''}">
@@ -289,38 +281,31 @@
         };
     }
 
+    // 配貨出貨助手連動邏輯
     function openPackAssistant() {
-        const evts = [...new Set(products.map(p => p.e))].filter(e => e);
-        tempPackStatus = {}; 
+        const evts = [...new Set(products.map(p => p.e))].filter(e => e); tempPackStatus = {}; 
         document.getElementById('modal-title').innerText = "📦 配貨出貨助手 (同品項合併)";
         let html = `<div id="step0-area"><div style="font-size:13px; color:var(--caramel); margin-bottom:10px;"><b>第 0 步：勾選處理場次</b></div><div style="background:#FFF; padding:10px; border-radius:10px; border:1px solid #EEE; max-height:200px; overflow-y:auto;">${evts.map(e => `<div style="padding:5px 0;"><input type="checkbox" class="evt-select-chk" value="${e}" id="evt-${e}"><label for="evt-${e}"> ${e}</label></div>`).join('')}</div></div><div id="step1-area" style="display:none; margin-top:15px;"></div><div id="step2-area" style="display:none; margin-top:15px;"></div>`;
-        document.getElementById('modal-body').innerHTML = html;
-        document.getElementById('edit-modal').style.display = 'flex';
+        document.getElementById('modal-body').innerHTML = html; document.getElementById('edit-modal').style.display = 'flex';
         const btn = document.getElementById('modal-save'); btn.innerText = "選擇訂單 →";
         btn.onclick = () => {
             const selEvts = Array.from(document.querySelectorAll('.evt-select-chk:checked')).map(el => el.value);
-            if(selEvts.length === 0) return alert("請勾選場次");
-            showOrderSelect(selEvts);
+            if(selEvts.length === 0) return alert("請勾選場次"); showOrderSelect(selEvts);
         };
     }
 
     function showOrderSelect(selEvts) {
         let html = `<div style="font-size:13px; color:var(--caramel); margin-bottom:10px;"><b>第一步：勾選訂單</b></div><div style="max-height:400px; overflow-y:auto; background:#FFF; border-radius:10px; border:1px solid #EEE;">`;
         Object.entries(orders).forEach(([k, o]) => {
-            if(!o || !o.nick || !o.items) return;
-            const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-            if (itemList.some(it => it && selEvts.includes(it.e))) {
-                html += `<div style="padding:12px; border-bottom:1px solid #F5F5F5;"><input type="checkbox" class="order-select-chk" value="${k}" id="sel-${k}"><label for="sel-${k}"> <b>${o.nick}</b></label></div>`;
-            }
+            if(!o || !o.items) return; const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
+            if (itemList.some(it => it && selEvts.includes(it.e))) html += `<div style="padding:12px; border-bottom:1px solid #F5F5F5;"><input type="checkbox" class="order-select-chk" value="${k}" id="sel-${k}"><label for="sel-${k}"> <b>${o.nick}</b></label></div>`;
         });
-        html += `</div>`;
-        document.getElementById('step0-area').style.display = 'none';
+        html += `</div>`; document.getElementById('step0-area').style.display = 'none';
         const s1 = document.getElementById('step1-area'); s1.innerHTML = html; s1.style.display = 'block';
         const btn = document.getElementById('modal-save'); btn.innerText = "開始核對 →";
         btn.onclick = () => {
             const selectedKeys = Array.from(document.querySelectorAll('.order-select-chk:checked')).map(el => el.value);
-            if (selectedKeys.length === 0) return alert("請先勾選訂單");
-            startDetailPacking(selectedKeys, selEvts);
+            if (selectedKeys.length === 0) return alert("請先勾選訂單"); startDetailPacking(selectedKeys, selEvts);
         };
     }
 
@@ -329,8 +314,7 @@
         let html = `<div style="font-size:12px; color:red; margin-bottom:10px;">核對完畢後請按最下方「確認出貨更新狀態」</div>`;
         keys.forEach(k => {
             const o = orders[k]; if(!o) return;
-            let categoryTotals = {}, groupItems = {}; 
-            const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
+            let categoryTotals = {}, groupItems = {}; const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
             itemList.forEach((it, idx) => {
                 if (it && selEvts.includes(it.e)) {
                     let mP = products[it.pid] || products.find(p => p.n === it.n && p.e === it.e);
@@ -353,8 +337,7 @@
                     <div style="margin-top:8px; padding:8px; background:#FEF9EF; border-left:4px solid #BC6C25; border-radius:4px;">${bonusInfo || '無相符場次'}</div>
                 </div>`;
             for (let gKey in groupItems) {
-                let g = groupItems[gKey];
-                let allChecked = g.indices.every(idx => {
+                let g = groupItems[gKey], allChecked = g.indices.every(idx => {
                     if (tempPackStatus[`${k}_${idx}`] === undefined) tempPackStatus[`${k}_${idx}`] = g.it.isShipped === true;
                     return tempPackStatus[`${k}_${idx}`];
                 });
@@ -376,25 +359,24 @@
         startDetailPacking(keysStr.split(','), selEvtsStr.split(','));
     }
 
+    // 核心修正：連動更新資料庫
     function saveShippingUpdates() {
         const updates = {};
         for (let key in tempPackStatus) {
             const [orderKey, itemIdx] = key.split('_');
-            // 修正：確保更新路徑與 Firebase 資料結構絕對對齊
             updates[`/orders/${orderKey}/items/${itemIdx}/isShipped`] = tempPackStatus[key];
         }
         db.ref().update(updates).then(() => { 
             alert("已連動更新狀態！"); 
             document.getElementById('edit-modal').style.display = 'none'; 
-            tempPackStatus = {}; // 清空暫存
-            renderAdminOrders(); 
+            tempPackStatus = {}; renderAdminOrders(); 
         });
     }
 
+    // 複製與合併
     function copyShippingCard(orderKey, selEvtsStr) {
         const o = orders[orderKey], selEvts = selEvtsStr.split(','), JPY_THRESHOLD = 6000; if(!o) return;
-        let nowShipping = {}, totals = {}, stillWaiting = {};
-        const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
+        let nowShipping = {}, totals = {}, stillWaiting = {}; const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
         itemList.forEach((it, idx) => {
             if (it && selEvts.includes(it.e)) {
                 let mP = products[it.pid] || products.find(p => p.n === it.n && p.e === it.e);
@@ -409,36 +391,27 @@
         if (Object.keys(stillWaiting).length > 0) { txt += `\n⏳ 【尚在等候中】：\n`; for(let k in stillWaiting) txt += `- ${k} x${stillWaiting[k]}\n`; }
         txt += `\n🎁 滿額禮統計：\n`; let hasBonus = false;
         for(let e in totals) { let c = Math.floor(totals[e]/JPY_THRESHOLD); if(c > 0) { txt += `- ${e}：滿 ¥${totals[e]} 送 ${c} 張卡\n`; hasBonus = true; } }
-        if(!hasBonus) txt += `(本次寄出內容未達滿額禮門檻)\n`;
-        txt += `\n以上資訊供核對，無誤將為您安排寄出唷！`;
+        if(!hasBonus) txt += `(本次寄出內容未達滿額禮門檻)\n`; txt += `\n以上資訊供核對，無誤將為您安排寄出唷！`;
         navigator.clipboard.writeText(txt).then(() => alert("對帳卡已複製！"));
     }
-
     function mergeSelected() {
         const checks = Array.from(document.querySelectorAll('.merge-check:checked')); if(checks.length<2) return alert("選兩筆以上");
         const keys = checks.map(el => el.value); let items = [], total = 0;
         keys.forEach(k => { 
-            if(!orders[k]) return;
             const itemList = Array.isArray(orders[k].items) ? orders[k].items : Object.values(orders[k].items || {});
-            items = items.concat(itemList); 
-            total += (orders[k].total||0); 
+            items = items.concat(itemList); total += (orders[k].total||0); 
         });
         db.ref('orders').push({ nick: checks[0].getAttribute('data-nick'), items, total, time: Date.now(), isUnlocked: true }).then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); });
     }
     function copyToLine(k) {
-        const o = orders[k]; if(!o) return;
-        let txt = `🌟 ${o.nick} 明細 🌟\n`;
+        const o = orders[k]; if(!o) return; let txt = `🌟 ${o.nick} 明細 🌟\n`;
         const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-        const sortedItems = [...itemList].sort((a,b) => {
-            if(a.isShipped === b.isShipped) return 0;
-            return a.isShipped ? 1 : -1;
-        });
-        sortedItems.forEach((it, i) => { if(it) txt += `${i+1}. ${it.n}(${it.sel})${it.isShipped?'[已出]':''} $${it.p}\n`; });
+        itemList.forEach((it, i) => { if(it) txt += `${i+1}. ${it.n}(${it.sel})${it.isShipped?'[已出]':''} $${it.p}\n`; });
         txt += `總計：$${o.total}`; navigator.clipboard.writeText(txt).then(() => alert("已複製"));
     }
-    function unlockAllOrders() { 
-        const ups = {}; Object.keys(orders).forEach(k => { if(orders[k]) ups[`${k}/isUnlocked`] = true; }); db.ref('orders').update(ups); 
-    }
+    function unlockAllOrders() { const ups = {}; Object.keys(orders).forEach(k => { if(orders[k]) ups[`${k}/isUnlocked`] = true; }); db.ref('orders').update(ups); }
+    
+    // 匯出功能
     function askExport(type) {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
         document.getElementById('modal-title').innerText = "匯出場次";
@@ -449,14 +422,12 @@
             let txt = `${type === 'summary' ? '採購統計' : '匯出明細'}\n`;
             if(type === 'summary') {
                 let s = {}; Object.values(orders).forEach(o => {
-                    if(!o || !o.items) return;
                     const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
                     itemList.forEach(it => { if(it && sel.includes(it.e)) { let k = `${it.e}_${it.n}_${it.sel}`; s[k] = (s[k]||0)+1; } });
                 });
                 for(let k in s) txt += `${k} x${s[k]}\n`;
             } else {
                 Object.values(orders).sort((a,b)=>a.time-b.time).forEach(o => {
-                    if(!o || !o.items) return;
                     const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
                     if(itemList.some(it => it && sel.includes(it.e))) {
                         txt += `\n👤 ${o.nick}\n`;
@@ -467,9 +438,10 @@
             navigator.clipboard.writeText(txt).then(() => { alert("已複製到剪貼簿"); document.getElementById('edit-modal').style.display='none'; });
         };
     }
+
+    // 搜尋與登入
     function performSearch() {
-        const nick = document.getElementById('search-nick').value.trim();
-        const area = document.getElementById('search-results-area');
+        const nick = document.getElementById('search-nick').value.trim(), area = document.getElementById('search-results-area');
         if(!nick) { area.innerHTML = ""; return; }
         const matched = Object.entries(orders).filter(([k, o]) => o.nick === nick && o.isUnlocked);
         if(matched.length === 0) { area.innerHTML = "<p style='padding:20px; color:#999; text-align:center;'>尚未有解鎖訂單</p>"; return; }
