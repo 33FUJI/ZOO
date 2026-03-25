@@ -109,25 +109,12 @@
     let products = [], orders = {}, cart = [], curS = {}, curQty = {}, currentEvent = "";
     let tempPackStatus = {}; 
 
-    db.ref('products').on('value', snap => { 
-        products = snap.val() || []; 
-        renderHall(); 
-        updateAdminFilter();
-        if(currentEvent) openShop(currentEvent); 
-    });
-    db.ref('orders').on('value', snap => { 
-        orders = snap.val() || {}; 
-        if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); 
-    });
+    db.ref('products').on('value', snap => { products = snap.val() || []; renderHall(); updateAdminFilter(); });
+    db.ref('orders').on('value', snap => { orders = snap.val() || {}; if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); });
 
     function adminLogin() {
         const p = prompt("請輸入管理員密碼");
-        if(p === "1239") { 
-            document.getElementById('admin-panel').style.display = 'flex'; 
-            renderAdminOrders(); 
-        } else {
-            alert("密碼錯誤");
-        }
+        if(p === "1239") { document.getElementById('admin-panel').style.display = 'flex'; renderAdminOrders(); }
     }
 
     function renderHall() {
@@ -242,7 +229,7 @@
 
     function startDetailPacking(keys, selEvts) {
         const JPY_THRESHOLD = 6000;
-        let html = `<div style="font-size:12px; color:red;">核對完後按最下方「確認出貨更新狀態」</div>`;
+        let html = `<div style="font-size:12px; color:red;">核對完後按下方「確認出貨更新狀態」</div>`;
         keys.forEach(k => {
             const o = orders[k]; if(!o) return;
             let categoryTotals = {}, groupItems = {}; 
@@ -268,9 +255,8 @@
                     if (tempPackStatus[`${k}_${idx}`] === undefined) tempPackStatus[`${k}_${idx}`] = (g.it.isShipped === true);
                     return tempPackStatus[`${k}_${idx}`];
                 });
-                // 重現灰底視覺效果：選取時 background 變為 #F0F0F0
                 html += `<div onclick="toggleGroupCheck('${k}', '${g.indices.join(',')}', ${!allChecked}, '${selEvts.join(',')}', '${keys.join(',')}')" 
-                         style="padding:10px; margin:5px 0; border:1px solid #DDD; background:${allChecked?'#F0F0F0':'#FFF'}; border-radius:8px; cursor:pointer; transition:0.2s;">
+                         style="padding:10px; margin:5px 0; border:1px solid #DDD; background:${allChecked?'#F0F0F0':'#FFF'}; border-radius:8px; cursor:pointer;">
                     ${allChecked?'☑️':'⬜'} [${g.it.e}] ${g.it.n}(${g.it.sel}) x${g.count}
                 </div>`;
             }
@@ -290,11 +276,15 @@
         const batchUpdates = {};
         for (let key in tempPackStatus) {
             const [orderKey, itemIdx] = key.split('_');
-            batchUpdates[`orders/${orderKey}/items/${itemIdx}/isShipped`] = tempPackStatus[key];
+            batchUpdates[`/orders/${orderKey}/items/${itemIdx}/isShipped`] = tempPackStatus[key];
         }
         if(Object.keys(batchUpdates).length === 0) return alert("沒有需要更新的內容");
         db.ref().update(batchUpdates)
-            .then(() => { alert("✅ 連動成功！資料庫已同步。"); document.getElementById('edit-modal').style.display = 'none'; })
+            .then(() => { 
+                alert("✅ 資料庫已同步！"); 
+                document.getElementById('edit-modal').style.display = 'none';
+                renderAdminOrders();
+            })
             .catch(e => alert("❌ 同步失敗：" + e.message));
     }
 
