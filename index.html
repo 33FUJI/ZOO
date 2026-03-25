@@ -200,7 +200,7 @@
                 if(!it || it.n === undefined) return '';
                 const limit = (products[it.pid]||{}).limit||999, rank = pool[`${it.pid}_${it.sel}`].indexOf(it)+1, isWin = it.fWin || rank <= limit;
                 return `<div style="font-size:13px; border-bottom:1px solid #F0F0F0; padding:4px 0; display:flex; justify-content:space-between;">
-                    <span>[${it.e}] ${it.n}(${it.sel}) <b onclick="editItemPrice('${k}', ${idx})">$${it.p}</b> ${it.isShipped?'[已出]':''} <b onclick="db.ref('orders/${k}/items/${idx}').update({fWin:${!it.fWin}})" style="color:${isWin?'green':'orange'};">${isWin?'[正]':'[補'+(rank-limit)+']'}</b></span>
+                    <span>[${it.e}] ${it.n}(${it.sel}) <b onclick="editItemPrice('${k}', ${idx})">$${it.p}</b> ${it.isShipped?'<b style="color:#BC6C25;">[已出]</b>':''} <b onclick="db.ref('orders/${k}/items/${idx}').update({fWin:${!it.fWin}})" style="color:${isWin?'green':'orange'};">${isWin?'[正]':'[補'+(rank-limit)+']'}</b></span>
                     <span onclick="removeOrderItem('${k}', ${idx})" style="color:red;">🗑️</span>
                 </div>`;
             }).join('');
@@ -259,7 +259,7 @@
             });
             let bonusInfo = "";
             for (let e in categoryTotals) { let cards = Math.floor(categoryTotals[e] / JPY_THRESHOLD); bonusInfo += `🎁 ${e}：¥${categoryTotals[e]} ➔ ${cards} 張卡<br>`; }
-            html += `<div style="border:1px solid #BC6C25; padding:10px; margin-top:10px; border-radius:10px;">
+            html += `<div style="border:1px solid #BC6C25; padding:10px; margin-top:10px; border-radius:10px; background:#FFF;">
                 <div style="display:flex; justify-content:space-between;"><b>👤 ${o.nick}</b> <button onclick="copyShippingCard('${k}', '${selEvts.join(',')}')" style="font-size:10px;">對帳卡</button></div>
                 <div style="font-size:11px; color:red;">${bonusInfo}</div>`;
             for (let gKey in groupItems) {
@@ -268,7 +268,9 @@
                     if (tempPackStatus[`${k}_${idx}`] === undefined) tempPackStatus[`${k}_${idx}`] = (g.it.isShipped === true);
                     return tempPackStatus[`${k}_${idx}`];
                 });
-                html += `<div onclick="toggleGroupCheck('${k}', '${g.indices.join(',')}', ${!allChecked}, '${selEvts.join(',')}', '${keys.join(',')}')" style="padding:8px; margin:4px 0; border:1px solid #DDD; background:${allChecked?'#FEF9EF':'#FFF'}; border-radius:5px; cursor:pointer;">
+                // 重現灰底視覺效果：選取時 background 變為 #F0F0F0
+                html += `<div onclick="toggleGroupCheck('${k}', '${g.indices.join(',')}', ${!allChecked}, '${selEvts.join(',')}', '${keys.join(',')}')" 
+                         style="padding:10px; margin:5px 0; border:1px solid #DDD; background:${allChecked?'#F0F0F0':'#FFF'}; border-radius:8px; cursor:pointer; transition:0.2s;">
                     ${allChecked?'☑️':'⬜'} [${g.it.e}] ${g.it.n}(${g.it.sel}) x${g.count}
                 </div>`;
             }
