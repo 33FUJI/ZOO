@@ -48,7 +48,6 @@
         .modal-box { background: var(--rice); padding: 25px; border-radius: 20px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
         .input-std { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #DDD; border-radius: 10px; font-size: 15px; }
 
-        /* 變灰樣式 */
         .shipped-item { color: #AAA !important; text-decoration: line-through !important; opacity: 0.6; }
 
         @media (max-width: 768px) {
@@ -302,7 +301,7 @@
                     categoryTotals[it.e] = (categoryTotals[it.e] || 0) + jpyPrice;
                     let gKey = `${it.e}_${it.n}_${it.sel}`;
                     if(!groupItems[gKey]) groupItems[gKey] = { it, indices: [], count: 0, jpy: jpyPrice };
-                    groupItems[gKey].indices.push(idx); groupItems[groupKey].count++;
+                    groupItems[gKey].indices.push(idx); groupItems[gKey].count++;
                 }
             });
             let bonusInfo = "";
