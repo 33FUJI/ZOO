@@ -13,6 +13,7 @@
             --caramel: #BC6C25;
             --wood: #283618;
             --gray: #F4F1EA;
+            --shipped-bg: #F5F5F5; /* 已出貨背景色 */
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Noto Sans TC', sans-serif; }
         html, body { height: 100%; margin: 0; padding: 0; background: var(--gray); overflow: hidden; color: var(--wood); }
@@ -133,6 +134,7 @@
     let products = [], orders = {}, cart = [], curS = {}, curQty = {}, currentEvent = "";
     let tempPackStatus = {}; 
 
+    // 初始化資料監聽
     db.ref('products').on('value', snap => { 
         products = snap.val() || []; 
         renderHall(); 
@@ -143,6 +145,16 @@
         orders = snap.val() || {}; 
         if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); 
     });
+
+    function adminLogin() {
+        const p = prompt("請輸入管理密碼");
+        if(p === "3355") {
+            document.getElementById('admin-panel').style.display = 'flex';
+            renderAdminOrders();
+        } else {
+            alert("密碼錯誤");
+        }
+    }
 
     function renderHall() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e && e.trim() !== "");
@@ -173,7 +185,7 @@
     
     function addToCart(rid) {
         const p = products[rid], sA = p.s ? p.s.split(/,|，/).filter(x=>x.trim()) : [];
-        if(sA.length > 0 && !curS[rid]) return alert("選規格");
+        if(sA.length > 0 && !curS[rid]) return alert("請選擇規格");
         const t = Date.now(); 
         for(let i=0; i<curQty[rid]; i++) cart.push({...p, sel: curS[rid]||"一般", pid: rid, t, p_jpy: p.p_jpy||0});
         renderCart();
@@ -188,38 +200,16 @@
     }
 
     function submitOrder() {
-        const n = document.getElementById('nick').value.trim(); if(!n || cart.length===0) return alert("請填寫完整");
-        db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), isUnlocked: false }).then(() => { alert("成功"); location.reload(); });
-    }
-
-    function removeOrderItem(orderKey, itemIdx) {
-        if(!confirm('確定要從訂單中刪除此項商品嗎？')) return;
-        let o = orders[orderKey];
-        let itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-        itemList.splice(itemIdx, 1);
-        if(itemList.length === 0) { db.ref(`orders/${orderKey}`).remove(); }
-        else { 
-            o.total = itemList.reduce((a, b) => a + (b.p || 0), 0); 
-            db.ref(`orders/${orderKey}`).update({ items: itemList, total: o.total }); 
-        }
-    }
-
-    function editItemPrice(orderKey, itemIdx) {
-        const o = orders[orderKey];
-        let itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-        const it = itemList[itemIdx];
-        const newP = prompt(`修改 [${it.n}] 的台幣單價`, it.p);
-        if(newP !== null) {
-            itemList[itemIdx].p = parseInt(newP) || 0;
-            o.total = itemList.reduce((a, b) => a + (b.p || 0), 0);
-            db.ref(`orders/${orderKey}`).update({ items: itemList, total: o.total });
-        }
+        const n = document.getElementById('nick').value.trim(); if(!n || cart.length===0) return alert("請填寫暱稱及選購商品");
+        db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), isUnlocked: false }).then(() => { alert("訂單提交成功！"); location.reload(); });
     }
 
     function renderAdminOrders() {
         const main = document.getElementById('admin-main'), filterEvt = document.getElementById('admin-event-filter').value;
         let pool = {}; 
         let orderEntries = Object.entries(orders).filter(([k, o]) => o && o.nick && o.items);
+        
+        // 建立配貨排名池
         orderEntries.forEach(([k, o]) => {
             const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
             itemList.forEach(it => { 
@@ -230,30 +220,35 @@
             });
         });
         for(let k in pool) pool[k].sort((a,b) => (a.t||0) - (b.t||0));
+
         if (filterEvt !== "ALL") orderEntries = orderEntries.filter(([k, o]) => {
             const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
             return itemList.some(it => it && it.e === filterEvt);
         });
+
         main.innerHTML = `<button class="btn-add" style="margin-bottom:15px; width:100%;" onclick="mergeSelected()">🔗 併單</button>` + orderEntries.sort((a,b)=>a[1].time-b[1].time).map(([k, o]) => {
             const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-            // 已出貨置底排序邏輯
+            
+            // 排序：未出貨優先，已出貨置底
             const sortedItems = [...itemList].sort((a,b) => {
-                if(a.isShipped === b.isShipped) return 0;
+                if(!!a.isShipped === !!b.isShipped) return 0;
                 return a.isShipped ? 1 : -1;
             });
+
             const itemsHtml = sortedItems.map((it) => {
                 if(!it) return '';
                 const idx = itemList.indexOf(it);
                 const limit = (products[it.pid]||{}).limit||999, rank = pool[`${it.pid}_${it.sel}`].indexOf(it)+1, isWin = it.fWin || rank <= limit;
                 const isShipped = it.isShipped === true; 
-                return `<div style="font-size:13px; border-bottom:1px solid #F0F0F0; padding:6px 0; display:flex; justify-content:space-between; align-items:center; ${isShipped ? 'background:#F9F9F9;' : ''}">
-                    <div style="${isShipped ? 'color:#AAA;' : ''}">
+                return `<div style="font-size:13px; border-bottom:1px solid #F0F0F0; padding:6px 0; display:flex; justify-content:space-between; align-items:center; ${isShipped ? 'background:var(--shipped-bg); opacity:0.6;' : ''}">
+                    <div>
                         <input type="checkbox" class="msg-item-check-${k}" value="${idx}" checked>
-                        <span>[${it.e}] ${it.n}(${it.sel}) <b style="color:${isShipped ? '#AAA' : 'var(--caramel)'}; cursor:pointer;" onclick="editItemPrice('${k}', ${idx})">$${it.p}</b> ${isShipped ? '<b>[已出]</b>' : ''} <b onclick="db.ref('orders/${k}/items/${idx}').update({fWin:${!it.fWin}})" style="color:${isWin?'green':'orange'}; cursor:pointer;">${isWin?'[正]':'[補'+(rank-limit)+']'}</b></span>
+                        <span>[${it.e}] ${it.n}(${it.sel}) <b style="color:var(--caramel); cursor:pointer;" onclick="editItemPrice('${k}', ${idx})">$${it.p}</b> ${isShipped ? '<b style="color:#666;">[已出]</b>' : ''} <b onclick="db.ref('orders/${k}/items/${idx}').update({fWin:${!it.fWin}})" style="color:${isWin?'green':'orange'}; cursor:pointer;">${isWin?'[正]':'[補'+(rank-limit)+']'}</b></span>
                     </div>
                     <span onclick="removeOrderItem('${k}', ${idx})" style="color:red; cursor:pointer; font-size:11px; padding:2px 5px; border:1px solid red; border-radius:4px;">🗑️ 刪除</span>
                 </div>`;
             }).join('');
+
             return `<div class="admin-order-card">
                 <div style="display:flex; justify-content:space-between;"><span><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> <b>${o.nick}</b></span><button onclick="if(confirm('整筆刪除？'))db.ref('orders/${k}').remove()" style="color:red; background:none; border:none;">✕</button></div>
                 <div style="margin:8px 0;">${itemsHtml}</div>
@@ -262,38 +257,12 @@
             </div>`}).join('');
     }
 
-    function renderAdminProds() {
-        const main = document.getElementById('admin-main');
-        main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px;" onclick="openEdit(-1)">＋ 新增上架</button>` + 
-            products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between; align-items:center;"><div><b>[${p.e}] ${p.n}</b><br>$${p.p} <span style="color:#888;">(¥${p.p_jpy || 0})</span></div><button class="btn-add" style="background:var(--caramel);" onclick="openEdit(${i})">編輯</button></div>`).join('');
-    }
-
-    function openEdit(index) {
-        const isNew = index === -1;
-        const p = isNew ? {e:'', n:'', p:0, p_jpy:0, limit:999, s:''} : products[index];
-        document.getElementById('modal-title').innerText = isNew ? "新增上架" : "編輯商品";
-        document.getElementById('modal-body').innerHTML = `
-            活動場次：<input id="inp-e" class="input-std" value="${p.e || ''}" placeholder="例如：日本超市">
-            商品名稱：<input id="inp-n" class="input-std" value="${p.n || ''}">
-            台幣售價：<input id="inp-p" type="number" class="input-std" value="${p.p || 0}">
-            日幣單價(滿額試算)：<input id="inp-pj" type="number" class="input-std" value="${p.p_jpy || 0}">
-            限購數量：<input id="inp-l" type="number" class="input-std" value="${p.limit || 999}">
-            規格選項：<input id="inp-s" class="input-std" value="${p.s || ''}" placeholder="紅,藍 (逗號隔開)">
-        `;
-        document.getElementById('edit-modal').style.display = 'flex';
-        document.getElementById('modal-save').onclick = () => {
-            const vE = document.getElementById('inp-e').value.trim(), vN = document.getElementById('inp-n').value.trim(), vP = parseInt(document.getElementById('inp-p').value)||0, vPJ = parseInt(document.getElementById('inp-pj').value)||0, vL = parseInt(document.getElementById('inp-l').value)||999, vS = document.getElementById('inp-s').value.trim();
-            if (!vN) return alert("請輸入名稱");
-            let nP = [...products]; const obj = { e: vE, n: vN, p: vP, p_jpy: vPJ, limit: vL, s: vS };
-            if (isNew) nP.push(obj); else nP[index] = obj;
-            db.ref('products').set(nP).then(() => { alert("成功"); document.getElementById('edit-modal').style.display = 'none'; });
-        };
-    }
+    // --- 核心邏輯：配貨助手 ---
 
     function openPackAssistant() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
         tempPackStatus = {}; 
-        document.getElementById('modal-title').innerText = "📦 配貨出貨助手 (同品項合併)";
+        document.getElementById('modal-title').innerText = "📦 配貨出貨助手";
         let html = `<div id="step0-area"><div style="font-size:13px; color:var(--caramel); margin-bottom:10px;"><b>第 0 步：勾選處理場次</b></div><div style="background:#FFF; padding:10px; border-radius:10px; border:1px solid #EEE; max-height:200px; overflow-y:auto;">${evts.map(e => `<div style="padding:5px 0;"><input type="checkbox" class="evt-select-chk" value="${e}" id="evt-${e}"><label for="evt-${e}"> ${e}</label></div>`).join('')}</div></div><div id="step1-area" style="display:none; margin-top:15px;"></div><div id="step2-area" style="display:none; margin-top:15px;"></div>`;
         document.getElementById('modal-body').innerHTML = html;
         document.getElementById('edit-modal').style.display = 'flex';
@@ -356,7 +325,7 @@
             for (let gKey in groupItems) {
                 let g = groupItems[gKey];
                 let allChecked = g.indices.every(idx => {
-                    if (tempPackStatus[`${k}_${idx}`] === undefined) tempPackStatus[`${k}_${idx}`] = g.it.isShipped === true;
+                    if (tempPackStatus[`${k}_${idx}`] === undefined) tempPackStatus[`${k}_${idx}`] = (g.it.isShipped === true);
                     return tempPackStatus[`${k}_${idx}`];
                 });
                 html += `<div onclick="toggleGroupCheck('${k}', '${g.indices.join(',')}', ${!allChecked}, '${selEvts.join(',')}', '${keys.join(',')}')" style="cursor:pointer; display:flex; align-items:center; gap:10px; padding:10px; margin-bottom:5px; border-radius:6px; background:${allChecked ? '#FEF9EF' : '#FFF'}; border:1px solid ${allChecked ? '#BC6C25' : '#DDD'};">
@@ -368,8 +337,8 @@
         });
         document.getElementById('step1-area').style.display = 'none';
         const s2 = document.getElementById('step2-area'); s2.innerHTML = html; s2.style.display = 'block';
-        const btn = document.getElementById('modal-save'); btn.innerText = "🚀 確認出貨並更新狀態";
-        btn.onclick = () => { if(confirm("確定更新勾選商品為已出貨？")) saveShippingUpdates(); };
+        const btn = document.getElementById('modal-save'); btn.innerText = "🚀 確認出貨並連動更新";
+        btn.onclick = () => { if(confirm("確定將勾選商品更新為已出貨狀態？")) saveShippingUpdates(); };
     }
 
     function toggleGroupCheck(k, idxsStr, status, selEvtsStr, keysStr) {
@@ -377,13 +346,29 @@
         startDetailPacking(keysStr.split(','), selEvtsStr.split(','));
     }
 
-    function saveShippingUpdates() {
+    // --- 連動修正函數 ---
+    async function saveShippingUpdates() {
         const updates = {};
+        let hasChanges = false;
         for (let key in tempPackStatus) {
             const [orderKey, itemIdx] = key.split('_');
-            updates[`orders/${orderKey}/items/${itemIdx}/isShipped`] = tempPackStatus[key];
+            // 路徑加上斜線，確保 Firebase 正確處理多路徑更新
+            updates[`/orders/${orderKey}/items/${itemIdx}/isShipped`] = tempPackStatus[key];
+            hasChanges = true;
         }
-        db.ref().update(updates).then(() => { alert("已連動更新狀態！"); document.getElementById('edit-modal').style.display = 'none'; renderAdminOrders(); });
+        
+        if(!hasChanges) return alert("沒有任何變動");
+
+        try {
+            await db.ref().update(updates);
+            alert("✅ 已連動更新狀態！");
+            tempPackStatus = {}; // 清空暫存
+            document.getElementById('edit-modal').style.display = 'none';
+            renderAdminOrders(); // 強制重新渲染介面
+        } catch (e) {
+            console.error(e);
+            alert("更新失敗，請檢查連線");
+        }
     }
 
     function copyShippingCard(orderKey, selEvtsStr) {
@@ -395,8 +380,15 @@
                 let mP = products[it.pid] || products.find(p => p.n === it.n && p.e === it.e);
                 const jpyPrice = mP ? (mP.p_jpy || 0) : (it.p_jpy || 0);
                 let gKey = `[${it.e}] ${it.n}(${it.sel})`;
-                if (tempPackStatus[`${orderKey}_${idx}`]) { nowShipping[gKey] = (nowShipping[gKey] || 0) + 1; totals[it.e] = (totals[it.e] || 0) + jpyPrice; }
-                else { stillWaiting[gKey] = (stillWaiting[gKey] || 0) + 1; }
+                // 優先讀取暫存區，若暫存無資料則讀取資料庫
+                const isChecking = tempPackStatus[`${orderKey}_${idx}`] !== undefined ? tempPackStatus[`${orderKey}_${idx}`] : (it.isShipped === true);
+                
+                if (isChecking) { 
+                    nowShipping[gKey] = (nowShipping[gKey] || 0) + 1; 
+                    totals[it.e] = (totals[it.e] || 0) + jpyPrice; 
+                } else { 
+                    stillWaiting[gKey] = (stillWaiting[gKey] || 0) + 1; 
+                }
             }
         });
         let txt = `🌟 【33日本動物園 - 出貨對帳】 🌟\n\n👤 暱稱：${o.nick}\n\n📦 本次預計寄出：\n`;
@@ -409,33 +401,84 @@
         navigator.clipboard.writeText(txt).then(() => alert("對帳卡已複製！"));
     }
 
+    // 其餘維護功能...
+    function removeOrderItem(orderKey, itemIdx) {
+        if(!confirm('確定刪除？')) return;
+        let o = orders[orderKey];
+        let itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
+        itemList.splice(itemIdx, 1);
+        if(itemList.length === 0) db.ref(`orders/${orderKey}`).remove();
+        else {
+            const newTotal = itemList.reduce((a, b) => a + (b.p || 0), 0);
+            db.ref(`orders/${orderKey}`).update({ items: itemList, total: newTotal });
+        }
+    }
+
+    function editItemPrice(orderKey, itemIdx) {
+        const o = orders[orderKey];
+        let itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
+        const it = itemList[itemIdx];
+        const newP = prompt(`修改 [${it.n}] 的單價`, it.p);
+        if(newP !== null) {
+            itemList[itemIdx].p = parseInt(newP) || 0;
+            const newTotal = itemList.reduce((a, b) => a + (b.p || 0), 0);
+            db.ref(`orders/${orderKey}`).update({ items: itemList, total: newTotal });
+        }
+    }
+
+    function renderAdminProds() {
+        const main = document.getElementById('admin-main');
+        main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px;" onclick="openEdit(-1)">＋ 新增上架</button>` + 
+            products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between; align-items:center;"><div><b>[${p.e}] ${p.n}</b><br>$${p.p} <span style="color:#888;">(¥${p.p_jpy || 0})</span></div><button class="btn-add" style="background:var(--caramel);" onclick="openEdit(${i})">編輯</button></div>`).join('');
+    }
+
+    function openEdit(index) {
+        const isNew = index === -1;
+        const p = isNew ? {e:'', n:'', p:0, p_jpy:0, limit:999, s:''} : products[index];
+        document.getElementById('modal-title').innerText = isNew ? "新增上架" : "編輯商品";
+        document.getElementById('modal-body').innerHTML = `
+            活動場次：<input id="inp-e" class="input-std" value="${p.e || ''}">
+            商品名稱：<input id="inp-n" class="input-std" value="${p.n || ''}">
+            台幣售價：<input id="inp-p" type="number" class="input-std" value="${p.p || 0}">
+            日幣單價(滿額試算)：<input id="inp-pj" type="number" class="input-std" value="${p.p_jpy || 0}">
+            限購數量：<input id="inp-l" type="number" class="input-std" value="${p.limit || 999}">
+            規格選項：<input id="inp-s" class="input-std" value="${p.s || ''}" placeholder="紅,藍 (半角逗號)">
+        `;
+        document.getElementById('edit-modal').style.display = 'flex';
+        document.getElementById('modal-save').onclick = () => {
+            const vE = document.getElementById('inp-e').value.trim(), vN = document.getElementById('inp-n').value.trim(), vP = parseInt(document.getElementById('inp-p').value)||0, vPJ = parseInt(document.getElementById('inp-pj').value)||0, vL = parseInt(document.getElementById('inp-l').value)||999, vS = document.getElementById('inp-s').value.trim();
+            if (!vN) return alert("請輸入名稱");
+            let nP = [...products]; 
+            const obj = { e: vE, n: vN, p: vP, p_jpy: vPJ, limit: vL, s: vS };
+            if (isNew) nP.push(obj); else nP[index] = obj;
+            db.ref('products').set(nP).then(() => { alert("成功"); document.getElementById('edit-modal').style.display = 'none'; });
+        };
+    }
+
     function mergeSelected() {
         const checks = Array.from(document.querySelectorAll('.merge-check:checked')); if(checks.length<2) return alert("選兩筆以上");
         const keys = checks.map(el => el.value); let items = [], total = 0;
         keys.forEach(k => { 
             if(!orders[k]) return;
             const itemList = Array.isArray(orders[k].items) ? orders[k].items : Object.values(orders[k].items || {});
-            // 併單時保留原本順序
             items = items.concat(itemList); 
             total += (orders[k].total||0); 
         });
         db.ref('orders').push({ nick: checks[0].getAttribute('data-nick'), items, total, time: Date.now(), isUnlocked: true }).then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); });
     }
+
     function copyToLine(k) {
         const o = orders[k]; if(!o) return;
         let txt = `🌟 ${o.nick} 明細 🌟\n`;
         const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-        // 明細複製也遵循已出貨置底
-        const sortedItems = [...itemList].sort((a,b) => {
-            if(a.isShipped === b.isShipped) return 0;
-            return a.isShipped ? 1 : -1;
-        });
-        sortedItems.forEach((it, i) => { if(it) txt += `${i+1}. ${it.n}(${it.sel})${it.isShipped?'[已出]':''} $${it.p}\n`; });
+        itemList.forEach((it, i) => { if(it) txt += `${i+1}. ${it.n}(${it.sel})${it.isShipped?'[已出]':''} $${it.p}\n`; });
         txt += `總計：$${o.total}`; navigator.clipboard.writeText(txt).then(() => alert("已複製"));
     }
+
     function unlockAllOrders() { 
         const ups = {}; Object.keys(orders).forEach(k => { if(orders[k]) ups[`${k}/isUnlocked`] = true; }); db.ref('orders').update(ups); 
     }
+
     function askExport(type) {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
         document.getElementById('modal-title').innerText = "匯出場次";
@@ -446,58 +489,37 @@
             let txt = `${type === 'summary' ? '採購統計' : '匯出明細'}\n`;
             if(type === 'summary') {
                 let s = {}; Object.values(orders).forEach(o => {
-                    if(!o || !o.items) return;
                     const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
                     itemList.forEach(it => { if(it && sel.includes(it.e)) { let k = `${it.e}_${it.n}_${it.sel}`; s[k] = (s[k]||0)+1; } });
                 });
                 for(let k in s) txt += `${k} x${s[k]}\n`;
             } else {
                 Object.values(orders).sort((a,b)=>a.time-b.time).forEach(o => {
-                    if(!o || !o.items) return;
                     const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
                     if(itemList.some(it => it && sel.includes(it.e))) {
-                        txt += `\n[${o.nick}]\n`;
+                        txt += `\n👤 ${o.nick}\n`;
                         itemList.forEach(it => { if(it && sel.includes(it.e)) txt += `- ${it.n}(${it.sel}) $${it.p}\n`; });
                     }
                 });
             }
-            navigator.clipboard.writeText(txt).then(() => alert("已複製"));
+            navigator.clipboard.writeText(txt).then(() => alert("已複製至剪貼簿"));
         };
     }
 
     function performSearch() {
-        const q = document.getElementById('search-nick').value.trim().toLowerCase(); 
+        const q = document.getElementById('search-nick').value.trim().toLowerCase();
         const area = document.getElementById('search-results-area');
         if(!q) { area.innerHTML = ""; return; }
-
-        const results = Object.values(orders).filter(o => {
-            // 增強檢查：nick 必須存在且為字串，避免 toLowerCase 報錯
-            const name = (o && o.nick) ? String(o.nick).toLowerCase() : "";
-            return name.includes(q) && o.isUnlocked && o.items;
-        });
-        
-        if(results.length === 0) { area.innerHTML = "<p style='text-align:center; color:#999; margin-top:10px;'>查無已解鎖明細，請聯繫園長。</p>"; return; }
-        
-        area.innerHTML = results.map(o => {
-            const itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-            // 查詢結果也執行已出貨置底
-            const sortedItems = [...itemList].sort((a,b) => {
-                if(a.isShipped === b.isShipped) return 0;
-                return a.isShipped ? 1 : -1;
-            });
-            const itemsHtml = sortedItems.map(it => {
-                if(!it) return '';
-                const isShipped = it.isShipped === true;
-                return `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px dashed #DDD; ${isShipped ? 'color:#AAA;' : ''}"><span>${it.n}(${it.sel}) ${isShipped ? '[已出]' : ''}</span><span>$${it.p}</span></div>`;
-            }).join('');
-            return `<div style="background:#FFF; padding:15px; border-radius:10px; margin-top:10px; border:1px solid #EAE2D1;">
-                <div style="font-weight:bold; color:var(--matcha); border-bottom:1px solid #EEE; padding-bottom:5px; margin-bottom:5px;">${o.nick} 的訂單</div>
-                ${itemsHtml}<div style="text-align:right; font-weight:bold; margin-top:8px; color:var(--caramel);">總計：$${o.total}</div>
+        const res = Object.entries(orders).filter(([k, o]) => o.nick.toLowerCase().includes(q));
+        area.innerHTML = res.map(([k, o]) => {
+            const items = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
+            const itemHtml = items.map(it => `<div style="font-size:13px; color:#666;">- ${it.n}(${it.sel}) ${it.isShipped?'<b>[已出貨]</b>':''}</div>`).join('');
+            return `<div style="padding:15px; border-bottom:1px solid #EEE;">
+                <div style="font-weight:bold; color:var(--matcha);">${o.nick} ${o.isUnlocked?'':'(待核對)'}</div>
+                ${o.isUnlocked ? itemHtml + `<div style="text-align:right; font-weight:bold; color:var(--caramel);">總計: $${o.total}</div>` : '<div style="color:#999; font-size:12px;">訂單處理中，請稍後查詢</div>'}
             </div>`;
         }).join('');
     }
-
-    function adminLogin() { let pw = prompt("請輸入管理密碼"); if(pw === "1239") document.getElementById('admin-panel').style.display = 'flex'; }
 </script>
 </body>
 </html>
