@@ -141,52 +141,28 @@
 
     function renderAdminOrders() {
         const main = document.getElementById('admin-main'), filterEvt = document.getElementById('admin-event-filter').value;
-        let prodSummary = {};    // 總採購統計
-        let unShippedSummary = {}; // 未出貨統計
-
+        let prodSummary = {}, unShippedSummary = {};
         Object.values(orders).forEach(o => {
             if(!o) return;
-            let itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-            if (filterEvt !== "ALL" && !itemList.some(it => it && it.e === filterEvt)) return;
-            
+            let itemList = (Array.isArray(o.items) ? o.items : Object.values(o.items || {})).filter(it=>it && it.n);
+            if (filterEvt !== "ALL" && !itemList.some(it => it.e === filterEvt)) return;
             itemList.forEach(it => { 
-                if(it && it.n && it.e) { 
-                    let k = `[${it.e}] ${it.n}(${it.sel||'一般'})`; 
-                    // 1. 累加總採購
-                    prodSummary[k] = (prodSummary[k] || 0) + 1; 
-                    // 2. 累加未出貨 (只有 isShipped 不為 true 的才算)
-                    if (!it.isShipped) {
-                        unShippedSummary[k] = (unShippedSummary[k] || 0) + 1;
-                    }
-                }
+                let k = `[${it.e}] ${it.n}(${it.sel||'一般'})`; 
+                prodSummary[k] = (prodSummary[k] || 0) + 1; 
+                if (!it.isShipped) unShippedSummary[k] = (unShippedSummary[k] || 0) + 1;
             });
         });
-
-        // 原本的總統計框
-        let summaryHtml = `<div class="summary-box"><b>📊 本區商品採購統計 (不分出貨狀態)：</b><br>`;
-        for(let k in prodSummary) summaryHtml += `${k}：<span style="color:var(--caramel);font-weight:bold;">${prodSummary[k]}</span> 件<br>`;
+        let summaryHtml = `<div class="summary-box"><b>📊 本區商品採購統計 (總數)：</b><br>`;
+        for(let k in prodSummary) summaryHtml += `${k}：${prodSummary[k]} 件<br>`;
+        summaryHtml += `</div><div class="summary-box" style="border-left: 5px solid #E07A5F; background: #FFF5F2;"><b>📦 待出貨 (剩餘) 商品統計：</b><br>`;
+        for(let k in unShippedSummary) summaryHtml += `${k}：<span style="color:red;font-weight:bold;">${unShippedSummary[k]}</span> 件<br>`;
         summaryHtml += `</div>`;
-
-        // 新增：未出貨商品統計框
-        summaryHtml += `<div class="summary-box" style="border-left: 5px solid #E07A5F; background: #FFF5F2;"><b>📦 待出貨 (剩餘) 商品統計：</b><br>`;
-        let hasUnshipped = false;
-        for(let k in unShippedSummary) {
-            summaryHtml += `${k}：<span style="color:red;font-weight:bold;">${unShippedSummary[k]}</span> 件<br>`;
-            hasUnshipped = true;
-        }
-        if (!hasUnshipped) summaryHtml += `<span style="color:#999;">🎉 本區目前無待出貨商品！</span>`;
-        summaryHtml += `</div>`;
-
         main.innerHTML = summaryHtml + `<button class="btn-add" style="width:100%; margin-bottom:10px;" onclick="mergeSelected()">🔗 選取併單</button>`;
-        
         Object.entries(orders).sort((a,b)=>a[1].time-b[1].time).forEach(([k, o]) => {
             if (!o || !o.nick) return;
-            let itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-            if (filterEvt !== "ALL" && !itemList.some(it => it && it.e === filterEvt)) return;
-            const itemsHtml = itemList.map((it, idx) => {
-                if(!it) return '';
-                return `<div style="font-size:13px; padding:4px 0; border-bottom:1px dotted #EEE; display:flex; justify-content:space-between;"><span style="${it.isShipped?'color:#AAA;text-decoration:line-through;':''}">[${it.e||'未'}] ${it.n||'無'} (${it.sel||'-'}) $${it.p||0}</span><button onclick="deleteSingleItem('${k}', ${idx}); event.stopPropagation();" style="color:red; background:none; border:none; font-size:10px;">✕</button></div>`;
-            }).join('');
+            let itemList = (Array.isArray(o.items) ? o.items : Object.values(o.items || {})).filter(it=>it && it.n);
+            if (filterEvt !== "ALL" && !itemList.some(it => it.e === filterEvt)) return;
+            const itemsHtml = itemList.map((it, idx) => `<div style="font-size:13px; padding:4px 0; border-bottom:1px dotted #EEE; display:flex; justify-content:space-between;"><span style="${it.isShipped?'color:#AAA;text-decoration:line-through;':''}">[${it.e}] ${it.n} (${it.sel}) $${it.p}</span><button onclick="deleteSingleItem('${k}', ${idx}); event.stopPropagation();" style="color:red; background:none; border:none; font-size:10px;">✕</button></div>`).join('');
             main.innerHTML += `<div class="admin-order-card" onclick="copyOrderInfo('${o.nick}')">
                 <div style="display:flex; justify-content:space-between;"><b><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}" onclick="event.stopPropagation()"> ${o.nick}</b><button onclick="if(confirm('刪除整筆？'))db.ref('orders/${k}').remove(); event.stopPropagation();" style="color:red; border:none; background:none;">🗑️</button></div>
                 ${itemsHtml}<div style="text-align:right; font-weight:bold; margin-top:5px; color:var(--caramel);">總計：$${o.total||0}</div>
@@ -198,9 +174,9 @@
         let csv = "\ufeff暱稱,場次,商品名稱,規格,價格,狀態\n";
         Object.values(orders).forEach(o => {
             if(!o) return;
-            let itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
+            let itemList = (Array.isArray(o.items) ? o.items : Object.values(o.items || {})).filter(it=>it && it.n);
             itemList.forEach(it => {
-                if(it && it.n) csv += `${o.nick},${it.e||''},${it.n},${it.sel||'一般'},${it.p||0},${it.isShipped?'已出貨':'未出貨'}\n`;
+                csv += `${o.nick},${it.e||''},${it.n},${it.sel||'一般'},${it.p||0},${it.isShipped?'已出貨':'未出貨'}\n`;
             });
         });
         const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
@@ -213,7 +189,7 @@
         let html = `<div style="max-height:400px; overflow-y:auto;">`;
         Object.entries(orders).forEach(([ok, o]) => {
             if(!o || !o.nick) return;
-            let itemList = (Array.isArray(o.items) ? o.items : Object.values(o.items || {})).filter(it => it);
+            let itemList = (Array.isArray(o.items) ? o.items : Object.values(o.items || {})).filter(it => it && it.n);
             html += `<div style="background:#FFF; margin-bottom:10px; padding:10px; border-radius:8px; border:1px solid #DDD;">
                         <div style="font-weight:bold; border-bottom:1px solid #EEE;">👤 ${o.nick}</div>`;
             itemList.forEach((it, idx) => {
@@ -233,7 +209,7 @@
             const firstOk = checks[0].getAttribute('data-ok');
             const o = orders[firstOk];
             let nowShipping = {}, stillWaiting = {}, totals = {};
-            let itemList = (Array.isArray(o.items) ? o.items : Object.values(o.items || {})).filter(it => it);
+            let itemList = (Array.isArray(o.items) ? o.items : Object.values(o.items || {})).filter(it => it && it.n);
             const selectedIndices = Array.from(checks).filter(c => c.getAttribute('data-ok') === firstOk).map(c => parseInt(c.getAttribute('data-idx')));
 
             itemList.forEach((it, idx) => {
@@ -287,7 +263,7 @@
         };
     }
     function deleteSingleItem(orderKey, itemIdx) {
-        let o = orders[orderKey], itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
+        let o = orders[orderKey], itemList = (Array.isArray(o.items) ? o.items : Object.values(o.items || {})).filter(it=>it);
         itemList.splice(itemIdx, 1);
         if(itemList.length === 0) db.ref(`orders/${orderKey}`).remove();
         else db.ref(`orders/${orderKey}`).update({ items: itemList, total: itemList.reduce((a,b)=>a+(b?b.p:0),0) });
@@ -295,17 +271,19 @@
     function mergeSelected() {
         const checks = Array.from(document.querySelectorAll('.merge-check:checked')); if(checks.length<2) return alert("請選取兩筆以上");
         const keys = checks.map(el => el.value); let items = [], total = 0;
-        keys.forEach(k => { let o = orders[k], itemList = (Array.isArray(o.items) ? o.items : Object.values(o.items || {})).filter(it=>it); items = items.concat(itemList); total += (o.total||0); });
+        keys.forEach(k => { let o = orders[k], itemList = (Array.isArray(o.items) ? o.items : Object.values(o.items || {})).filter(it=>it && it.n); items = items.concat(itemList); total += (o.total||0); });
         db.ref('orders').push({ nick: checks[0].getAttribute('data-nick'), items, total, time: Date.now(), isUnlocked: true }).then(() => keys.forEach(k => db.ref(`orders/${k}`).remove()));
     }
     function performSearch() {
         const n = document.getElementById('search-nick').value.trim();
-        const res = Object.values(orders).filter(o => o.nick === n && o.isUnlocked);
+        if(!n) { document.getElementById('search-results-area').innerHTML = ""; return; }
+        const res = Object.values(orders).filter(o => o && o.nick && o.nick.toLowerCase() === n.toLowerCase() && o.isUnlocked);
+        if(res.length === 0) { document.getElementById('search-results-area').innerHTML = `<p style="text-align:center;color:#999;margin-top:20px;">未找到已解鎖的訂單，請聯繫園長。</p>`; return; }
         document.getElementById('search-results-area').innerHTML = res.map(o => {
-            let itemList = (Array.isArray(o.items) ? o.items : Object.values(o.items || {})).filter(it=>it);
-            return `<div style="background:#FFF;padding:12px;margin-top:10px;border-radius:12px;border-left:4px solid var(--matcha);">` +
-            itemList.map(it => `<div style="display:flex; justify-content:space-between; ${it.isShipped?'color:#AAA;text-decoration:line-through;':''}"><span>[${it.e}] ${it.n}</span><b>$${it.p}</b></div>`).join('') +
-            `<div style="text-align:right; font-weight:bold; margin-top:8px;">總計：$${o.total}</div></div>`;
+            let itemList = (Array.isArray(o.items) ? o.items : Object.values(o.items || {})).filter(it=>it && it.n);
+            return `<div style="background:#FFF;padding:12px;margin-top:10px;border-radius:12px;border-left:4px solid var(--matcha);box-shadow:0 2px 5px rgba(0,0,0,0.05);">` +
+            itemList.map(it => `<div style="display:flex; justify-content:space-between; margin-bottom:5px; ${it.isShipped?'color:#AAA;text-decoration:line-through;':''}"><span>[${it.e}] ${it.n} (${it.sel})</span><b>$${it.p}</b></div>`).join('') +
+            `<div style="text-align:right; font-weight:bold; margin-top:8px; border-top:1px solid #EEE; padding-top:8px; color:var(--caramel);">總計金額：$${o.total}</div></div>`;
         }).join('');
     }
     function unlockAllOrders() { Object.keys(orders).forEach(k => db.ref(`orders/${k}`).update({isUnlocked:true})); alert("已全開查詢功能"); }
