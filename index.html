@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>33日本動物園 - 救援版</title>
+    <title>33日本動物園</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
@@ -29,9 +29,7 @@
         #admin-panel { position: fixed; inset: 0; background: #F8F9FA; z-index: 4000; display: none; flex-direction: column; }
         .admin-header { background: var(--wood); color: #FFF; padding: 15px; display: flex; justify-content: space-between; }
         .admin-nav { padding: 10px; background: #EEE; display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #DDD; }
-        .admin-order-card { background: #FFF; border: 1px solid #EEE; border-radius: 12px; padding: 15px; margin-bottom: 15px; border-left: 5px solid #DDD; }
-        .admin-order-card.has-data { border-left-color: var(--matcha); }
-        .admin-order-card.is-error { border-left-color: #E63946; background: #FFF5F5; }
+        .admin-order-card { background: #FFF; border: 1px solid #EEE; border-radius: 12px; padding: 15px; margin-bottom: 15px; border-left: 5px solid var(--matcha); cursor: pointer; }
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 15px; }
         .modal-box { background: var(--rice); padding: 25px; border-radius: 20px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
         .input-std { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #DDD; border-radius: 10px; }
@@ -63,14 +61,14 @@
 
 <div id="admin-panel">
     <div class="admin-header">
-        <b>33 園長工作台 (救援模式)</b>
-        <select id="admin-event-filter" onchange="renderAdminOrders()"><option value="ALL">🔍 顯示所有訂單 (含救援資料)</option></select>
+        <b>33 園長工作台</b>
+        <select id="admin-event-filter" onchange="renderAdminOrders()"><option value="ALL">🔍 所有場次 (顯示全部)</option></select>
         <button onclick="document.getElementById('admin-panel').style.display='none'">關閉</button>
     </div>
     <div class="admin-nav">
         <button class="btn-add" onclick="renderAdminOrders()">訂單管理</button>
         <button class="btn-add" style="background:#BC6C25;" onclick="unlockAllOrders()">🔓 一鍵全開</button>
-        <button class="btn-add" style="background:#E07A5F;" onclick="openPackAssistant()">📦 即時配貨助手</button>
+        <button class="btn-add" style="background:#E07A5F;" onclick="openPackAssistant()">📦 配貨助手 (勾選核對出貨卡)</button>
         <button class="btn-add" style="background:#888;" onclick="renderAdminProds()">商品維護</button>
     </div>
     <div id="admin-main" style="flex:1; overflow-y:auto; padding:15px;"></div>
@@ -95,10 +93,7 @@
     let products = [], orders = {}, cart = [], curS = {}, curQty = {}, currentEvent = "";
 
     db.ref('products').on('value', snap => { products = snap.val() || []; renderHall(); updateAdminFilter(); });
-    db.ref('orders').on('value', snap => { 
-        orders = snap.val() || {}; 
-        if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); 
-    });
+    db.ref('orders').on('value', snap => { orders = snap.val() || {}; if(document.getElementById('admin-panel').style.display==='flex') renderAdminOrders(); });
 
     function renderHall() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
@@ -106,7 +101,7 @@
     }
     function updateAdminFilter() {
         const evts = [...new Set(products.map(p => p.e))].filter(e => e);
-        document.getElementById('admin-event-filter').innerHTML = '<option value="ALL">🔍 顯示所有訂單 (含救援資料)</option>' + evts.map(e => `<option value="${e}">${e}</option>`).join('');
+        document.getElementById('admin-event-filter').innerHTML = '<option value="ALL">🔍 所有場次 (顯示全部)</option>' + evts.map(e => `<option value="${e}">${e}</option>`).join('');
     }
 
     function openShop(e) {
@@ -142,66 +137,47 @@
         db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), isUnlocked: false }).then(() => { alert("提交成功"); location.reload(); });
     }
 
-    // --- 核心：強力救援讀取邏輯 ---
+    // --- 管理後台 ---
     function renderAdminOrders() {
         const main = document.getElementById('admin-main'), filterEvt = document.getElementById('admin-event-filter').value;
         main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:10px;" onclick="mergeSelected()">🔗 選取併單</button>`;
-        
         Object.entries(orders).sort((a,b)=>a[1].time-b[1].time).forEach(([k, o]) => {
-            if (!o || !o.nick) return; // 只要有暱稱就嘗試讀取
-
-            // 強制格式轉換，解決亂碼或層級問題
-            let itemList = [];
-            let isError = false;
-            try {
-                if (o.items) {
-                    itemList = Array.isArray(o.items) ? o.items : Object.values(o.items);
-                } else {
-                    isError = true;
-                }
-            } catch(e) {
-                isError = true;
-            }
-
-            // 場次過濾
+            if (!o || !o.nick) return;
+            let itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
             if (filterEvt !== "ALL" && !itemList.some(it => it && it.e === filterEvt)) return;
-
-            const itemsHtml = isError ? `<div style="color:red; font-size:12px;">⚠️ 此訂單內容損壞，建議手動補單或刪除。</div>` : 
-                itemList.map((it, idx) => `
+            const copyText = `${o.nick}\\n` + itemList.map(it => `- ${(it&&it.n)||'無'} (${(it&&it.sel)||'-'})`).join('\\n');
+            const itemsHtml = itemList.map((it, idx) => `
                 <div style="font-size:13px; padding:4px 0; border-bottom:1px dotted #EEE; display:flex; justify-content:space-between;">
-                    <span style="${it && it.isShipped?'color:#AAA;text-decoration:line-through;':''}">[${(it&&it.e)||'未分類'}] ${(it&&it.n)||'無名稱'}(${(it&&it.sel)||'-'}) $${(it&&it.p)||0}</span>
-                    <button onclick="deleteSingleItem('${k}', ${idx})" style="color:red; background:none; border:none; font-size:10px;">✕</button>
+                    <span style="${it && it.isShipped?'color:#AAA;text-decoration:line-through;':''}">[${(it&&it.e)||'未'}] ${(it&&it.n)||'無'} (${(it&&it.sel)||'-'}) $${(it&&it.p)||0}</span>
+                    <button onclick="deleteSingleItem('${k}', ${idx}); event.stopPropagation();" style="color:red; background:none; border:none; font-size:10px;">✕</button>
                 </div>`).join('');
-            
-            main.innerHTML += `<div class="admin-order-card ${isError?'is-error':'has-data'}">
+            main.innerHTML += `<div class="admin-order-card" onclick="copyOrderInfo('${copyText}')">
                 <div style="display:flex; justify-content:space-between;">
-                    <b><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}"> ${o.nick}</b>
-                    <span style="font-size:10px; color:#999;">${new Date(o.time).toLocaleDateString()}</span>
-                    <button onclick="if(confirm('刪除整筆？'))db.ref('orders/${k}').remove()" style="color:red; border:none; background:none;">🗑️</button>
+                    <b><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}" onclick="event.stopPropagation()"> ${o.nick}</b>
+                    <button onclick="if(confirm('刪除整筆？'))db.ref('orders/${k}').remove(); event.stopPropagation();" style="color:red; border:none; background:none;">🗑️</button>
                 </div>
                 ${itemsHtml}
                 <div style="text-align:right; font-weight:bold; margin-top:5px; color:var(--caramel);">總計：$${o.total||0}</div>
+                <div style="margin-top:5px;" onclick="event.stopPropagation()"><label><input type="checkbox" ${o.isUnlocked?'checked':''} onchange="db.ref('orders/${k}').update({isUnlocked:this.checked})"> 解鎖查詢</label></div>
             </div>`;
         });
     }
 
-    // --- 即時連動配貨助手 (同樣具備救援邏輯) ---
+    function copyOrderInfo(txt) { navigator.clipboard.writeText(txt.replace(/\\n/g, '\n')).then(() => alert("已複製出貨資訊！")); }
+
     function openPackAssistant() {
-        document.getElementById('modal-title').innerText = "📦 即時配貨助手 (連動更新)";
-        let html = `<div style="color:red; font-size:12px; margin-bottom:10px;">點擊勾選框即「即時更新」出貨狀態。</div><div style="max-height:400px; overflow-y:auto;">`;
-        
+        document.getElementById('modal-title').innerText = "📦 配貨助手 (勾選核對出貨)";
+        let html = `<div style="max-height:400px; overflow-y:auto;">`;
         Object.entries(orders).forEach(([ok, o]) => {
             if(!o || !o.nick) return;
-            let itemList = [];
-            try { itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {}); } catch(e){}
-            
+            let itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
             html += `<div style="background:#FFF; margin-bottom:10px; padding:10px; border-radius:8px; border:1px solid #DDD;">
                         <div style="font-weight:bold; border-bottom:1px solid #EEE; padding-bottom:5px;">👤 ${o.nick}</div>`;
             itemList.forEach((it, idx) => {
                 if(!it) return;
                 html += `<div style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #F9F9F9;">
-                            <input type="checkbox" style="transform:scale(1.3);" ${it.isShipped?'checked':''} onchange="toggleInstantShip('${ok}', ${idx}, this.checked)">
-                            <div style="flex:1; font-size:13px; ${it.isShipped?'color:#AAA;':''}">[${it.e||'未分類'}] ${it.n}(${it.sel})</div>
+                            <input type="checkbox" class="ship-check" data-ok="${ok}" data-idx="${idx}" style="transform:scale(1.3);" ${it.isShipped?'checked disabled':''}>
+                            <div style="flex:1; font-size:13px; ${it.isShipped?'color:#AAA;':''}">[${it.e||'未'}] ${it.n}(${it.sel})</div>
                         </div>`;
             });
             html += `</div>`;
@@ -209,46 +185,64 @@
         html += `</div>`;
         document.getElementById('modal-body').innerHTML = html;
         document.getElementById('edit-modal').style.display = 'flex';
-        document.getElementById('modal-save').innerText = "完成關閉";
-        document.getElementById('modal-save').onclick = () => document.getElementById('edit-modal').style.display = 'none';
-    }
-
-    function toggleInstantShip(orderKey, itemIdx, status) {
-        db.ref(`orders/${orderKey}/items/${itemIdx}`).update({ isShipped: status });
-    }
-
-    function deleteSingleItem(orderKey, itemIdx) {
-        if(!confirm('刪除此項商品？')) return;
-        let o = orders[orderKey];
-        let itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-        itemList.splice(itemIdx, 1);
-        if(itemList.length === 0) db.ref(`orders/${orderKey}`).remove();
-        else db.ref(`orders/${orderKey}`).update({ items: itemList, total: itemList.reduce((a,b)=>a+(b.p||0),0) });
-    }
-
-    function mergeSelected() {
-        const checks = Array.from(document.querySelectorAll('.merge-check:checked')); if(checks.length<2) return alert("請選取兩筆以上");
-        const keys = checks.map(el => el.value); let items = [], total = 0;
-        keys.forEach(k => { 
-            let o = orders[k];
+        document.getElementById('modal-save').innerText = "確認勾選並複製對帳卡";
+        document.getElementById('modal-save').onclick = () => {
+            const JPY_THRESHOLD = 6000;
+            const checks = document.querySelectorAll('.ship-check:checked:not([disabled])');
+            if(checks.length === 0) return alert("請先勾選要核對的商品");
+            const firstOk = checks[0].getAttribute('data-ok');
+            const o = orders[firstOk];
+            let nowShipping = {}, stillWaiting = {}, totals = {};
             let itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-            items = items.concat(itemList); total += (o.total||0); 
-        });
-        db.ref('orders').push({ nick: checks[0].getAttribute('data-nick'), items, total, time: Date.now(), isUnlocked: true }).then(() => { 
-            keys.forEach(k => db.ref(`orders/${k}`).remove()); alert("併單完成"); 
-        });
-    }
+            const selectedIndices = Array.from(checks).filter(c => c.getAttribute('data-ok') === firstOk).map(c => parseInt(c.getAttribute('data-idx')));
 
-    function unlockAllOrders() { Object.keys(orders).forEach(k => db.ref(`orders/${k}`).update({isUnlocked:true})); alert("全開完成"); }
+            itemList.forEach((it, idx) => {
+                let key = `[${it.e}] ${it.n}(${it.sel})`;
+                // 這裡分開場次計算滿額禮
+                if (it.isShipped || selectedIndices.includes(idx)) {
+                    if (selectedIndices.includes(idx)) nowShipping[key] = (nowShipping[key] || 0) + 1;
+                    totals[it.e] = (totals[it.e] || 0) + (it.p || 0);
+                } else {
+                    stillWaiting[key] = (stillWaiting[key] || 0) + 1;
+                }
+            });
+
+            let txt = `🌟 【33日本動物園 - 出貨對帳】 🌟\n\n👤 暱稱：${o.nick}\n\n📦 本次預計寄出：\n`;
+            for(let k in nowShipping) txt += `- ${k} x${nowShipping[k]}\n`;
+            if (Object.keys(stillWaiting).length > 0) { 
+                txt += `\n⏳ 【尚在等候中】：\n`; 
+                for(let k in stillWaiting) txt += `- ${k} x${stillWaiting[k]}\n`; 
+            }
+            txt += `\n🎁 滿額禮統計：\n`; 
+            let hasBonus = false;
+            for(let e in totals) { 
+                let c = Math.floor(totals[e]/JPY_THRESHOLD); 
+                if(c > 0) { txt += `- ${e}：滿 ¥${totals[e]} 送 ${c} 張卡\n`; hasBonus = true; } 
+                else { txt += `- ${e}：目前合計 ¥${totals[e]} (未達門檻)\n`; hasBonus = true; }
+            }
+            if(!hasBonus) txt += `(本次內容未達滿額禮門檻)\n`;
+
+            navigator.clipboard.writeText(txt).then(() => {
+                if(confirm("對帳卡已複製！是否同時更新資料庫狀態？")) {
+                    checks.forEach(el => {
+                        const ok = el.getAttribute('data-ok'), idx = el.getAttribute('data-idx');
+                        db.ref(`orders/${ok}/items/${idx}`).update({ isShipped: true });
+                    });
+                    alert("更新完成！");
+                    document.getElementById('edit-modal').style.display = 'none';
+                }
+            });
+        };
+    }
 
     function renderAdminProds() {
         const main = document.getElementById('admin-main');
         main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px;" onclick="openEdit(-1)">＋ 新增商品</button>` + 
-            products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between;"><div><b>[${p.e}] ${p.n}</b><br>$${p.p}</div><button class="btn-add" style="background:var(--caramel);" onclick="openEdit(${i})">編輯</button></div>`).join('');
+            products.map((p, i) => `<div class="admin-order-card" style="display:flex; justify-content:space-between; cursor:default;"><div><b>[${p.e}] ${p.n}</b><br>$${p.p}</div><button class="btn-add" style="background:var(--caramel);" onclick="openEdit(${i})">編輯</button></div>`).join('');
     }
 
     function openEdit(index) {
-        const isNew = index === -1; const p = isNew ? {e:'', n:'', p:0, s:''} : products[index];
+        const isNew = index === -1, p = isNew ? {e:'', n:'', p:0, s:''} : products[index];
         document.getElementById('modal-title').innerText = isNew ? "新增商品" : "編輯商品";
         document.getElementById('modal-body').innerHTML = `場次：<input id="inp-e" class="input-std" value="${p.e}">名稱：<input id="inp-n" class="input-std" value="${p.n}">售價：<input id="inp-p" type="number" class="input-std" value="${p.p}">規格：<input id="inp-s" class="input-std" value="${p.s}" placeholder="紅,藍">`;
         document.getElementById('edit-modal').style.display = 'flex';
@@ -269,6 +263,22 @@
             `<div style="text-align:right; font-weight:bold; margin-top:8px;">總計：$${o.total||0}</div></div>`;
         }).join('');
     }
+
+    function deleteSingleItem(orderKey, itemIdx) {
+        let o = orders[orderKey], itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
+        itemList.splice(itemIdx, 1);
+        if(itemList.length === 0) db.ref(`orders/${orderKey}`).remove();
+        else db.ref(`orders/${orderKey}`).update({ items: itemList, total: itemList.reduce((a,b)=>a+(b.p||0),0) });
+    }
+
+    function mergeSelected() {
+        const checks = Array.from(document.querySelectorAll('.merge-check:checked')); if(checks.length<2) return alert("請選取兩筆以上");
+        const keys = checks.map(el => el.value); let items = [], total = 0;
+        keys.forEach(k => { let o = orders[k], itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {}); items = items.concat(itemList); total += (o.total||0); });
+        db.ref('orders').push({ nick: checks[0].getAttribute('data-nick'), items, total, time: Date.now(), isUnlocked: true }).then(() => { keys.forEach(k => db.ref(`orders/${k}`).remove()); alert("併單完成"); });
+    }
+
+    function unlockAllOrders() { Object.keys(orders).forEach(k => db.ref(`orders/${k}`).update({isUnlocked:true})); alert("全開完成"); }
     function adminLogin() { if(prompt("管理密碼")==="1239") document.getElementById('admin-panel').style.display='flex'; }
 </script>
 </body>
