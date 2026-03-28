@@ -33,7 +33,7 @@
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 15px; }
         .modal-box { background: var(--rice); padding: 25px; border-radius: 20px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
         .input-std { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #DDD; border-radius: 10px; }
-        .summary-box { background: #FFF; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #DDD; font-size: 13px; }
+        .summary-box { background: #FFF; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #DDD; font-size: 14px; line-height: 1.6; }
         @media (max-width: 768px) { .app-container { flex-direction: column; } .cart-area { width: 100%; flex: 1.5; } .prod-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
     </style>
 </head>
@@ -69,8 +69,8 @@
     <div class="admin-nav">
         <button class="btn-add" onclick="renderAdminOrders()">訂單管理</button>
         <button class="btn-add" style="background:#BC6C25;" onclick="unlockAllOrders()">🔓 一鍵全開</button>
-        <button class="btn-add" style="background:#E07A5F;" onclick="openPackAssistant()">📦 配貨助手 (勾選出貨)</button>
-        <button class="btn-add" style="background:#4A90E2;" onclick="exportData()">📤 匯出資料</button>
+        <button class="btn-add" style="background:#E07A5F;" onclick="openPackAssistant()">📦 配貨助手(對帳複製)</button>
+        <button class="btn-add" style="background:#4A90E2;" onclick="exportData()">📤 匯出資料(修復亂碼)</button>
         <button class="btn-add" style="background:#888;" onclick="renderAdminProds()">商品維護</button>
     </div>
     <div id="admin-main" style="flex:1; overflow-y:auto; padding:15px;"></div>
@@ -139,67 +139,80 @@
         db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), isUnlocked: false }).then(() => { alert("提交成功"); location.reload(); });
     }
 
+    // --- 商品統計與訂單管理 (不可刪減) ---
     function renderAdminOrders() {
         const main = document.getElementById('admin-main'), filterEvt = document.getElementById('admin-event-filter').value;
         let prodSummary = {};
+        
+        // 確保統計包含所有符合篩選的訂單
         Object.values(orders).forEach(o => {
+            if(!o) return;
             let itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
             if (filterEvt !== "ALL" && !itemList.some(it => it && it.e === filterEvt)) return;
             itemList.forEach(it => { if(it) { let k = `[${it.e}] ${it.n}(${it.sel})`; prodSummary[k] = (prodSummary[k] || 0) + 1; } });
         });
-        let summaryHtml = `<div class="summary-box"><b>📊 本區商品總計：</b><br>`;
-        for(let k in prodSummary) summaryHtml += `${k}：${prodSummary[k]} 件<br>`;
+
+        // 商品總計面板 (補回)
+        let summaryHtml = `<div class="summary-box"><b>📊 本區商品採購統計：</b><br>`;
+        for(let k in prodSummary) summaryHtml += `${k}：<span style="color:var(--caramel);font-weight:bold;">${prodSummary[k]}</span> 件<br>`;
         summaryHtml += `</div>`;
+        
         main.innerHTML = summaryHtml + `<button class="btn-add" style="width:100%; margin-bottom:10px;" onclick="mergeSelected()">🔗 選取併單</button>`;
+        
+        // 訂單列表 (確保 ting hui 正常顯示)
         Object.entries(orders).sort((a,b)=>a[1].time-b[1].time).forEach(([k, o]) => {
             if (!o || !o.nick) return;
             let itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
             if (filterEvt !== "ALL" && !itemList.some(it => it && it.e === filterEvt)) return;
-            const copyText = `${o.nick}\\n` + itemList.map(it => `- ${(it&&it.n)||'無'} (${(it&&it.sel)||'-'})`).join('\\n');
+
             const itemsHtml = itemList.map((it, idx) => `<div style="font-size:13px; padding:4px 0; border-bottom:1px dotted #EEE; display:flex; justify-content:space-between;"><span style="${it && it.isShipped?'color:#AAA;text-decoration:line-through;':''}">[${(it&&it.e)||'未'}] ${(it&&it.n)||'無'} (${(it&&it.sel)||'-'}) $${(it&&it.p)||0}</span><button onclick="deleteSingleItem('${k}', ${idx}); event.stopPropagation();" style="color:red; background:none; border:none; font-size:10px;">✕</button></div>`).join('');
-            main.innerHTML += `<div class="admin-order-card" onclick="copyOrderInfo('${copyText}')">
+            
+            main.innerHTML += `<div class="admin-order-card" onclick="copyOrderInfo('${o.nick}')">
                 <div style="display:flex; justify-content:space-between;"><b><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}" onclick="event.stopPropagation()"> ${o.nick}</b><button onclick="if(confirm('刪除整筆？'))db.ref('orders/${k}').remove(); event.stopPropagation();" style="color:red; border:none; background:none;">🗑️</button></div>
                 ${itemsHtml}<div style="text-align:right; font-weight:bold; margin-top:5px; color:var(--caramel);">總計：$${o.total||0}</div>
                 <div style="margin-top:5px;" onclick="event.stopPropagation()"><label><input type="checkbox" ${o.isUnlocked?'checked':''} onchange="db.ref('orders/${k}').update({isUnlocked:this.checked})"> 解鎖查詢</label></div></div>`;
         });
     }
 
+    // --- 匯出功能：加入 BOM 頭解決亂碼問題 ---
     function exportData() {
-        let txt = "暱稱,場次,商品,規格,價格,狀態\n";
+        let csvContent = "\ufeff"; // BOM 頭，解決 Excel 中文亂碼關鍵
+        csvContent += "暱稱,場次,商品名稱,規格,價格,狀態\n";
         Object.values(orders).forEach(o => {
             let itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
-            itemList.forEach(it => { txt += `${o.nick},${it.e},${it.n},${it.sel},${it.p},${it.isShipped?'已出貨':'未出貨'}\n`; });
+            itemList.forEach(it => {
+                csvContent += `${o.nick},${it.e},${it.n},${it.sel},${it.p},${it.isShipped?'已出貨':'未出貨'}\n`;
+            });
         });
-        const blob = new Blob([txt], {type: 'text/csv'});
+        const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = `33日本動物園_訂單匯出.csv`; a.click();
+        const a = document.createElement('a');
+        a.href = url; a.download = `33日本動物園_訂單明細.csv`; a.click();
     }
 
-    // --- 核心：對帳卡複製邏輯 (不可刪減) ---
+    // --- 配貨助手 (包含出貨 vs 待出貨分類) ---
     function openPackAssistant() {
-        document.getElementById('modal-title').innerText = "📦 配貨助手 (勾選後複製對帳卡)";
+        document.getElementById('modal-title').innerText = "📦 配貨助手 (分類核對)";
         let html = `<div style="max-height:400px; overflow-y:auto;">`;
         Object.entries(orders).forEach(([ok, o]) => {
             if(!o || !o.nick) return;
             let itemList = Array.isArray(o.items) ? o.items : Object.values(o.items || {});
             html += `<div style="background:#FFF; margin-bottom:10px; padding:10px; border-radius:8px; border:1px solid #DDD;">
-                        <div style="font-weight:bold; border-bottom:1px solid #EEE; padding-bottom:5px;">👤 ${o.nick}</div>`;
+                        <div style="font-weight:bold; border-bottom:1px solid #EEE;">👤 ${o.nick}</div>`;
             itemList.forEach((it, idx) => {
                 html += `<div style="display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #F9F9F9;">
                             <input type="checkbox" class="ship-check" data-ok="${ok}" data-idx="${idx}" style="transform:scale(1.3);" ${it.isShipped?'checked disabled':''}>
-                            <div style="flex:1; font-size:13px; ${it.isShipped?'color:#AAA;':''}">[${it.e}] ${it.n}(${it.sel})</div>
-                        </div>`;
+                            <div style="flex:1; font-size:13px; ${it.isShipped?'color:#AAA;':''}">[${it.e}] ${it.n}(${it.sel})</div></div>`;
             });
             html += `</div>`;
         });
         html += `</div>`;
         document.getElementById('modal-body').innerHTML = html;
         document.getElementById('edit-modal').style.display = 'flex';
-        document.getElementById('modal-save').innerText = "確認勾選並複製對帳卡";
+        document.getElementById('modal-save').innerText = "複製對帳卡給客人";
         document.getElementById('modal-save').onclick = () => {
-            const JPY_THRESHOLD = 6000;
             const checks = document.querySelectorAll('.ship-check:checked:not([disabled])');
-            if(checks.length === 0) return alert("請先勾選本次要寄出的商品");
+            if(checks.length === 0) return alert("請勾選本次寄出的商品");
             const firstOk = checks[0].getAttribute('data-ok');
             const o = orders[firstOk];
             let nowShipping = {}, stillWaiting = {}, totals = {};
@@ -216,7 +229,6 @@
                 }
             });
 
-            // 產出文字 (園長指定格式)
             let txt = `🌟 【33日本動物園 - 出貨對帳】 🌟\n\n👤 暱稱：${o.nick}\n\n📦 本次預計寄出：\n`;
             for(let k in nowShipping) txt += `- ${k} x${nowShipping[k]}\n`;
             if (Object.keys(stillWaiting).length > 0) { 
@@ -225,11 +237,11 @@
             }
             txt += `\n🎁 滿額禮統計：\n`; 
             for(let e in totals) { 
-                let c = Math.floor(totals[e]/JPY_THRESHOLD); 
-                txt += `- ${e}：滿 ¥${totals[e]} 送 ${c} 張卡\n`;
+                let c = Math.floor(totals[e]/6000); 
+                txt += `- ${e}：累計 ¥${totals[e]} (送 ${c} 張卡)\n`;
             }
             navigator.clipboard.writeText(txt).then(() => {
-                if(confirm("對帳卡已複製！是否同步將這些商品設為『已出貨』？")) {
+                if(confirm("對帳卡已複製！要將勾選商品標記為已出貨嗎？")) {
                     checks.forEach(el => {
                         const ok = el.getAttribute('data-ok'), idx = el.getAttribute('data-idx');
                         db.ref(`orders/${ok}/items/${idx}`).update({ isShipped: true });
@@ -240,7 +252,7 @@
         };
     }
 
-    function copyOrderInfo(txt) { navigator.clipboard.writeText(txt.replace(/\\n/g, '\n')).then(() => alert("已複製！")); }
+    function copyOrderInfo(nick) { alert("請使用配貨助手功能來產生對帳文字給 " + nick); }
     function renderAdminProds() {
         const main = document.getElementById('admin-main');
         main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px;" onclick="openEdit(-1)">＋ 新增商品</button>` + 
@@ -279,7 +291,7 @@
             `<div style="text-align:right; font-weight:bold; margin-top:8px;">總計：$${o.total}</div></div>`;
         }).join('');
     }
-    function unlockAllOrders() { Object.keys(orders).forEach(k => db.ref(`orders/${k}`).update({isUnlocked:true})); alert("已全部開放查詢"); }
+    function unlockAllOrders() { Object.keys(orders).forEach(k => db.ref(`orders/${k}`).update({isUnlocked:true})); alert("已全開查詢功能"); }
     function adminLogin() { if(prompt("管理密碼")==="1239") document.getElementById('admin-panel').style.display='flex'; }
 </script>
 </body>
