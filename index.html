@@ -14,6 +14,7 @@
             --wood: #283618; 
             --gray: #F4F1EA; 
             --baby-blue: #E0F2FE;
+            --profit-green: #2A9D8F;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Noto Sans TC', sans-serif; }
         html, body { height: 100%; margin: 0; padding: 0; background: var(--gray); overflow: hidden; color: var(--wood); }
@@ -176,7 +177,7 @@
             <button class="filter-btn active" onclick="filterOrderUser('all')">全部</button>
         </div>
         <div class="panel-box">
-            <div class="panel-title">📋 全部活動訂單明細統計</div>
+            <div class="panel-title">📋 買家訂單詳細明細核對統計</div>
             <div id="admin-orders-list"></div>
         </div>
     </div>
@@ -199,7 +200,7 @@
 <div id="search-modal" class="modal"><div class="modal-box"><h2>🔍 個人訂單對帳查詢</h2><input id="search-nick" class="input-std" placeholder="請輸入您的 LINE 暱稱" oninput="runSearch()"><div id="search-results-area" style="max-height:300px; overflow-y:auto; margin-top:10px;"></div><button onclick="document.getElementById('search-modal').style.display='none'" class="btn-action" style="width:100%; margin-top:15px; background:#999;">關閉視窗</button></div></div>
 
 <script>
-    // 100% 完整保留您的 Firebase 資料庫核心連接
+    // 您的 Firebase 連接配置
     const firebaseConfig = {
         apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",
         authDomain: "zoo-62638.firebaseapp.com",
@@ -214,13 +215,24 @@
 
     let products = [], orders = {}, cart = [], curS = {}, curQty = {};
     let currentFilterUser = 'all', currentMoneyFilter = 'all';
-    let currentSelectedEventName = ''; // 紀錄前台目前點選進入哪一個場次
+    let currentSelectedEventName = '';
 
-    // 監聽 Firebase 核心資料
-    db.ref('products').on('value', snap => { products = snap.val() || []; renderFrontEvents(); renderAdminEvents(); renderActiveEventsPage(); if(currentSelectedEventName) selectEvent(currentSelectedEventName); });
-    db.ref('orders').on('value', snap => { orders = snap.val() || {}; renderAdminOrders(); renderMoneyRecords(); updateFilterButtons(); });
+    // 即時連動與同步監聽
+    db.ref('products').on('value', snap => { 
+        products = snap.val() || []; 
+        renderFrontEvents(); 
+        renderAdminEvents(); 
+        renderActiveEventsPage(); 
+        if(currentSelectedEventName) selectEvent(currentSelectedEventName); 
+    });
+    
+    db.ref('orders').on('value', snap => { 
+        orders = snap.val() || {}; 
+        renderAdminOrders(); 
+        renderMoneyRecords(); 
+        updateFilterButtons(); 
+    });
 
-    // 頁籤切換控制
     function switchTab(tabId, btnEl) {
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
@@ -228,7 +240,7 @@
         if(btnEl) btnEl.classList.add('active');
     }
 
-    // 【前台第一層】渲染所有活動場次的大卡片
+    // 前台：第一層活動場次
     function renderFrontEvents() {
         const evts = [...new Set(products.map(p => p ? p.e : ''))].filter(e => e);
         const grid = document.getElementById('front-event-grid');
@@ -247,7 +259,7 @@
         }).join('');
     }
 
-    // 【前台第二層】點選特定場次卡片，切換進去顯示專屬商品
+    // 前台：第二層場次內商品
     function selectEvent(evtName) {
         currentSelectedEventName = evtName;
         document.getElementById('front-event-layer').style.display = 'none';
@@ -286,14 +298,7 @@
         }).join('');
     }
 
-    // 從商品區返回場次列表
-    function backToEventList() {
-        currentSelectedEventName = '';
-        document.getElementById('front-event-layer').style.display = 'block';
-        document.getElementById('front-prod-layer').style.display = 'none';
-        document.getElementById('btn-back-to-events').style.display = 'none';
-    }
-
+    function backToEventList() { currentSelectedEventName = ''; document.getElementById('front-event-layer').style.display = 'block'; document.getElementById('front-prod-layer').style.display = 'none'; document.getElementById('btn-back-to-events').style.display = 'none'; }
     function selSpec(rid, v) { curS[rid] = v; document.querySelectorAll(`[id^="s-${rid}-"]`).forEach(b => b.style.background = '#FFF'); if(document.getElementById(`s-${rid}-${v}`)) document.getElementById(`s-${rid}-${v}`).style.background = '#EAE2D1'; }
     function updateQty(rid, d) { let v = (curQty[rid] || 1) + d; if(v < 1) v = 1; curQty[rid] = v; if(document.getElementById(`qty-val-${rid}`)) document.getElementById(`qty-val-${rid}`).innerText = v; }
 
@@ -313,13 +318,29 @@
         document.getElementById('cart-total').innerText = '$ ' + cart.reduce((a,b)=>a+b.p,0);
     }
 
+    // 訂單點擊提交，主動實時重新同步渲染
     function submitCartOrder() {
         const nick = document.getElementById('customer-nick').value.trim(); if(!nick) return alert("請填寫您的 LINE 暱稱！");
         if(cart.length===0) return alert("購物車內目前沒有任何商品項目。");
-        db.ref('orders').push({ nick, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), isUnlocked: false, paid: false }).then(() => { alert("訂單提交成功！稍後請向園長核對。"); cart=[]; renderCart(); document.getElementById('customer-nick').value=''; });
+        
+        const newOrder = {
+            nick: nick,
+            items: cart,
+            total: cart.reduce((a,b)=>a+b.p,0),
+            time: Date.now(),
+            isUnlocked: true,
+            paid: false
+        };
+
+        db.ref('orders').push(newOrder).then(() => { 
+            alert("🎉 訂單提交成功！資料已同步匯入更新至管理工作台。"); 
+            cart=[]; 
+            renderCart(); 
+            document.getElementById('customer-nick').value=''; 
+        });
     }
 
-    // 後台分頁 1：渲染進行中的活動場次首頁
+    // 後台：活動場次概覽
     function renderActiveEventsPage() {
         const evts = [...new Set(products.map(p => p ? p.e : ''))].filter(e => e);
         document.getElementById('active-events-list').innerHTML = evts.map(e => `
@@ -330,12 +351,12 @@
         `).join('');
     }
 
-    // 後台分頁 2：活動場次增減與商品維護表格
+    // 後台：維護與日幣換算台幣利潤精密面板
     function renderAdminEvents() {
         const evts = [...new Set(products.map(p => p ? p.e : ''))].filter(e => e);
         const tbody = document.getElementById('admin-events-table');
         if(evts.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#999; padding:20px;">目前沒有建立任何場次，請點擊上方按鈕建立。</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#999; padding:20px;">目前沒有建立任何場次。</td></tr>`;
             return;
         }
         tbody.innerHTML = evts.map(e => {
@@ -343,10 +364,10 @@
             return `<tr>
                 <td style="font-weight:bold; color:var(--wood);">${e}</td>
                 <td><span class="status-badge">進行中連線</span></td>
-                <td style="color:var(--caramel); font-weight:bold;">TWD (台幣)</td>
+                <td style="color:var(--caramel); font-weight:bold;">JPY (日幣連線)</td>
                 <td style="font-weight:bold; color:var(--matcha);">${count} 項商品</td>
                 <td>
-                    <button class="btn-sm btn-edit" onclick="renderAdminProdsView('${e}')">維護商品卡片</button>
+                    <button class="btn-sm btn-edit" onclick="renderAdminProdsView('${e}')">維護商品與利潤</button>
                     <button class="btn-sm btn-del" onclick="deleteEntireEvent('${e}')">刪除此場次</button>
                 </td>
             </tr>`;
@@ -356,73 +377,98 @@
     function renderAdminProdsView(evtName) {
         switchTab('tab-admin');
         const tbody = document.getElementById('admin-events-table');
-        let html = `<tr><td colspan="5" style="background:#FFF; padding:15px;"><b style="color:var(--matcha);">[${evtName}] 商品明細維護：</b><br><br>`;
+        let html = `<tr><td colspan="5" style="background:#FFF; padding:15px;"><b style="color:var(--matcha);">[${evtName}] 商品細節與私密利潤對帳表（僅限後台可見）：</b><br><br>`;
+        
         products.forEach((p, i) => {
             if(p && p.e === evtName) {
-                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px; border-bottom:1px solid #EEE;"><span>${p.n} - <b style="color:var(--caramel);">$${p.p}</b> (${p.s||'無規格'})</span><div><button class="btn-sm btn-edit" onclick="openProductEdit(${i})">修改</button><button class="btn-sm btn-del" onclick="if(confirm('確定刪除商品嗎？')){let nP=[...products]; nP.splice(${i},1); db.ref('products').set(nP).then(()=>renderAdminEvents());}">下架</button></div></div>`;
+                const jpOriginal = p.fp || 0;     // 原價 (日幣)
+                const jpCost = p.cp || 0;         // 代購購入價 (日幣成本)
+                const currentRate = p.rate || 0.22; // 自訂適用匯率
+                
+                // 台幣成本 = 日幣成本 * 匯率
+                const costTWD = Math.round(jpCost * currentRate);
+                // 淨利潤 = 台幣賣出價 - 台幣成本
+                const profitTWD = p.p - costTWD;
+                
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #EEE; font-size:13px;">
+                    <div>
+                        <strong>${p.n}</strong> (${p.s||'無規格'}) <br>
+                        <span style="color:#666; font-size:12px;">
+                            日幣原價: ¥${jpOriginal} | 代購購入價: ¥${jpCost} (折合台幣約 $${costTWD}) | 賣出價格: <b style="color:var(--caramel);">NT$ ${p.p}</b>
+                        </span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="background:#E6F4EA; color:var(--profit-green); padding:2px 8px; border-radius:4px; font-weight:bold; font-size:12px;">
+                            預估利潤: +NT$ ${profitTWD}
+                        </span>
+                        <button class="btn-sm btn-edit" onclick="openProductEdit(${i})">修改</button>
+                        <button class="btn-sm btn-del" onclick="if(confirm('確定下架商品嗎？')){let nP=[...products]; nP.splice(${i},1); db.ref('products').set(nP).then(()=>renderAdminEvents());}">下架</button>
+                    </div>
+                </div>`;
             }
         });
         html += `<br><button class="btn-action" style="font-size:12px; padding:6px 12px; background:#666;" onclick="renderAdminEvents()">返回場次列表</button></td></tr>`;
         tbody.innerHTML = html;
     }
 
-    // 後台分頁 3：訂單統計與核對明細
+    // 後台：分頁 3 訂單明細直接展開查閱
     function renderAdminOrders() {
         const main = document.getElementById('admin-orders-list');
-        let prodSummary = {};
-        Object.values(orders).forEach(o => {
-            if(o && o.items) {
-                o.items.forEach(it => { let k = `[${it.e}] ${it.n}(${it.sel||'一般'})`; prodSummary[k] = (prodSummary[k] || 0) + 1; });
-            }
-        });
-        let summaryHtml = `<div style="background:var(--rice); padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid #EAE2D1; font-size:13px;"><b>📊 目前商品採購匯總統計：</b><br>`;
-        for(let k in prodSummary) summaryHtml += `${k} ： <b style="color:var(--matcha);">${prodSummary[k]}</b> 件<br>`;
-        summaryHtml += `</div>`;
-        
         let filteredOrders = Object.entries(orders);
         if(currentFilterUser !== 'all') filteredOrders = filteredOrders.filter(([k, o]) => o && o.nick === currentFilterUser);
 
         let listHtml = '';
         filteredOrders.sort((a,b)=>b[1].time - a[1].time).forEach(([k, o]) => {
             if(!o || !o.items) return;
+            
+            // 完整展開買家名細與規格
             const itemsHtml = o.items.map((it, idx) => `
-                <div style="font-size:13px; padding:6px 0; border-bottom:1px dotted #EEE; display:flex; justify-content:space-between; align-items:center;">
-                    <span style="${it.isShipped?'color:#AAA;text-decoration:line-through;':''}">[${it.e}] ${it.n} (${it.sel}) $${it.p}</span>
-                    <button onclick="deleteSingleItem('${k}', ${idx}); event.stopPropagation();" style="color:red; background:none; border:none; font-size:14px; cursor:pointer;">✕</button>
+                <div style="font-size:13px; padding:8px 0; border-bottom:1px solid #F1EDE4; display:flex; justify-content:space-between; align-items:center;">
+                    <span>
+                        <b style="color:var(--caramel);">[${it.e}]</b> ${it.n} 
+                        <span style="background:var(--gray); padding:2px 6px; border-radius:4px; font-size:11px; margin-left:5px;">規格: ${it.sel}</span>
+                    </span>
+                    <div>
+                        <span style="font-weight:bold; margin-right:15px; color:var(--wood);">$ ${it.p}</span>
+                        <button onclick="deleteSingleItem('${k}', ${idx}); event.stopPropagation();" style="color:#EF4444; background:none; border:none; font-size:14px; cursor:pointer; font-weight:bold;">✕ 刪除</button>
+                    </div>
                 </div>
             `).join('');
 
             listHtml += `
-                <div class="collapse-group">
-                    <div class="collapse-header" onclick="copyOrderInfo('${o.nick}')">
+                <div class="collapse-group" style="border-left:5px solid var(--matcha);">
+                    <div class="collapse-header" onclick="copyOrderInfo('${o.nick}')" style="background: var(--rice);">
                         <div>
                             <input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}" onclick="event.stopPropagation()">
-                            <b style="color:var(--matcha); margin-left:6px; font-size:14px;">${o.nick}</b>
-                            <small style="color:#888; margin-left:10px;">${new Date(o.time).toLocaleDateString()}</small>
+                            <b style="color:var(--wood); margin-left:8px; font-size:15px;">👤 買家：${o.nick}</b>
+                            <span style="margin-left:12px; font-size:11px; background:#DDD; padding:2px 6px; border-radius:4px;">${new Date(o.time).toLocaleString()}</span>
                         </div>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <span style="font-weight:bold; color:var(--caramel);">總計：$${o.total}</span>
-                            <button onclick="if(confirm('確定要刪除整筆訂單嗎？'))db.ref('orders/${k}').remove(); event.stopPropagation();" class="btn-sm btn-del">🗑️ 整單刪</button>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <span style="font-size:15px; font-weight:bold; color:var(--caramel);">總計金額：$ ${o.total}</span>
+                            <button onclick="if(confirm('確定要刪除整筆訂單嗎？'))db.ref('orders/${k}').remove(); event.stopPropagation();" class="btn-sm btn-del" style="padding:4px 8px;">🗑️ 刪整單</button>
                         </div>
                     </div>
-                    <div class="collapse-body">
+                    <div class="collapse-body" style="background:#FFF; padding:15px;">
+                        <div style="font-weight:bold; color:var(--matcha); margin-bottom:8px; font-size:12px;">📋 購買商品清單明細：</div>
                         ${itemsHtml}
-                        <div style="margin-top:10px;"><label style="cursor:pointer; font-size:12px; color:#555;"><input type="checkbox" ${o.isUnlocked?'checked':''} onchange="db.ref('orders/${k}').update({isUnlocked:this.checked})"> 開放前台查詢此筆明細</label></div>
+                        <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
+                            <label style="cursor:pointer; font-size:12px; color:#555;"><input type="checkbox" ${o.isUnlocked?'checked':''} onchange="db.ref('orders/${k}').update({isUnlocked:this.checked})"> 開放前台自助對帳查詢</label>
+                            <span style="font-size:12px; color:#999;">💡 點擊大標題欄位可快速複製 LINE 對帳文字</span>
+                        </div>
                     </div>
                 </div>`;
         });
-        main.innerHTML = summaryHtml + (listHtml || `<p style="color:#999; text-align:center;">目前沒有對應的訂單明細紀錄。</p>`);
+        main.innerHTML = listHtml || `<p style="color:#999; text-align:center; padding:30px;">目前沒有任何買家訂單紀錄。</p>`;
     }
 
-    // 後台分頁 4：收款記錄對帳面板
+    // 後台：分頁 4 收款對帳
     function renderMoneyRecords() {
         const container = document.getElementById('money-events-container');
         container.innerHTML = '';
-
         let unpaidCount = 0; let unpaidSum = 0; let groupedByEvent = {};
 
         Object.entries(orders).forEach(([k, o]) => {
-            if(!o || !o.items) return;
+            if(!o || !o.items || o.items.length === 0) return;
             if(!o.paid) { unpaidCount++; unpaidSum += o.total; }
             if(currentMoneyFilter === 'unpaid' && o.paid) return;
             if(currentMoneyFilter === 'paid' && !o.paid) return;
@@ -460,8 +506,8 @@
             container.innerHTML += `
                 <div class="panel-box" style="margin-bottom:15px;">
                     <div class="panel-title">
-                        <span>📌 場次：${evtName} <small style="color:#888; font-weight:normal; margin-left:10px;">共 ${list.length} 筆資料</small></span>
-                        <button class="btn-action" style="padding:4px 10px; font-size:11px;" onclick="markEventAllPaid('${evtName}')">本連線區全清已收</button>
+                        <span>📌 場次：${evtName} <small style="color:#888; font-weight:normal; margin-left:10px;">共 ${list.length} 筆</small></span>
+                        <button class="btn-action" style="padding:4px 10px; font-size:11px;" onclick="markEventAllPaid('${evtName}')">本區全清已收</button>
                     </div>
                     <div>${rowsHtml}</div>
                 </div>`;
@@ -469,14 +515,14 @@
     }
 
     function markEventAllPaid(evtName) {
-        if(confirm(`確定要將 [${evtName}] 連線場次下的所有單據一鍵變更為已收款嗎？`)) {
+        if(confirm(`確定要將 [${evtName}] 連線場次下的所有單據變更為已收款嗎？`)) {
             Object.entries(orders).forEach(([k, o]) => {
                 if(o && o.items && o.items[0].e === evtName) db.ref(`orders/${k}`).update({ paid: true });
             });
         }
     }
 
-    // 建立新場次與商品卡片
+    // 建立與修改視窗 (全面支援純日幣原價與台幣賣出計價)
     function openAddEventModal() {
         document.getElementById('modal-title').innerText = "建立全新活動連線場次";
         document.getElementById('modal-body').innerHTML = `場次名稱：<input id="new-evt-name" class="input-std" placeholder="例如: 日本超市連線">`;
@@ -484,7 +530,7 @@
         document.getElementById('modal-save').onclick = () => {
             const name = document.getElementById('new-evt-name').value.trim();
             if(!name) return alert("請輸入場次名稱唷！");
-            let nP = [...products]; nP.push({ e: name, n: "【活動場次初始化卡片】", p: 0, s: "一般" });
+            let nP = [...products]; nP.push({ e: name, n: "【活動場次初始化卡片】", p: 0, s: "一般", fp: 0, cp: 0, rate: 0.22 });
             db.ref('products').set(nP).then(() => closeModal());
         };
     }
@@ -492,13 +538,24 @@
     function openAddProdModal() {
         document.getElementById('modal-title').innerText = "上架全新商品卡片";
         document.getElementById('modal-body').innerHTML = `
-            對應場次名稱：<input id="inp-e" class="input-std" placeholder="請務必與活動場次名稱完全一致">
+            對應場次名稱：<input id="inp-e" class="input-std" placeholder="例如: 日本超市連線">
             商品卡片名稱：<input id="inp-n" class="input-std" placeholder="例如: 摺疊購物袋">
-            台幣售價：<input id="inp-p" type="number" class="input-std" placeholder="例如: 670">
-            規格屬性 (用英文逗號隔開)：<input id="inp-s" class="input-std" placeholder="例如: M,L">`;
+            規格屬性 (用英文逗號隔開)：<input id="inp-s" class="input-std" placeholder="例如: M,L">
+            日幣原價 (定價面額)：<input id="inp-fp" type="number" class="input-std" placeholder="例如: 1200">
+            請代購購入價格 (日幣成本面額)：<input id="inp-cp" type="number" class="input-std" placeholder="例如: 1000">
+            此商品適用匯率：<input id="inp-rate" type="number" step="0.001" class="input-std" value="0.22">
+            賣出價格 (給客人看台幣售價)：<input id="inp-p" type="number" class="input-std" placeholder="例如: 350">`;
         document.getElementById('edit-modal').style.display = 'flex';
         document.getElementById('modal-save').onclick = () => {
-            let nP = [...products], v = { e: document.getElementById('inp-e').value.trim(), n: document.getElementById('inp-n').value.trim(), p: parseInt(document.getElementById('inp-p').value)||0, s: document.getElementById('inp-s').value.trim() };
+            let nP = [...products], v = { 
+                e: document.getElementById('inp-e').value.trim(), 
+                n: document.getElementById('inp-n').value.trim(), 
+                s: document.getElementById('inp-s').value.trim(),
+                fp: parseInt(document.getElementById('inp-fp').value)||0,
+                cp: parseInt(document.getElementById('inp-cp').value)||0,
+                rate: parseFloat(document.getElementById('inp-rate').value)||0.22,
+                p: parseInt(document.getElementById('inp-p').value)||0 
+            };
             if(!v.e || !v.n) return alert("欄位資訊不可以空白唷！");
             nP.push(v);
             db.ref('products').set(nP).then(() => closeModal());
@@ -507,12 +564,27 @@
 
     function openProductEdit(index) {
         const p = products[index];
-        document.getElementById('modal-title').innerText = "修改商品資訊";
-        document.getElementById('modal-body').innerHTML = `場次名稱：<input id="inp-e" class="input-std" value="${p.e}">商品名稱：<input id="inp-n" class="input-std" value="${p.n}">售價：<input id="inp-p" type="number" class="input-std" value="${p.p}">規格：<input id="inp-s" class="input-std" value="${p.s||''}">`;
+        document.getElementById('modal-title').innerText = "修改商品與私密成本欄位";
+        document.getElementById('modal-body').innerHTML = `
+            場次名稱：<input id="inp-e" class="input-std" value="${p.e}">
+            商品名稱：<input id="inp-n" class="input-std" value="${p.n}">
+            規格選項：<input id="inp-s" class="input-std" value="${p.s||''}">
+            日幣原價：<input id="inp-fp" type="number" class="input-std" value="${p.fp||0}">
+            日幣購入價成本：<input id="inp-cp" type="number" class="input-std" value="${p.cp||0}">
+            適用匯率設定：<input id="inp-rate" type="number" step="0.001" class="input-std" value="${p.rate||0.22}">
+            賣出價格 (台幣售價)：<input id="inp-p" type="number" class="input-std" value="${p.p}">`;
         document.getElementById('edit-modal').style.display = 'flex';
         document.getElementById('modal-save').onclick = () => {
             let nP = [...products];
-            nP[index] = { e: document.getElementById('inp-e').value, n: document.getElementById('inp-n').value, p: parseInt(document.getElementById('inp-p').value), s: document.getElementById('inp-s').value };
+            nP[index] = { 
+                e: document.getElementById('inp-e').value, 
+                n: document.getElementById('inp-n').value, 
+                s: document.getElementById('inp-s').value,
+                fp: parseInt(document.getElementById('inp-fp').value)||0,
+                cp: parseInt(document.getElementById('inp-cp').value)||0,
+                rate: parseFloat(document.getElementById('inp-rate').value)||0.22,
+                p: parseInt(document.getElementById('inp-p').value)
+            };
             db.ref('products').set(nP).then(()=> { closeModal(); renderAdminEvents(); });
         };
     }
@@ -520,7 +592,7 @@
     function deleteEntireEvent(evtName) { if(confirm(`確定要完全下架刪除 [${evtName}] 的全部商品卡片嗎？`)) { let nP = products.filter(p => p && p.e !== evtName); db.ref('products').set(nP); } }
     function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
 
-    // 後台輔助功能中控邏輯
+    // 配貨助手
     function openPackAssistant() {
         document.getElementById('modal-title').innerText = "📦 園長配貨助手系統";
         let html = `<div style="max-height:400px; overflow-y:auto;">`;
@@ -587,7 +659,6 @@
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `33日本動物園_後台總明細.csv`; a.click();
     }
 
-    // 前台個人查詢
     function runSearch() {
         const n = document.getElementById('search-nick').value.trim(); if(!n) return;
         const res = Object.values(orders).filter(o => o && o.nick === n && o.isUnlocked);
@@ -599,7 +670,6 @@
             </div>`).join('');
     }
 
-    // 園長登入驗證
     function promptAdmin() { if(prompt("請輸入園長工作台密碼") === "1239") { document.getElementById('front-hall').style.display = 'none'; switchTab('tab-events'); } else { alert("密碼不對唷！"); } }
     function exitAdmin() { document.getElementById('front-hall').style.display = 'flex'; backToEventList(); }
 </script>
