@@ -2,174 +2,158 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>33日本動物園</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
-        :root { --matcha: #606C38; --rice: #FEF9EF; --caramel: #BC6C25; --wood: #283618; --gray: #F4F1EA; --baby-blue: #E0F2FE; --profit-green: #2A9D8F; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Noto Sans TC', sans-serif; }
-        html, body { height: 100%; margin: 0; padding: 0; background: var(--gray); overflow: hidden; color: var(--wood); }
-        body { display: flex; flex-direction: column; }
-        .top-nav { background: var(--rice); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #EAE2D1; }
-        .nav-brand { display: flex; align-items: center; gap: 10px; }
-        .brand-title { font-size: 18px; font-weight: bold; letter-spacing: 1px; color: var(--matcha); display: flex; align-items: center; gap: 6px; }
-        .tag-admin { background: var(--wood); color: #FFF; font-size: 11px; padding: 2px 6px; border-radius: 4px; }
-        .nav-tabs { display: flex; gap: 5px; }
-        .nav-tab { background: transparent; border: none; color: #666; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; }
-        .nav-tab.active { background: var(--matcha); color: #FFF; }
-        .btn-logout { background: #FFF; border: 1px solid #DDD; color: #666; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: bold; }
-        .main-container { flex: 1; display: flex; overflow: hidden; position: relative; }
-        .view-section { display: none; flex: 1; overflow-y: auto; padding: 25px; }
-        .view-section.active { display: block; }
-        .panel-box { background: #FFF; border-radius: 12px; border: 1px solid #EAE2D1; padding: 20px; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .panel-title { font-size: 15px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; color: var(--wood); border-bottom: 1px solid #EAE2D1; padding-bottom: 10px; }
-        .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; color: var(--wood); }
-        .data-table th { color: var(--matcha); font-weight: bold; padding: 12px 8px; border-bottom: 1px solid #EAE2D1; background: var(--rice); }
-        .data-table td { padding: 14px 8px; border-bottom: 1px solid #EAE2D1; }
-        .status-badge { background: var(--baby-blue); color: #0369A1; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }
-        .btn-sm { padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; border: none; margin-left: 4px; }
-        .btn-edit { background: #FFF; color: var(--caramel); border: 1px solid var(--caramel); }
-        .btn-del { background: rgba(239, 68, 68, 0.1); color: #EF4444; border: 1px solid rgba(239, 68, 68, 0.3); }
-        .btn-action { background: var(--matcha); color: #FFF; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: bold; border: none; cursor: pointer; }
-        .btn-qty { width: 26px; height: 26px; border-radius: 4px; border: 1px solid #DDD; background: #FFF; cursor: pointer; font-weight: bold; }
-        .collapse-group { background: #FFF; border-radius: 12px; border: 1px solid #EAE2D1; margin-bottom: 15px; overflow: hidden; }
-        .collapse-header { padding: 16px 20px; background: var(--rice); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .collapse-body { padding: 15px; display: block; background: #FFF; border-top: 1px solid #EAE2D1; }
-        .front-container { position: fixed; inset: 0; background: var(--gray); z-index: 3000; display: flex; flex-direction: column; }
-        .front-main { display: flex; flex: 1; overflow: hidden; }
-        .front-content { flex: 1; overflow-y: auto; padding: 20px; }
-        .event-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .event-card { background: #FFF; border: 1px solid #EAE2D1; border-radius: 16px; padding: 25px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.04); transition: transform 0.2s; text-align: center; }
-        .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-        .prod-card { background: #FFF; border: 1px solid #EAE2D1; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-        .cart-panel { width: 360px; background: #FFF; border-left: 1px solid #EAE2D1; padding: 20px; display: flex; flex-direction: column; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 15px; }
-        .modal-box { background: var(--rice); border: 1px solid #EAE2D1; padding: 25px; border-radius: 12px; width: 100%; max-width: 600px; }
-        .input-std { width: 100%; padding: 10px; margin: 8px 0; background: #FFF; border: 1px solid #DDD; border-radius: 6px; }
+        :root { --matcha: #606C38; --rice: #FEF9EF; --caramel: #BC6C25; --wood: #283618; --gray: #EAEAEA; --profit-green: #2D6A4F; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: sans-serif; }
+        body { margin: 0; background: var(--gray); }
+        .event-card { background: white; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .btn-sm { padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; }
+        .btn-edit { background: var(--matcha); color: white; }
+        .btn-del { background: #EF4444; color: white; }
+        .input-std { width: 100%; padding: 8px; margin: 5px 0 15px; border: 1px solid #DDD; border-radius: 4px; }
+        .btn-action { width: 100%; padding: 10px; background: var(--matcha); color: white; border: none; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div id="front-hall" class="front-container">
-    <div class="top-nav">
-        <div class="nav-brand"><div class="brand-title">🌿 33 日本動物園 連線大廳</div></div>
-        <button class="btn-logout" onclick="promptAdmin()">管理登入</button>
-    </div>
-    <div class="front-main">
-        <div class="front-content">
-            <div id="front-event-layer">
-                <h3 style="margin-top:0; color:var(--wood);">📌 請選擇場次：</h3>
-                <div id="front-event-grid" class="event-grid"></div>
-            </div>
-            <div id="front-prod-layer" style="display:none;">
-                <h3 id="current-selected-event-title" style="color:var(--matcha);">商品明細</h3>
-                <div id="front-prod-grid" class="prod-grid"></div>
-            </div>
-        </div>
-        <div class="cart-panel">
-            <h3>🛒 購物車</h3>
-            <div id="cart-items" style="flex:1; overflow-y:auto;"></div>
-            <div style="border-top:1px solid #EEE; padding-top:15px;">
-                <p>總計: <span id="cart-total" style="color:var(--caramel); font-size:20px;">$ 0</span></p>
-                <input id="customer-nick" class="input-std" placeholder="您的 LINE 暱稱">
-                <button class="btn-action" style="width:100%" onclick="submitCartOrder()">確認提交</button>
+    <div id="admin-container" style="padding: 20px;">
+        <div id="active-events-list"></div>
+        <table id="admin-events-table" style="width: 100%; border-collapse: collapse;"></table>
+        <div id="admin-orders-list"></div>
+        <div id="money-events-container"></div>
+        <div id="order-user-filters"></div>
+        <div id="search-results-area"></div>
+        <div id="edit-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+            <div style="background:white; padding:20px; border-radius:8px; width:90%; max-width:400px;">
+                <h3 id="modal-title"></h3>
+                <div id="modal-body"></div>
+                <button id="modal-save" class="btn-action">儲存設定</button>
+                <button onclick="closeModal()" style="width:100%; margin-top:10px; background:none; border:none; color:#666;">取消</button>
             </div>
         </div>
     </div>
-</div>
-
-<div class="top-nav">
-    <div class="nav-brand"><div class="brand-title">🐾 33日本動物園</div><div class="tag-admin">● 園長後台</div></div>
-    <div class="nav-tabs">
-        <button class="nav-tab active" onclick="switchTab('tab-events', this)">活動場次</button>
-        <button class="nav-tab" onclick="switchTab('tab-admin', this)">⚙ 管理後台</button>
-        <button class="nav-tab" onclick="switchTab('tab-orders', this)">📋 訂單記錄</button>
-    </div>
-    <button class="btn-logout" onclick="exitAdmin()">登出大廳</button>
-</div>
-
-<div class="main-container">
-    <div id="tab-events" class="view-section active">
-        <div class="panel-box">
-            <div class="panel-title">📌 進行中場次</div>
-            <div id="active-events-list" class="event-grid"></div>
-        </div>
-    </div>
-    <div id="tab-admin" class="view-section">
-        <button class="btn-action" onclick="openAddEventModal()">＋ 新增場次</button>
-        <div class="panel-box" style="margin-top:20px;">
-            <table class="data-table">
-                <thead><tr><th>活動</th><th>狀態</th><th>操作</th></tr></thead>
-                <tbody id="admin-events-table"></tbody>
-            </table>
-        </div>
-    </div>
-    <div id="tab-orders" class="view-section">
-        <div class="panel-box"><div id="admin-orders-list"></div></div>
-    </div>
-</div>
-
-<div id="edit-modal" class="modal"><div class="modal-box"><h3 id="modal-title"></h3><div id="modal-body"></div><div style="display:flex; gap:10px; margin-top:20px;"><button class="btn-action" id="modal-save" style="flex:1;">儲存</button><button class="btn-action" style="flex:1; background:#999;" onclick="closeModal()">取消</button></div></div></div>
 
 <script>
+    // Firebase 初始化 (請確保放入您專案正確的 Config)
     const firebaseConfig = {
-        apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",
-        databaseURL: "https://zoo-62638-default-rtdb.firebaseio.com",
-        projectId: "zoo-62638"
+        databaseURL: "https://zoo-62638-default-rtdb.firebaseio.com"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    let products = [], orders = {}, cart = [];
 
-    db.ref('products').on('value', snap => { products = snap.val() || []; renderUI(); });
-    db.ref('orders').on('value', snap => { orders = snap.val() || {}; renderOrders(); });
+    let products = [], orders = {}, currentFilterUser = 'all', currentMoneyFilter = 'all';
 
-    function renderUI() {
-        const evts = [...new Set(products.map(p => p.e))];
-        document.getElementById('front-event-grid').innerHTML = evts.map(e => `<div class="event-card" onclick="selectEvent('${e}')"><h3>${e}</h3></div>`).join('');
-        document.getElementById('admin-events-table').innerHTML = evts.map(e => `<tr><td>${e}</td><td>進行中</td><td><button class="btn-sm btn-edit" onclick="renderAdminProds('${e}')">維護</button></td></tr>`).join('');
-    }
+    // 核心監聽：確保資料庫變動即時同步
+    db.ref('products').on('value', snapshot => { products = snapshot.val() || []; renderAdminEvents(); });
+    db.ref('orders').on('value', snapshot => { 
+        orders = snapshot.val() || {}; 
+        renderAdminOrders(); 
+        renderMoneyRecords();
+        updateFilterButtons();
+    });
 
-    function selectEvent(e) {
-        document.getElementById('front-event-layer').style.display = 'none';
-        document.getElementById('front-prod-layer').style.display = 'block';
-        const filtered = products.filter(p => p.e === e);
-        document.getElementById('front-prod-grid').innerHTML = filtered.map((p,i) => `<div class="prod-card"><h4>${p.n}</h4><p>$ ${p.p}</p><button class="btn-action" onclick="cart.push({pid:${i},...products[${i}]}); renderCart();">加入</button></div>`).join('');
-    }
-
-    function renderCart() {
-        document.getElementById('cart-items').innerHTML = cart.map((c,i) => `<div>${c.n} - $${c.p} <span style="color:red; cursor:pointer;" onclick="cart.splice(${i},1); renderCart();">✕</span></div>`).join('');
-        document.getElementById('cart-total').innerText = '$ ' + cart.reduce((a,b)=>a+b.p, 0);
-    }
-
-    function submitCartOrder() {
-        const nick = document.getElementById('customer-nick').value;
-        if(!nick || cart.length === 0) return alert("請輸入暱稱並選購商品！");
-        db.ref('orders').push({ nick, items: cart, total: cart.reduce((a,b)=>a+b.p, 0), time: Date.now() });
-        alert("訂單已提交！"); cart = []; renderCart();
-    }
-
-    function renderOrders() {
-        const list = document.getElementById('admin-orders-list');
-        list.innerHTML = Object.entries(orders).map(([k, o]) => `
-            <div class="collapse-group">
-                <div class="collapse-header"><b>👤 ${o.nick}</b> <span>$ ${o.total}</span></div>
-                <div class="collapse-body">${o.items.map(it => `<div>${it.n}</div>`).join('')}</div>
+    // 後台：活動場次概覽
+    function renderActiveEventsPage() {
+        const evts = [...new Set(products.map(p => p ? p.e : ''))].filter(e => e);
+        document.getElementById('active-events-list').innerHTML = evts.map(e => `
+            <div class="event-card" style="cursor:default; padding:20px;">
+                <b style="color:var(--wood); font-size:16px; display:block; margin-bottom:5px;">🟢 ${e}</b>
+                <span class="status-badge" style="background:#F0FDF4; color:var(--matcha);">連線火熱進行中</span>
             </div>
         `).join('');
     }
 
-    function promptAdmin() { if(prompt("密碼:") === "3333") document.getElementById('front-hall').style.display = 'none'; }
-    function exitAdmin() { document.getElementById('front-hall').style.display = 'flex'; }
-    function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
-    function switchTab(id, btn) {
-        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        btn.classList.add('active');
+    // 後台：維護與日幣換算台幣利潤精密面板
+    function renderAdminEvents() {
+        const evts = [...new Set(products.map(p => p ? p.e : ''))].filter(e => e);
+        const tbody = document.getElementById('admin-events-table');
+        if(!tbody) return;
+        if(evts.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#999; padding:20px;">目前沒有建立任何場次。</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = evts.map(e => {
+            const count = products.filter(p => p && p.e === e).length;
+            return `<tr>
+                <td style="font-weight:bold; color:var(--wood);">${e}</td>
+                <td><span class="status-badge">進行中連線</span></td>
+                <td style="color:var(--caramel); font-weight:bold;">JPY (日幣連線)</td>
+                <td style="font-weight:bold; color:var(--matcha);">${count} 項商品</td>
+                <td>
+                    <button class="btn-sm btn-edit" onclick="renderAdminProdsView('${e}')">維護商品與利潤</button>
+                    <button class="btn-sm btn-del" onclick="deleteEntireEvent('${e}')">刪除此場次</button>
+                </td>
+            </tr>`;
+        }).join('');
     }
-    function openAddEventModal() { const name = prompt("場次名稱:"); if(name) { products.push({e:name, n:"範例", p:0}); db.ref('products').set(products); } }
+
+    function renderAdminProdsView(evtName) {
+        const tbody = document.getElementById('admin-events-table');
+        let html = `<tr><td colspan="5" style="background:#FFF; padding:15px;"><b style="color:var(--matcha);">[${evtName}] 商品細節與私密利潤對帳表（僅限後台可見）：</b><br><br>`;
+        products.forEach((p, i) => {
+            if(p && p.e === evtName) {
+                const costTWD = Math.round((p.cp || 0) * (p.rate || 0.22));
+                const profitTWD = (p.p || 0) - costTWD;
+                html += `<div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #EEE; font-size:13px;">
+                    <div><strong>${p.n}</strong> (${p.s||'無規格'}) <br>
+                        <span style="color:#666; font-size:12px;">日幣原價: ¥${p.fp||0} | 購入: ¥${p.cp||0} (折合台幣約 $${costTWD}) | 賣出: <b style="color:var(--caramel);">NT$ ${p.p||0}</b></span>
+                    </div>
+                    <div>
+                        <span style="background:#E6F4EA; color:var(--profit-green); padding:2px 8px; border-radius:4px; font-weight:bold;">利潤: +NT$ ${profitTWD}</span>
+                        <button class="btn-sm btn-edit" onclick="openProductEdit(${i})">修改</button>
+                        <button class="btn-sm btn-del" onclick="if(confirm('下架商品嗎？')){let nP=[...products]; nP.splice(${i},1); db.ref('products').set(nP);}">下架</button>
+                    </div>
+                </div>`;
+            }
+        });
+        html += `<br><button onclick="renderAdminEvents()">返回場次列表</button></td></tr>`;
+        tbody.innerHTML = html;
+    }
+
+    // 後台：訂單明細
+    function renderAdminOrders() {
+        const main = document.getElementById('admin-orders-list');
+        if (!main) return;
+        let filteredOrders = Object.entries(orders);
+        if(currentFilterUser !== 'all') filteredOrders = filteredOrders.filter(([k, o]) => o && o.nick === currentFilterUser);
+
+        let listHtml = '';
+        filteredOrders.sort((a,b)=>b[1].time - a[1].time).forEach(([k, o]) => {
+            if(!o) return;
+            const itemsHtml = (o.items || []).map((it, idx) => it ? `<div style="font-size:13px; padding:8px 0;">[${it.e}] ${it.n} - $${it.p} <button onclick="deleteSingleItem('${k}', ${idx})">✕</button></div>` : '').join('');
+            listHtml += `<div style="border:1px solid #DDD; padding:10px; margin:5px;"><b>👤 ${o.nick}</b> - $${o.total} <button onclick="if(confirm('刪除訂單？'))db.ref('orders/${k}').remove()">刪除</button><div>${itemsHtml}</div></div>`;
+        });
+        main.innerHTML = listHtml || `<p>目前沒有訂單。</p>`;
+    }
+
+    // 後台：收款對帳
+    function renderMoneyRecords() {
+        const container = document.getElementById('money-events-container');
+        if (!container) return;
+        let html = '';
+        Object.entries(orders).forEach(([k, o]) => {
+            if(!o) return;
+            html += `<div style="border-bottom:1px solid #EEE; padding:10px;">${o.nick}: $${o.total} <button onclick="db.ref('orders/${k}').update({paid:${!o.paid}})">${o.paid?'已收款':'未收款'}</button></div>`;
+        });
+        container.innerHTML = html;
+    }
+
+    // 輔助功能
+    function deleteSingleItem(orderKey, itemIdx) {
+        let o = orders[orderKey];
+        if(!o || !o.items) return;
+        o.items.splice(itemIdx, 1);
+        if(o.items.length === 0) db.ref(`orders/${orderKey}`).remove();
+        else db.ref(`orders/${orderKey}`).update({ items: o.items, total: o.items.reduce((a,b)=>a+(b?b.p:0),0) });
+    }
+
+    function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
+    function openProductEdit(index) { /* 修改商品彈窗邏輯 */ }
+    function updateFilterButtons() { /* 篩選器更新邏輯 */ }
 </script>
 </body>
 </html>
