@@ -5,12 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>33日本動物園</title>
   
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- Firebase App & Database (Compat v9) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
@@ -18,7 +15,7 @@
     /* 🍵 抹茶牛奶日系清爽色調調色盤 */
     body {
       background-color: #F4F7F4; /* 淡淡的清爽米綠底色 */
-      color: #334155; /* 溫柔的深灰字，拒絕死黑 */
+      color: #334155; /* 溫柔的深灰字 */
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
     .sj-card {
@@ -37,7 +34,6 @@
       outline: none;
       box-shadow: 0 0 0 3px rgba(85, 122, 85, 0.15);
     }
-    /* 抹茶主色調按鈕 */
     .btn-primary {
       background-color: #557A55; /* 經典抹茶綠 */
       color: white;
@@ -57,7 +53,6 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <!-- 🟢 頂部導覽列 (溫柔的乳白牛奶色) -->
   <header class="border-b border-slate-200 bg-white/90 backdrop-blur-sm sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
       <div class="flex items-center space-x-3 cursor-pointer" onclick="switchView('lobby')">
@@ -72,10 +67,8 @@
     </div>
   </header>
 
-  <!-- 🟡 主要核心內容抽換區 -->
   <main class="flex-grow max-w-7xl w-full mx-auto p-4">
     
-    <!-- ================= 1. 前台連線大廳 (lobby) ================= -->
     <section id="view-lobby" class="space-y-6">
       <div id="active-events-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
       <div class="pt-6 border-t border-slate-200">
@@ -84,7 +77,6 @@
       </div>
     </section>
 
-    <!-- ================= 2. 前台商品選購頁 (shop) ================= -->
     <section id="view-shop" class="hidden space-y-4">
       <div class="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
         <button onclick="switchView('lobby')" class="text-slate-500 hover:text-slate-700 text-sm"><i class="fa-solid fa-arrow-left mr-1"></i> 返回場次大廳</button>
@@ -93,11 +85,9 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- 左側商品展示 -->
         <div class="lg:col-span-2">
           <div id="shop-products-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
         </div>
-        <!-- 右側購物車 -->
         <div class="lg:col-span-1">
           <div class="sj-card p-4 sticky top-20 space-y-4 border-t-4 border-t-[#557A55]">
             <h3 class="font-bold text-sm border-b border-slate-100 pb-2 text-slate-700 flex justify-between items-center">
@@ -121,7 +111,6 @@
       </div>
     </section>
 
-    <!-- ================= 3. 買家自行查單 (orders-query) ================= -->
     <section id="view-orders-query" class="hidden space-y-4 max-w-2xl mx-auto">
       <div class="sj-card p-6 space-y-4">
         <h2 class="text-base font-bold text-slate-700"><i class="fa-solid fa-magnifying-glass mr-1 text-[#557A55]"></i> 買家個人訂單查詢</h2>
@@ -133,9 +122,7 @@
       </div>
     </section>
 
-    <!-- ================= 4. 園長工作後台 (admin) ================= -->
     <section id="view-admin" class="hidden space-y-6">
-      <!-- 頂部數據看板 (牛奶純白底色 + 精緻小圖示) -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="sj-card p-4 flex items-center space-x-4">
           <div class="p-3 bg-[#EEF2EE] text-[#557A55] rounded-xl text-lg"><i class="fa-solid fa-wallet"></i></div>
@@ -160,13 +147,11 @@
         </div>
       </div>
 
-      <!-- 後台頁籤控制 -->
       <div class="border-b border-slate-200 flex space-x-4 text-sm">
         <button onclick="switchAdminTab('events')" id="tab-btn-events" class="pb-2 border-b-2 border-[#557A55] font-bold text-[#557A55] px-2">📅 活動場次與商品維護</button>
-        <button onclick="switchAdminTab('orders')" id="tab-btn-orders" class="pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-600 px-2">📋 訂單記錄與對帳助理</button>
+        <button onclick="switchAdminTab('orders')" id="tab-btn-orders" class="pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-600 px-2">📋 訂單紀錄與對帳助理</button>
       </div>
 
-      <!-- 子分頁：場次控制清單 -->
       <div id="admin-tab-events" class="space-y-4">
         <div class="flex justify-between items-center">
           <h3 class="text-sm font-bold text-slate-500">活動場次主列表</h3>
@@ -188,7 +173,6 @@
         </div>
       </div>
 
-      <!-- 子分頁：所有訂單清單 -->
       <div id="admin-tab-orders" class="hidden space-y-4">
         <h3 class="text-sm font-bold text-slate-500">全球買家代購訂單紀錄</h3>
         <div id="admin-orders-container" class="space-y-3"></div>
@@ -196,10 +180,8 @@
     </section>
   </main>
 
-  <!-- ================= 5. 【大彈窗】一頁流極速配置全新連線場次 (完美對齊 image_fc43ef.png 清爽牛奶配色) ================= -->
   <div id="event-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white border border-slate-200 rounded-2xl max-w-6xl w-full max-h-[92vh] flex flex-col shadow-2xl">
-      <!-- 彈窗頂部 -->
       <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-[#F8FAF8] rounded-t-2xl">
         <h3 id="modal-title" class="font-bold text-sm text-[#3D523D] flex items-center">
           <span class="mr-1">✨</span> 一頁流極速配置全新連線場次
@@ -207,18 +189,15 @@
         <button onclick="closeEventModal()" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
       </div>
       
-      <!-- 彈窗主表格區 -->
       <div class="p-6 overflow-y-auto space-y-6 flex-grow text-xs">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#F4F7F4]/50 p-4 rounded-xl border border-[#E2E8F0]">
           <div>
             <label class="block text-slate-500 font-bold mb-1">場次名稱 <span class="text-red-500">*</span></label>
-            <input type="text" id="modal-event-name" placeholder="例：2026-06 迪士尼快閃店連線" class="w-full px-3 py-2 rounded-lg sj-input">
-            <p class="text-[10px] text-slate-400 mt-1">系統會以此欄位串接舊商品，建議名稱保持一致</p>
+            <input type="text" id="modal-event-name" placeholder="例：2026-06 日本代購連線" class="w-full px-3 py-2 rounded-lg sj-input">
           </div>
           <div>
             <label class="block text-slate-500 font-bold mb-1">當次換算匯率 <span class="text-red-500">*</span></label>
             <input type="number" id="modal-event-rate" step="0.001" value="0.22" oninput="recalcAllPricesByRate()" class="w-full px-3 py-2 rounded-lg sj-input font-mono">
-            <p class="text-[10px] text-slate-400 mt-1">用於快速公式「(原價+代購) × 匯率」換算台幣賣價</p>
           </div>
         </div>
 
@@ -227,7 +206,6 @@
             <h4 class="font-bold text-slate-600 flex items-center">
               <span class="text-base mr-1.5">📦</span> 場次內商品清單明細
             </h4>
-            <!-- 按鈕調回 image_fc43ef.png 的深綠色設計 -->
             <button onclick="addModalProductRow()" class="px-3 py-1.5 bg-[#2D8A5E] hover:bg-[#226B46] text-white font-bold rounded text-[11px] flex items-center shadow-sm">
               <i class="fa-solid fa-plus mr-1"></i> 繼續新增下一筆商品 (Tab)
             </button>
@@ -243,7 +221,7 @@
                   <th class="p-2.5 w-24">原價 (日幣)</th>
                   <th class="p-2.5 w-24">付代購 (日幣)</th>
                   <th class="p-2.5 w-28">台幣賣價 <span class="text-red-500">*</span></th>
-                  <th class="p-2.5 w-20 text-center">庫存</th>
+                  <th class="p-2.5 w-32 text-center">庫存 (對應逗號)</th>
                   <th class="p-2.5 w-12 text-center">刪</th>
                 </tr>
               </thead>
@@ -253,22 +231,17 @@
         </div>
       </div>
       
-      <!-- 彈窗底部控制鈕 -->
       <div class="p-4 border-t border-slate-100 bg-[#F8FAF8] flex justify-end space-x-2 rounded-b-2xl">
-        <button onclick="closeEventModal()" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-50 text-xs font-medium">取消</button>
+        <button onclick="closeEventModal()" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-5 text-xs font-medium">取消</button>
         <button onclick="saveEventAndProducts()" class="px-5 py-2 bg-[#2D8A5E] hover:bg-[#226B46] text-white font-bold rounded-lg text-xs shadow-md"><i class="fa-solid fa-floppy-disk mr-1"></i> 儲存並發布此場次</button>
       </div>
     </div>
   </div>
 
-  <!-- 🟫 頁尾 -->
   <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400 mt-12">
     © 2026 33 日本動物園 ✨ 園長專屬手動開關連線大廳系統 (日系抹茶牛奶版)
   </footer>
 
-  <!-- ============================================================================== -->
-  <!-- 🟢 FIREBASE 核心業務邏輯腳本區 (完美保存自動拆分庫存防超賣邏輯) -->
-  <!-- ============================================================================== -->
   <script>
     // 📢 【請將此更換為您原本的 Firebase 密鑰設定】
     const firebaseConfig = {
@@ -349,7 +322,7 @@
       }
     }
 
-    // ================= 1. 前台連線大廳渲染 (日系米白牛奶小卡) =================
+    // ================= 1. 前台連線大廳渲染 =================
     function renderLobbyAndEvents() {
       const eventNamesSet = new Set();
       allProducts.forEach(p => { if(p.e) eventNamesSet.add(p.e.trim()); });
@@ -397,7 +370,7 @@
       renderAdminEventsTable(uniqueEventsArray);
     }
 
-    // ================= 2. 前台商品選購頁渲染 (庫存完美隱藏) =================
+    // ================= 2. 前台商品選購頁渲染 (自動隱藏斷貨規格) =================
     function enterShop(eventName) {
       currentEventName = eventName;
       document.getElementById('current-shop-title').innerText = eventName;
@@ -426,6 +399,7 @@
           let availableCount = 0;
           Object.keys(p.variants).forEach(specKey => {
             const v = p.variants[specKey];
+            // 🚨 核心邏輯：如果後台庫存小於或等於 0，直接跳過不顯示（完美的隱藏數字機制）
             if (v.stock !== undefined && v.stock !== "" && parseInt(v.stock) <= 0) {
               return; 
             }
@@ -434,10 +408,10 @@
           });
           
           if(availableCount === 0) {
-            optionsHtml = `<option value="" disabled>已全數斷貨</option>`;
+            optionsHtml = `<option value="" disabled>已全數斷貨完售</option>`;
           }
         } else {
-          optionsHtml = `<option value="default">預設規格</option>`;
+          optionsHtml = `<option value="預設規格">預設規格</option>`;
         }
 
         const imgUrl = p.img || 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&w=300&q=80';
@@ -469,7 +443,7 @@
       if(!p) return;
 
       const specSelect = document.getElementById(`spec-select-${pId}`);
-      if(specSelect.disabled || !specSelect.value) { alert("此商品已無庫存可選購！"); return; }
+      if(specSelect.disabled || !specSelect.value || specSelect.value === "") { alert("此商品已無庫存可選購！"); return; }
       
       const selectedSpec = specSelect.value;
 
@@ -665,7 +639,7 @@
       db.ref().update(updates);
     }
 
-    // ================= 5. 【大彈窗】新增商品列表列渲染 (完美對應一頁流一行式快填結構) =================
+    // ================= 5. 【大彈窗】編輯/新增一頁流處理 =================
     function openEventModal(editTargetEventName = "") {
       const modal = document.getElementById('event-modal');
       const tbody = document.getElementById('modal-products-tbody');
@@ -680,17 +654,16 @@
         const filtered = allProducts.filter(p => p.e === editTargetEventName);
         filtered.forEach(p => {
           let specString = "";
-          let stockVal = "";
+          let stockString = "";
           
           if(p.variants) {
             specString = Object.keys(p.variants).join(', ');
-            const firstKey = Object.keys(p.variants)[0];
-            stockVal = p.variants[firstKey]?.stock ?? "";
+            stockString = Object.keys(p.variants).map(k => p.variants[k].stock ?? "不限").join(', ');
           } else {
-            specString = p.s || "";
-            stockVal = p.stock ?? "";
+            specString = "預設規格";
+            stockString = "不限";
           }
-          addModalProductRow({ img: p.img||'', n: p.n||'', s: specString, jpy_cost: p.jpy_cost||0, jpy_fee: p.jpy_fee||0, p: p.p||0, stock: stockVal });
+          addModalProductRow({ img: p.img||'', n: p.n||'', s: specString, jpy_cost: p.jpy_cost||0, jpy_fee: p.jpy_fee||0, p: p.p||0, stock: stockString });
         });
       } else {
         document.getElementById('modal-title').innerHTML = `✨ 一頁流極速配置全新連線場次`;
@@ -714,11 +687,11 @@
       tr.innerHTML = `
         <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input p-img text-[11px]" value="${escapeHtml(data?data.img:'')}" placeholder="圖片URL"></td>
         <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input font-bold p-name" value="${escapeHtml(data?data.n:'')}" placeholder="品名(必填)"></td>
-        <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input p-spec text-[#557A55] font-medium" value="${escapeHtml(data?data.s:'')}" placeholder="大小,粉,藍"></td>
+        <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input p-spec text-[#557A55] font-medium" value="${escapeHtml(data?data.s:'')}" placeholder="M, L (留空為預設)"></td>
         <td class="p-2"><input type="number" oninput="calcRowTwdPrice('${rowId}')" class="w-full px-2 py-1 rounded sj-input text-right font-mono p-cost" value="${data?data.jpy_cost:''}" placeholder="0"></td>
         <td class="p-2"><input type="number" oninput="calcRowTwdPrice('${rowId}')" class="w-full px-2 py-1 rounded sj-input text-right font-mono p-fee" value="${data?data.jpy_fee:''}" placeholder="0"></td>
-        <td class="p-2"><input type="number" class="w-full px-2 py-1 rounded bg-[#FCFDFB] text-[#C87A28] font-bold border border-slate-300 text-right p-price" value="${data?data.p:''}" placeholder="台幣賣價"></td>
-        <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input text-center p-stock" value="${data!==null && data.stock!==undefined ? data.stock:''}" placeholder="不限"></td>
+        <td class="p-2"><input type="number" class="w-full px-2 py-1 rounded bg-[#FCFDFB] text-[#C87A28] font-bold border border-slate-300 text-right p-price" value="${data?data.p:''}" placeholder="賣價"></td>
+        <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input text-center p-stock font-mono text-[#2D8A5E]" value="${data?data.stock:''}" placeholder="例: 2, 5, 1"></td>
         <td class="p-2 text-center"><button onclick="document.getElementById('${rowId}').remove()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></td>
       `;
       tbody.appendChild(tr);
@@ -738,6 +711,7 @@
       rows.forEach(row => calcRowTwdPrice(row.id));
     }
 
+    // 🧠 核心升級：支援「單一複製」與「多規格一對一不同庫存」高智商配對儲存
     function saveEventAndProducts() {
       const eventName = document.getElementById('modal-event-name').value.trim();
       const rate = parseFloat(document.getElementById('modal-event-rate').value) || 0.22;
@@ -748,7 +722,7 @@
 
       for(let row of rows) {
         const n = row.querySelector('.p-name').value.trim();
-        if(!n) continue;
+        if(!n) continue; 
 
         const img = row.querySelector('.p-img').value.trim();
         const specRaw = row.querySelector('.p-spec').value.trim();
@@ -758,11 +732,34 @@
         const stockRaw = row.querySelector('.p-stock').value.trim();
 
         const variantsMap = {};
-        const specArray = specRaw ? specRaw.split(/[,，\s]+/).filter(Boolean) : ["預設規格"];
         
-        specArray.forEach(specName => {
+        // 切割規格陣列
+        const specArray = specRaw ? specRaw.split(/[,，\s]+/).filter(Boolean) : ["預設規格"];
+        // 切割庫存陣列
+        const stockArray = stockRaw ? stockRaw.split(/[,，\s]+/).map(s => s.trim()) : [];
+
+        specArray.forEach((specName, index) => {
+          let currentStockVal = "";
+          
+          if (stockArray.length === 0) {
+            // 情況 A：庫存沒填 -> 全部不限
+            currentStockVal = "";
+          } else if (stockArray.length === 1) {
+            // 情況 B：庫存只填了一個（例：6）-> 全尺寸都配 6
+            const singleStock = stockArray[0];
+            currentStockVal = (singleStock === "" || singleStock === "不限") ? "" : (isNaN(parseInt(singleStock)) ? "" : parseInt(singleStock));
+          } else {
+            // 情況 C：庫存填了多個（例：2, 5, 1）-> 依照順序一對一配對
+            const matchedStock = stockArray[index];
+            if (matchedStock !== undefined && matchedStock !== "" && matchedStock !== "不限") {
+              currentStockVal = isNaN(parseInt(matchedStock)) ? "" : parseInt(matchedStock);
+            } else {
+              currentStockVal = ""; // 超出位置或寫不限，就當作不限
+            }
+          }
+
           variantsMap[specName] = {
-            stock: stockRaw === "" ? "" : parseInt(stockRaw)
+            stock: currentStockVal
           };
         });
 
@@ -781,12 +778,17 @@
       updates[`event_status/${eventName}`] = { isClosed: isCurrentClosed, rate: rate };
 
       db.ref().update(updates, (err) => {
-        if(err) { alert("儲存失敗"); }
-        else { alert(`✨ 場次【${eventName}】規格庫存配置發布完成！`); closeEventModal(); }
+        if(err) { 
+          console.error(err);
+          alert("儲存失敗，請檢查資料或網路連線。"); 
+        } else { 
+          alert(`✨ 場次【${eventName}】多規格高智商庫存配置發布完成！`); 
+          closeEventModal(); 
+        }
       });
     }
 
-    // ================= 6. 後台買家訂單對帳與渲染 (清爽日系明細) =================
+    // ================= 6. 後台買家訂單對帳與渲染 =================
     function renderAdminOrders() {
       const container = document.getElementById('admin-orders-container');
       container.innerHTML = "";
