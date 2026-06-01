@@ -1,66 +1,362 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
-<head>
+<html lang="zh-Hant"><head>
     <meta charset="UTF-8">
-    <title>33 日本動物園 - 系統整合版</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>33日本動物園</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
-        /* 區塊一：樣式設定 (美化外觀) */
-        body { font-family: sans-serif; background: #f0f4fa; margin: 0; padding: 20px; }
-        .card { background: white; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #dee7f2; }
-        .btn-main { background: #003399; color: white; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; }
-    </style>
-</head>
-<body>
-
-    <div class="card">
-        <h1>💙 33 日本動物園</h1>
-        <div id="status-msg">系統連線中...</div>
-    </div>
-
-    <div class="card" id="pos-area">
-        <h3>點餐區</h3>
-        <div id="product-list"></div>
-    </div>
-
-    <script>
-        // 區塊二：設定區 (唯一需要您動手的地方)
-        const firebaseConfig = {
-            // 請確保填入您原本的正確設定
-            apiKey: "填入您的apiKey",
-            authDomain: "zoo-62638.firebaseapp.com",
-            databaseURL: "https://zoo-62638-default-rtdb.firebaseio.com",
-            projectId: "zoo-62638",
-            storageBucket: "zoo-62638.firebasestorage.app",
-            messagingSenderId: "33012710753",
-            appId: "1:33012710753:web:318636add1f5ac2f7b5920"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
-        // 區塊三：功能區 (邏輯處理)
+        :root { 
+            --matcha: #606C38; 
+            --rice: #FEF9EF; 
+            --caramel: #BC6C25; 
+            --wood: #283618; 
+            --gray: #F4F1EA; 
+            --baby-blue: #E0F2FE;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'Noto Sans TC', sans-serif; }
+        html, body { height: 100%; margin: 0; padding: 0; background: var(--gray); overflow: hidden; color: var(--wood); }
+        body { display: flex; flex-direction: column; }
         
-        // 1. 讀取商品並顯示
-        db.ref("products").on("value", (snapshot) => {
-            const data = snapshot.val();
-            const listDiv = document.getElementById('product-list');
-            const statusMsg = document.getElementById('status-msg');
-            
-            if (data) {
-                statusMsg.innerText = "✅ 系統已連線";
-                // 這裡把資料變成 HTML
-                const products = Object.values(data);
-                listDiv.innerHTML = products.map(p => `
-                    <div style="margin: 10px 0; border-bottom: 1px solid #eee;">
-                        <strong>${p.name}</strong> - $${p.price}
-                    </div>
-                `).join('');
-            } else {
-                statusMsg.innerText = "⚠️ 目前沒有商品資料";
+        /* 頂部功能導覽列 */
+        .header-bar { background: var(--rice); padding: 15px; border-bottom: 1px solid #EAE2D1; display: flex; justify-content: space-between; align-items: center; }
+        .header-title h1 { color: var(--matcha); margin: 0; font-size: 24px; }
+        .header-title p { color: #888; font-size: 12px; margin: 2px 0 0 0; }
+        .header-btns { display: flex; gap: 10px; align-items: center; }
+
+        /* 主程式佈局 */
+        .app-container { display: flex; flex: 1; overflow: hidden; flex-direction: row; }
+        .list-area { flex: 1; overflow-y: auto; padding: 15px; background: var(--gray); }
+        .prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; max-width: 1400px; margin: 0 auto; }
+        .prod-card { background: #FFF; border-radius: 12px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.08); min-height: 280px; }
+        .prod-name { font-size: 16px; font-weight: bold; min-height: 45px; text-align: center; }
+        .prod-price { color: var(--caramel); font-size: 18px; margin: 8px 0; font-weight: bold; text-align: center; }
+        .spec-area { min-height: 60px; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; align-content: flex-start; }
+        .qty-area { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; }
+        .btn-qty { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #DDD; background: #FFF; cursor: pointer; font-weight: bold; }
+        
+        /* 右側購物車樣式 */
+        .cart-area { width: 360px; background: #FFF; border-left: 1px solid #DDD; display: flex; flex-direction: column; }
+        .cart-bottom { padding: 15px; border-top: 1px solid #EEE; padding-bottom: calc(15px + env(safe-area-inset-bottom)); }
+        .btn-add { background: var(--matcha); color: #FFF; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; text-align: center; }
+        
+        /* 園長工作台後台面版樣式 */
+        #admin-panel { position: fixed; inset: 0; background: var(--gray); z-index: 4000; display: none; flex-direction: column; }
+        .admin-header { background: var(--wood); color: #FFF; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .admin-nav { padding: 10px; background: var(--rice); display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #EAE2D1; }
+        .admin-order-card { background: #FFF; border: 1px solid #EAE2D1; border-radius: 12px; padding: 15px; margin-bottom: 15px; border-left: 5px solid var(--matcha); cursor: pointer; }
+        
+        /* 彈出模組視窗 */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 15px; }
+        .modal-box { background: var(--rice); padding: 25px; border-radius: 20px; width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; color: var(--wood); border: 1px solid #EAE2D1; }
+        .input-std { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #DDD; border-radius: 10px; font-size: 14px; background: #FFF; color: var(--wood); }
+        .summary-box { background: #FFF; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #EAE2D1; font-size: 14px; line-height: 1.6; }
+        
+        /* 收款/出貨狀態專用 Banner 樣式 */
+        .money-summary-banner { background: var(--baby-blue); border: 1px solid #BAE6FD; padding: 12px 20px; border-radius: 10px; margin-bottom: 15px; font-size: 14px; color: #0369A1; font-weight: bold; }
+        .filter-bar { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .filter-btn { background: #FFF; border: 1px solid #DDD; color: var(--wood); padding: 6px 14px; border-radius: 15px; cursor: pointer; font-size: 12px; }
+        .filter-btn.active { background: var(--matcha); color: #FFF; border-color: var(--matcha); }
+
+        @media (max-width: 768px) { 
+            .app-container { flex-direction: column; } 
+            .cart-area { width: 100%; flex: 1.5; border-left: none; border-top: 1px solid #DDD; } 
+            .prod-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+            .header-bar { padding: 10px 15px; flex-direction: column; gap: 10px; text-align: center; }
+        }
+    </style></head><body><div class="header-bar">
+    <div class="header-title">
+        <h1>33 日本動物園</h1>
+        <p>代購連線管理系統</p>
+    </div>
+    <div class="header-btns">
+        <button onclick="document.getElementById('search-modal').style.display='flex'" style="background:var(--caramel); color:#FFF; border:none; padding:10px 20px; border-radius:20px; font-weight:bold; cursor:pointer; font-size:13px;">🔍 查詢我的訂單</button>
+        <div onclick="adminLogin()" style="color:#BBB; cursor:pointer; font-size:11px; letter-spacing: 1px; padding: 5px;">管理登入</div>
+    </div></div><div class="app-container" id="main-app">
+    <div class="list-area"><div id="prod-list" class="prod-grid"></div></div>
+    <div class="cart-area">
+        <div style="padding:15px; font-weight:bold; border-bottom: 1px solid #EEE;">🛒 購物清單</div>
+        <div id="cart-items" style="flex:1; overflow-y:auto; padding:10px;"></div>
+        <div class="cart-bottom">
+            <p style="font-size: 16px; margin-bottom: 10px;">總計: <span style="color:var(--caramel); font-weight:bold; font-size: 20px;">$ <span id="cart-total">0</span></span></p>
+            <input id="nick" class="input-std" placeholder="您的 LINE 暱稱">
+            <button class="btn-add" style="width:100%; padding:16px; font-size: 16px;" onclick="submitOrder()">確認提交訂單</button>
+        </div>
+    </div></div><div id="admin-panel">
+    <div class="admin-header">
+        <b>33 園長工作台</b>
+        <button onclick="document.getElementById('admin-panel').style.display='none'" style="background: transparent; border: 1px solid #FFF; color: #FFF; padding: 4px 10px; border-radius: 4px; cursor: pointer;">關閉</button>
+    </div>
+    <div class="admin-nav">
+        <button class="btn-add" onclick="switchAdminView('orders')">📋 訂單管理</button>
+        <button class="btn-add" style="background:#BC6C25;" onclick="unlockAllOrders()">🔓 一鍵全開</button>
+        <button class="btn-add" style="background:#E07A5F;" onclick="openPackAssistant()">📦 配貨助手</button>
+        <button class="btn-add" style="background:#4A90E2;" onclick="exportData()">📤 匯出資料</button>
+        <button class="btn-add" style="background:#0284C7;" onclick="switchAdminView('money')">💰 收款記錄</button>
+        <button class="btn-add" style="background:#888;" onclick="switchAdminView('products')">⚙️ 商品維護</button>
+    </div>
+    <div id="admin-main" style="flex:1; overflow-y:auto; padding:15px;"></div></div><div id="edit-modal" class="modal"><div class="modal-box"><h3 id="modal-title">編輯</h3><div id="modal-body"></div><div style="display:flex; gap:10px; margin-top:20px;"><button class="btn-add" id="modal-save" style="flex:1;">儲存</button><button class="btn-add" style="flex:1; background:#999;" onclick="document.getElementById('edit-modal').style.display='none'">取消</button></div></div></div><div id="search-modal" class="modal"><div class="modal-box"><h2>個人查詢</h2><input id="search-nick" class="input-std" placeholder="您的 LINE 暱稱" oninput="performSearch()"><div id="search-results-area"></div><button onclick="document.getElementById('search-modal').style.display='none'" style="width:100%; margin-top:15px; border:none; background:none; color:#666; cursor:pointer; font-size:14px;">關閉視窗</button></div></div><script>
+    // 保留完整的 Firebase 資料庫連接
+    const firebaseConfig = {
+        apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",
+        authDomain: "zoo-62638.firebaseapp.com",
+        databaseURL: "https://zoo-62638-default-rtdb.firebaseio.com",
+        projectId: "zoo-62638",
+        storageBucket: "zoo-62638.firebasestorage.app",
+        messagingSenderId: "33012710753",
+        appId: "1:33012710753:web:318636add1f5ac2f7b5920"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let products = [], orders = {}, cart = [], curS = {}, curQty = {};
+    let currentAdminTab = 'orders'; // 紀錄後台目前在切哪一頁
+    let currentMoneyFilter = 'all'; // 收款紀錄篩選器
+
+    // 監聽 Firebase 核心資料變動
+    db.ref('products').on('value', snap => { products = snap.val() || []; renderAllProducts(); if(document.getElementById('admin-panel').style.display === 'flex') refreshAdminView(); });
+    db.ref('orders').on('value', snap => { orders = snap.val() || {}; if(document.getElementById('admin-panel').style.display === 'flex') refreshAdminView(); });
+
+    // 前台：直接在大廳列出所有商品卡片邏輯
+    function renderAllProducts() {
+        if (products.length === 0 || products.every(p => !p)) {
+            document.getElementById('prod-list').innerHTML = `<p style="text-align:center; color:#999; grid-column:1/-1; padding:30px;">目前後台沒有任何上架商品唷！</p>`;
+            return;
+        }
+        document.getElementById('prod-list').innerHTML = products.map((p, rid) => {
+            if(!p) return '';
+            if(!curQty[rid]) curQty[rid] = 1;
+            const specs = (p.s||'').split(',').filter(v=>v.trim()).map(v=>`<button id="s-${rid}-${v}" onclick="selSpec(${rid},'${v}')" style="border:1px solid #DDD; margin:2px; font-size:11px; background:#FFF; border-radius:4px; padding:4px 8px; cursor:pointer; color:var(--wood);">${v}</button>`).join('');
+            return `<div class="prod-card"><div class="prod-name"><span style="font-size:11px; color:var(--caramel); display:block; margin-bottom:2px;">[${p.e}]</span>${p.n}</div><div class="prod-price">$${p.p}</div><div class="spec-area">${specs}</div><div class="qty-area"><button class="btn-qty" onclick="updateQty(${rid},-1)">-</button><span id="qty-val-${rid}" style="font-weight:bold;width:20px;text-align:center;">${curQty[rid]}</span><button class="btn-qty" onclick="updateQty(${rid},1)">+</button></div><button class="btn-add" onclick="addToCart(${rid})">加入購物車</button></div>`;
+        }).join('');
+    }
+    
+    function selSpec(rid, v) { curS[rid] = v; document.querySelectorAll(`[id^="s-${rid}-"]`).forEach(b => b.style.background = '#FFF'); if(document.getElementById(`s-${rid}-${v}`)) document.getElementById(`s-${rid}-${v}`).style.background = '#EAE2D1'; }
+    function updateQty(rid, d) { let v = (curQty[rid] || 1) + d; if(v < 1) v = 1; curQty[rid] = v; if(document.getElementById(`qty-val-${rid}`)) document.getElementById(`qty-val-${rid}`).innerText = v; }
+
+    function addToCart(rid) {
+        const p = products[rid]; if(!p) return;
+        if((p.s||'').split(',').filter(x=>x.trim()).length > 0 && !curS[rid]) return alert("請先選擇商品規格唷！");
+        for(let i=0; i<curQty[rid]; i++) cart.push({ ...p, sel: curS[rid]||"一般", pid: rid, isShipped: false });
+        renderCart();
+    }
+    
+    function removeCartItem(pid, sel) { cart = cart.filter(x => !(x.pid == pid && x.sel == sel)); renderCart(); }
+
+    function renderCart() {
+        let summ = {}; cart.forEach(it => { let k = `${it.pid}_${it.sel}`; summ[k] = (summ[k]||0)+1; });
+        document.getElementById('cart-items').innerHTML = Object.keys(summ).map(k => {
+            const [pid, sel] = k.split('_'); const name = products[pid] ? products[pid].n : "";
+            return `<div style="padding:8px; border-bottom:1px solid #EEE; display:flex; justify-content:space-between; align-items:center; font-size:14px;"><span>${name} (${sel}) <b style="color:var(--matcha);">x ${summ[k]}</b></span><span style="cursor:pointer; color:red; font-weight:bold; padding:0 8px; font-size:16px;" onclick="removeCartItem(${pid},'${sel}')">✕</span></div>`
+        }).join('');
+        document.getElementById('cart-total').innerText = cart.reduce((a,b)=>a+b.p,0);
+    }
+    
+    function submitOrder() {
+        const n = document.getElementById('nick').value.trim(); if(!n) return alert("請填寫您的 LINE 暱稱，方便園長核對！");
+        if(cart.length===0) return alert("購物車內還沒有商品唷！");
+        db.ref('orders').push({ nick: n, items: cart, total: cart.reduce((a,b)=>a+b.p,0), time: Date.now(), isUnlocked: false, paid: false }).then(() => { alert("訂單提交成功！"); location.reload(); });
+    }
+
+    // 後台：導覽列視窗切換中控中心
+    function switchAdminView(tabName) { currentAdminTab = tabName; refreshAdminView(); }
+    
+    function refreshAdminView() {
+        if (currentAdminTab === 'orders') renderAdminOrders();
+        else if (currentAdminTab === 'money') renderMoneyRecords();
+        else if (currentAdminTab === 'products') renderAdminProds();
+    }
+
+    // 後台子功能 1：訂單管理
+    function renderAdminOrders() {
+        const main = document.getElementById('admin-main');
+        let prodSummary = {};
+        Object.values(orders).forEach(o => {
+            if(o && o.items) {
+                o.items.forEach(it => { let k = `[${it.e}] ${it.n}(${it.sel||'一般'})`; prodSummary[k] = (prodSummary[k] || 0) + 1; });
             }
         });
+        let summaryHtml = `<div class="summary-box"><b>📊 本區商品採購統計：</b><br>`;
+        for(let k in prodSummary) summaryHtml += `${k}：${prodSummary[k]} 件<br>`;
+        summaryHtml += `</div>`;
+        
+        main.innerHTML = summaryHtml + `<button class="btn-add" style="width:100%; margin-bottom:10px;" onclick="mergeSelected()">🔗 選取併單</button>`;
+        
+        Object.entries(orders).sort((a,b)=>a[1].time - b[1].time).forEach(([k, o]) => {
+            if(!o || !o.items) return;
+            const itemsHtml = o.items.map((it, idx) => `<div style="font-size:13px; padding:4px 0; border-bottom:1px dotted #EEE; display:flex; justify-content:space-between; align-items:center;"><span>[${it.e}] ${it.n} (${it.sel}) $${it.p}</span><button onclick="deleteSingleItem('${k}', ${idx}); event.stopPropagation();" style="color:red; background:none; border:none; font-size:11px; cursor:pointer;">✕</button></div>`).join('');
+            main.innerHTML += `<div class="admin-order-card" onclick="copyOrderInfo('${o.nick}')">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"><b><input type="checkbox" class="merge-check" value="${k}" data-nick="${o.nick}" onclick="event.stopPropagation()"> ${o.nick}</b><button onclick="if(confirm('確定刪除整單嗎？'))db.ref('orders/${k}').remove(); event.stopPropagation();" style="color:red; border:none; background:none; cursor:pointer; font-size:14px;">🗑️</button></div>
+                ${itemsHtml}<div style="text-align:right; font-weight:bold; margin-top:8px; color:var(--caramel);">總計：$${o.total} (${o.paid?'已收款':'未收款'})</div>
+                <div style="margin-top:8px;" onclick="event.stopPropagation()"><label style="cursor:pointer; font-size:13px; color:#555;"><input type="checkbox" ${o.isUnlocked?'checked':''} onchange="db.ref('orders/${k}').update({isUnlocked:this.checked})"> 開放前台查詢此單</label></div></div>`;
+        });
+    }
 
-    </script>
-</body>
+    // 後台子功能 2：進階對齊收款記錄面板
+    function renderMoneyRecords() {
+        const main = document.getElementById('admin-main');
+        main.innerHTML = '';
+
+        let unpaidCount = 0;
+        let unpaidSum = 0;
+        let groupedByEvent = {};
+
+        Object.entries(orders).forEach(([k, o]) => {
+            if(!o || !o.items) return;
+            if(!o.paid) { unpaidCount++; unpaidSum += o.total; }
+
+            if(currentMoneyFilter === 'unpaid' && o.paid) return;
+            if(currentMoneyFilter === 'paid' && !o.paid) return;
+
+            const evtName = o.items[0].e || "其他連線場次";
+            if(!groupedByEvent[evtName]) groupedByEvent[evtName] = [];
+            groupedByEvent[evtName].push({ key: k, order: o });
+        });
+
+        // 頂部統計 Banner
+        let bannerHtml = `<div class="money-summary-banner">💰 未收款小計：${unpaidCount} 筆 ｜ 合計金額：NT$ ${unpaidSum.toLocaleString()}</div>`;
+        
+        // 篩選按鈕列
+        let filterHtml = `
+            <div class="filter-bar">
+                <button class="filter-btn ${currentMoneyFilter==='all'?'active':''}" onclick="currentMoneyFilter='all'; renderMoneyRecords();">全部記錄</button>
+                <button class="filter-btn ${currentMoneyFilter==='unpaid'?'active':''}" onclick="currentMoneyFilter='unpaid'; renderMoneyRecords();" style="color:red;">⚠️ 未收款</button>
+                <button class="filter-btn ${currentMoneyFilter==='paid'?'active':''}" onclick="currentMoneyFilter='paid'; renderMoneyRecords();" style="color:green;">✅ 已收款</button>
+            </div>`;
+
+        let listsHtml = '';
+        for(let evtName in groupedByEvent) {
+            const list = groupedByEvent[evtName];
+            
+            const rowsHtml = list.map(item => {
+                return `
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #EEE;">
+                    <div>
+                        <div style="font-weight:bold; color:var(--wood);">${item.order.nick}</div>
+                        <div style="color:#888; font-size:11px; margin-top:2px;">${new Date(item.order.time).toLocaleDateString()}</div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span style="font-weight:bold; color:var(--caramel);">$ ${item.order.total}</span>
+                        <button class="btn-qty" style="width:70px; height:28px; border-radius:6px; font-size:12px; border:1px solid ${item.order.paid?'var(--matcha)':'#CCC'}; background:${item.order.paid?'#F0FDF4':'#FFF'}; color:${item.order.paid?'var(--matcha)':'#666'};" onclick="db.ref('orders/${item.key}').update({paid:${!item.order.paid}})">
+                            ${item.order.paid ? '已收款' : '未收款'}
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+
+            listsHtml += `
+                <div class="admin-order-card" style="cursor:default;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #EAE2D1; padding-bottom:6px; margin-bottom:8px; font-weight:bold; color:var(--matcha);">
+                        <span>📌 ${evtName}</span>
+                        <button class="btn-add" style="padding:4px 10px; font-size:11px;" onclick="markEventAllPaid('${evtName}')">本區全清已收</button>
+                    </div>
+                    <div>${rowsHtml}</div>
+                </div>`;
+        }
+
+        main.innerHTML = bannerHtml + filterHtml + (listsHtml || `<p style="text-align:center;color:#999;padding:20px;">此條件下無任何帳務明細項目。</p>`);
+    }
+
+    function markEventAllPaid(evtName) {
+        if(confirm(`確定要將 [${evtName}] 場次下的所有紀錄一鍵更改為已收款嗎？`)) {
+            Object.entries(orders).forEach(([k, o]) => {
+                if(o && o.items && o.items[0].e === evtName) db.ref(`orders/${k}`).update({ paid: true });
+            });
+        }
+    }
+
+    // 後台子功能 3：商品維護
+    function renderAdminProds() {
+        const main = document.getElementById('admin-main');
+        main.innerHTML = `<button class="btn-add" style="width:100%; margin-bottom:15px; background:var(--matcha);" onclick="openEdit(-1)">＋ 新增商品</button>` + 
+            products.map((p, i) => p ? `<div class="admin-order-card" style="display:flex; justify-content:space-between; align-items:center;"><div><b>[${p.e}] ${p.n}</b><br><span style="color:var(--caramel);font-weight:bold;">$${p.p}</span><br><span style="font-size:12px;color:#888;">規格: ${p.s||'無'}</span></div><button class="btn-add" style="background:var(--caramel);" onclick="openEdit(${i})">編輯</button></div>` : '').join('');
+    }
+
+    function openEdit(index) {
+        const isNew = index === -1, p = isNew ? {e:'', n:'', p:0, s:''} : products[index];
+        document.getElementById('modal-title').innerText = isNew ? "新增商品" : "編輯商品";
+        document.getElementById('modal-body').innerHTML = `場次名稱：<input id="inp-e" class="input-std" value="${p.e}">商品名稱：<input id="inp-n" class="input-std" value="${p.n}">售價：<input id="inp-p" type="number" class="input-std" value="${p.p}">規格 (逗號隔開)：<input id="inp-s" class="input-std" value="${p.s||''}">`;
+        document.getElementById('edit-modal').style.display = 'flex';
+        document.getElementById('modal-save').onclick = () => {
+            let nP = [...products], v = { e: document.getElementById('inp-e').value, n: document.getElementById('inp-n').value, p: parseInt(document.getElementById('inp-p').value), s: document.getElementById('inp-s').value };
+            if(isNew) nP.push(v); else nP[index] = v;
+            db.ref('products').set(nP).then(()=> document.getElementById('edit-modal').style.display='none');
+        };
+    }
+
+    // 功能助手常規邏輯：匯出、配貨、刪除、合併
+    function exportData() {
+        let csv = "\uFEFF暱稱,場次,商品名稱,規格,價格,出貨狀態,對帳狀態\n";
+        Object.values(orders).forEach(o => {
+            if(o && o.items) {
+                o.items.forEach(it => { csv += `${o.nick},${it.e},${it.n},${it.sel},${it.p},${it.isShipped?'已出貨':'未出貨'},${o.paid?'已收款':'未收款'}\n`; });
+            }
+        });
+        const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `33日本動物園_對帳明細表.csv`; a.click();
+    }
+
+    function openPackAssistant() {
+        document.getElementById('modal-title').innerText = "📦 配貨助手";
+        let html = `<div style="max-height:400px; overflow-y:auto;">`;
+        Object.entries(orders).forEach(([ok, o]) => {
+            if(!o || !o.items) return;
+            html += `<div style="background:#FFF; margin-bottom:10px; padding:10px; border-radius:8px; border:1px solid #DDD;"><div style="font-weight:bold; border-bottom:1px solid #EEE; padding-bottom:4px; margin-bottom:4px;">👤 ${o.nick}</div>`;
+            o.items.forEach((it, idx) => {
+                html += `<div style="display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid #F9F9F9;"><input type="checkbox" class="ship-check" data-ok="${ok}" data-idx="${idx}" style="transform:scale(1.2);" ${it.isShipped?'checked disabled':''}><div style="flex:1; font-size:13px; ${it.isShipped?'color:#AAA; text-decoration:line-through;':''}">[${it.e}] ${it.n} (${it.sel})</div></div>`;
+            });
+            html += `</div>`;
+        });
+        html += `</div>`;
+        document.getElementById('modal-body').innerHTML = html;
+        document.getElementById('edit-modal').style.display = 'flex';
+        document.getElementById('modal-save').innerText = "確認更新出貨狀態";
+        document.getElementById('modal-save').onclick = () => {
+            document.querySelectorAll('.ship-check:checked:not([disabled])').forEach(el => {
+                const ok = el.getAttribute('data-ok'), idx = el.getAttribute('data-idx');
+                db.ref(`orders/${ok}/items/${idx}`).update({ isShipped: true });
+            });
+            document.getElementById('edit-modal').style.display = 'none';
+            refreshAdminView();
+        };
+    }
+
+    function copyOrderInfo(nick) {
+        let txt = `👤 【33日本動物園 - 對帳明細】\n買家：${nick}\n\n`; let t = 0;
+        Object.values(orders).filter(o => o && o.nick === nick && o.items).forEach(o => {
+            o.items.forEach(it => { txt += `▪️ [${it.e}] ${it.n} (${it.sel}) -$${it.p} [${it.isShipped?'已出貨':'未出貨'}]\n`; t += it.p; });
+        });
+        txt += `\n💰 總計台幣：$${t}\n感謝您的訂購 ❤️`;
+        navigator.clipboard.writeText(txt).then(() => alert(`已自動複製 ${nick} 的完整對帳訊息到剪貼簿囉！`));
+    }
+    
+    function deleteSingleItem(orderKey, itemIdx) {
+        let o = orders[orderKey]; o.items.splice(itemIdx, 1);
+        if(o.items.length === 0) db.ref(`orders/${orderKey}`).remove();
+        else db.ref(`orders/${orderKey}`).update({ items: o.items, total: o.items.reduce((a,b)=>a+b.p,0) });
+    }
+    
+    function mergeSelected() {
+        const checks = Array.from(document.querySelectorAll('.merge-check:checked')); if(checks.length<2) return alert("請選擇兩筆以上的訂單！");
+        if(!confirm("確定合併嗎？舊單將被刪除")) return;
+        const keys = checks.map(el => el.value); let items = [], total = 0;
+        keys.forEach(k => { items = items.concat(orders[k].items); total += orders[k].total; });
+        db.ref('orders').push({ nick: checks[0].getAttribute('data-nick'), items, total, time: Date.now(), isUnlocked: true, paid: false }).then(() => keys.forEach(k => db.ref(`orders/${k}`).remove()));
+    }
+    
+    function performSearch() {
+        const n = document.getElementById('search-nick').value.trim();
+        if(!n) { document.getElementById('search-results-area').innerHTML = ""; return; }
+        const res = Object.values(orders).filter(o => o && o.nick === n && o.isUnlocked);
+        if(res.length === 0) { document.getElementById('search-results-area').innerHTML = `<p style="text-align:center;color:#999;margin-top:20px;">未找到已開放查詢的訂單。</p>`; return; }
+        document.getElementById('search-results-area').innerHTML = res.map(o => {
+            if(!o.items) return '';
+            return `<div style="background:#FFF;padding:12px;margin-top:10px;border-radius:12px;border-left:4px solid var(--matcha);box-shadow:0 2px 5px rgba(0,0,0,0.05); color:var(--wood);">` +
+            o.items.map(it => `<div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:13px; ${it.isShipped?'color:#AAA;text-decoration:line-through;':''}"><span>[${it.e}] ${it.n} (${it.sel})</span><b>$${it.p}</b></div>`).join('') +
+            `<div style="text-align:right; font-weight:bold; margin-top:8px; border-top:1px solid #EEE; padding-top:8px; color:var(--caramel);">總計金額：$${o.total} (${o.paid?'已核帳':'未核帳'})</div></div>`;
+        }).join('');
+    }
+    
+    function unlockAllOrders() { if(confirm("確定一鍵開放前台查詢嗎？")) Object.keys(orders).forEach(k => db.ref(`orders/${k}`).update({isUnlocked:true})); }
+    function adminLogin() { if(prompt("請輸入管理密碼")==="1239") { document.getElementById('admin-panel').style.display='flex'; switchAdminView('orders'); } else { alert("密碼錯誤！"); } }</script></body>
 </html>
