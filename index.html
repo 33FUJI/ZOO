@@ -1,96 +1,365 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>33日本動物園 - 專業管理系統</title>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>33日本動物園 - 前後台整合系統</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
     <style>
-        :root { --matcha: #606C38; --rice: #FEF9EF; --caramel: #BC6C25; --wood: #283618; }
-        body { font-family: 'Noto Sans TC', sans-serif; background: #f4f1ea; color: var(--wood); margin: 0; }
-        .tabs-header { display: flex; background: #fff; border-bottom: 2px solid var(--matcha); position: sticky; top: 0; z-index: 100; }
-        .tab-btn { padding: 15px 10px; cursor: pointer; border: none; background: none; font-weight: bold; flex: 1; font-size: 13px; }
-        .tab-btn.active { background: var(--matcha); color: white; }
-        .order-card { background: white; margin: 10px; padding: 15px; border-radius: 8px; border-left: 5px solid var(--matcha); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .status-tag { background: var(--rice); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; border: 1px solid #ddd; margin-top: 5px; display: inline-block; }
-        .profit-view { color: var(--caramel); font-weight: bold; margin-top: 5px; font-size: 0.9em; }
+        :root {
+            --matcha-green: #709a77;
+            --matcha-dark: #2b303c;
+            --matcha-bg: #1f232b;
+            --rice-white: #e8ece9;
+            --accent-gold: #ffbc42;
+        }
+        body {
+            background-color: var(--matcha-bg);
+            color: var(--rice-white);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 15px;
+        }
+        /* 主切換按鈕樣式 */
+        .system-toggle-btn {
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: #3a4150;
+            color: #ccc;
+            flex: 1;
+            text-align: center;
+        }
+        .system-toggle-btn.active {
+            background: var(--matcha-green);
+            color: white;
+            box-shadow: 0 0 10px rgba(112, 154, 119, 0.5);
+        }
+        input, select, textarea {
+            width: 100%; font-size: 15px; border-radius: 6px; padding: 12px; border: 1px solid #4f5b66; background-color: #1f232b; color: #fff; box-sizing: border-box;
+        }
+        /* 賣貨便頁籤 */
+        .order-tab {
+            padding: 12px 22px; cursor: pointer; background: #3a4150; color: #ccc; border-radius: 6px 6px 0 0; margin-right: 6px; transition: 0.2s; white-space: nowrap;
+        }
+        .order-tab.active { background: var(--matcha-green); color: #fff; font-weight: bold; }
+        
+        /* 前台卡片 RWD */
+        .activity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .activity-card { background-color: var(--matcha-dark); border-radius: 12px; padding: 20px; border-top: 6px solid var(--matcha-green); display: flex; flex-direction: column; justify-content: space-between; }
+        .activity-card.expired { border-top: 6px solid #ff7b7b; opacity: 0.75; }
+        .product-list-box { margin-top: 15px; background: #161920; padding: 10px; border-radius: 6px; }
+        .product-item-btn { background: #2b303c; border: 1px solid #444; color: #fff; padding: 10px; width: 100%; text-align: left; margin-bottom: 6px; border-radius: 4px; cursor: pointer; display: flex; justify-content: space-between; }
+        
+        /* 下單彈窗 */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; padding: 15px; z-index: 1000; display: none; }
+        .modal-content { background-color: var(--matcha-dark); border-radius: 12px; width: 100%; max-width: 450px; padding: 20px; position: relative; }
+        
+        .product-row-item { background-color: #20242f; padding: 15px; border-radius: 8px; border-left: 5px solid var(--matcha-green); display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+        @media (max-width: 768px) {
+            .product-row-item { flex-direction: column; align-items: stretch; }
+            .order-tabs { display: flex; overflow-x: auto; padding-bottom: 8px; }
+        }
     </style>
 </head>
 <body>
 
-<div class="tabs-header">
-    <button class="tab-btn active" onclick="setFilter('all', this)">全部</button>
-    <button class="tab-btn" onclick="setFilter('pending', this)">待確認</button>
-    <button class="tab-btn" onclick="setFilter('action', this)">待買家處理</button>
-    <button class="tab-btn" onclick="setFilter('confirmed', this)">已成立</button>
-    <button class="tab-btn" onclick="setFilter('other', this)">其它</button>
-</div>
+    <div style="display: flex; gap: 10px; background: #222630; padding: 8px; border-radius: 8px; margin-bottom: 25px;">
+        <button id="btnGoFront" class="system-toggle-btn active" onclick="switchView('front')">🛒 進入前台 (客人選購)</button>
+        <button id="btnGoAdmin" class="system-toggle-btn" onclick="switchView('admin')">🐾 進入後台 (園長管理)</button>
+    </div>
 
-<div id="admin-main"></div>
+    <div style="text-align: center; margin-bottom: 25px;">
+        <h1 style="color: #a3c9a8; margin: 0; font-size: 26px;">🐾 33日本動物園 🐾</h1>
+    </div>
 
-<script>
-    // --- 園長：請確保此處為您原始專案的正確設定 ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",
-        authDomain: "zoo-62638.firebaseapp.com",
-        databaseURL: "https://zoo-62638-default-rtdb.firebaseio.com",
-        projectId: "zoo-62638",
-        storageBucket: "zoo-62638.firebasestorage.app",
-        messagingSenderId: "33012710753",
-        appId: "1:33012710753:web:318636add1f5ac2f7b5920"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    
-    let allOrders = {};
-    let products = {}; // 商品成本資訊需在此處存取
+    <div id="frontSection">
+        <h2 style="color: #a3c9a8; border-left: 5px solid #a3c9a8; padding-left: 10px; margin-bottom: 15px; font-size: 18px;">🔥 進行中連線場次 (開放登記)</h2>
+        <div id="frontOngoingGrid" class="activity-grid"></div>
 
-    // 讀取訂單與商品資料
-    db.ref('orders').on('value', snap => { allOrders = snap.val() || {}; renderOrders('all'); });
-    db.ref('products').on('value', snap => { products = snap.val() || {}; });
+        <h2 style="color: #ff7b7b; border-left: 5px solid #ff7b7b; padding-left: 10px; margin-top: 30px; margin-bottom: 15px; font-size: 16px;">⏳ 已截止歷史場次</h2>
+        <div id="frontExpiredGrid" class="activity-grid"></div>
+    </div>
 
-    function setFilter(status, btn) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        renderOrders(status);
-    }
+    <div id="adminSection" style="display: none;">
+        <div style="background-color: var(--matcha-dark); padding: 20px; border-radius: 12px; margin-bottom: 30px;">
+            <h3 style="color: #a3c9a8; margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 10px;">✦ 發布新連線活動</h3>
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px;">活動名稱</label>
+                <input type="text" id="actName" placeholder="例：日本動物園限定吊飾連線">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display:block; margin-bottom:5px;">截止日期時間</label>
+                <input type="datetime-local" id="actDeadline">
+            </div>
 
-    function renderOrders(filterStatus) {
-        const container = document.getElementById('admin-main');
-        container.innerHTML = '';
-        Object.entries(allOrders).forEach(([key, order]) => {
-            // 這裡對應頁籤邏輯
-            const profit = calculateProfit(order);
-            container.innerHTML += `
-                <div class="order-card">
-                    <div><b>${order.nick}</b> | 總計: $${order.total}</div>
-                    <div class="profit-view">預估利潤: $${profit}</div>
-                    <button class="status-tag" onclick="rotateStatus('${key}')">物流: ${order.logistics || '待採購'}</button>
-                </div>`;
+            <h4 style="color: #e2f0d9; margin-bottom: 12px; border-left: 4px solid var(--matcha-green); padding-left: 8px;">商品明細管理</h4>
+            <div id="dynamicProductContainer" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
+                <div class="product-row-item">
+                    <div><label style="font-size:12px; color:#aaa;">品名</label><input type="text" class="prod-name" placeholder="商品名稱"></div>
+                    <div><label style="font-size:12px; color:#aaa;">規格 (以逗號隔開)</label><input type="text" class="prod-specs" placeholder="例: 淨漢,圓佑,珉奎"></div>
+                    <div><label style="font-size:12px; color:#aaa;">日幣代購價</label><input type="number" class="prod-jpy-buy" placeholder="日幣" oninput="calculateRowProfit(this)"></div>
+                    <div><label style="font-size:12px; color:#aaa;">匯率</label><input type="number" class="prod-rate" value="0.22" step="0.001" oninput="calculateRowProfit(this)"></div>
+                    <div><label style="font-size:12px; color:#aaa;">台幣售價</label><input type="number" class="prod-twd-price" placeholder="售價" oninput="calculateRowProfit(this)"></div>
+                    <div><label style="font-size:12px; color:#aaa;">備註說明</label><input type="text" class="prod-note" placeholder="限購狀況"></div>
+                    <div class="row-profit-display" style="min-width:100px; font-size:12px; color:var(--accent-gold);">利潤: TWD 0</div>
+                    <button type="button" onclick="removeProductRow(this)" style="background:#e63946; color:white; border:none; padding:10px 15px; border-radius:4px; height:45px;">✕</button>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <button type="button" onclick="addProductRow()" style="padding: 12px 20px; background:#709a77; color:white; border:none; border-radius:6px; font-weight:bold;">＋ 追加一筆商品</button>
+                <button type="button" onclick="saveActivityToFirebase()" style="padding: 12px 25px; background:#4a6fa5; color:white; border:none; border-radius:6px; font-weight:bold;">發布活動場次</button>
+            </div>
+        </div>
+
+        <div style="background-color: var(--matcha-dark); padding: 20px; border-radius: 12px; margin-bottom: 30px;">
+            <h3 style="color: #a3c9a8; margin-top:0; margin-bottom: 15px;">📦 賣貨便風格訂單管理</h3>
+            <div class="order-tabs" style="display: flex; border-bottom: 2px solid #444; margin-bottom: 15px;">
+                <div id="tab-all" class="order-tab active" onclick="switchOrderTab('all')">全部</div>
+                <div id="tab-pending" class="order-tab" onclick="switchOrderTab('pending')">待確認</div>
+                <div id="tab-unshipped" class="order-tab" onclick="switchOrderTab('unshipped')">未出貨</div>
+                <div id="tab-shipped" class="order-tab" onclick="switchOrderTab('shipped')">已出貨</div>
+                <div id="tab-completed" class="order-tab" onclick="switchOrderTab('completed')">已完成</div>
+            </div>
+            <div id="orderListContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
+        </div>
+
+        <div style="background-color: var(--matcha-dark); padding: 20px; border-radius: 12px;">
+            <h3 style="color: #a3c9a8; margin-top:0; margin-bottom: 15px;">📅 後台場次看板 (刪除管理)</h3>
+            <div id="adminActivitiesBox" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        </div>
+    </div>
+
+    <div id="guestOrderModal" class="modal-overlay">
+        <div class="modal-content">
+            <button onclick="closeGuestModal()" style="position: absolute; top:15px; right:15px; background:none; border:none; color:#aaa; font-size:24px;">✕</button>
+            <h3 id="modalProdName" style="color: #a3c9a8; margin-top:0;">品名</h3>
+            <p id="modalProdNote" style="color:#aaa; font-size:13px; margin-bottom:15px;"></p>
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; font-size:14px;">選擇 規格/成員/尺寸：</label>
+                <select id="modalSpecSelect"></select>
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <div style="flex:2;">單價：<span style="color:var(--accent-gold); font-size:20px; font-weight:bold;">TWD <span id="modalPriceDisplay">0</span></span></div>
+                <div style="flex:1;"><label style="font-size:12px;">數量</label><input type="number" id="modalQuantInput" value="1" min="1" style="text-align:center;"></div>
+            </div>
+            <div style="margin-bottom: 15px;"><label style="font-size:14px; display:block; margin-bottom:5px;">買家姓名/暱稱：</label><input type="text" id="modalBuyerName" placeholder="填寫您的名稱"></div>
+            <div style="margin-bottom: 20px;"><label style="font-size:14px; display:block; margin-bottom:5px;">買家備註：</label><input type="text" id="modalBuyerNote" placeholder="選填"></div>
+            <button type="button" onclick="submitGuestOrderFromModal()" style="background:var(--matcha-green); color:white; border:none; width:100%; padding:14px; border-radius:6px; font-weight:bold; font-size:16px;">確認送出登記</button>
+        </div>
+    </div>
+
+    <script>
+        // ✦ 請換上 33日本動物園 的 Firebase 金鑰 ✦
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let globalActivities = [];
+        let cachedOrders = [];
+        let selectedProductData = null;
+        let currentTab = 'all';
+
+        // 前後台切換開關
+        function switchView(view) {
+            if(view === 'front') {
+                document.getElementById('frontSection').style.display = 'block';
+                document.getElementById('adminSection').style.display = 'none';
+                document.getElementById('btnGoFront').classList.add('active');
+                document.getElementById('btnGoAdmin').classList.remove('active');
+            } else {
+                document.getElementById('frontSection').style.display = 'none';
+                document.getElementById('adminSection').style.display = 'block';
+                document.getElementById('btnGoFront').classList.remove('active');
+                document.getElementById('btnGoAdmin').classList.add('active');
+            }
+        }
+
+        // 後台動態加減商品欄位
+        function addProductRow() {
+            const container = document.getElementById('dynamicProductContainer');
+            const div = document.createElement('div');
+            div.className = 'product-row-item';
+            div.innerHTML = `
+                <div><input type="text" class="prod-name" placeholder="商品名稱"></div>
+                <div><input type="text" class="prod-specs" placeholder="例: 淨漢,圓佑"></div>
+                <div><input type="number" class="prod-jpy-buy" placeholder="日幣" oninput="calculateRowProfit(this)"></div>
+                <div><input type="number" class="prod-rate" value="0.22" step="0.001" oninput="calculateRowProfit(this)"></div>
+                <div><input type="number" class="prod-twd-price" placeholder="售價" oninput="calculateRowProfit(this)"></div>
+                <div><input type="text" class="prod-note" placeholder="限購"></div>
+                <div class="row-profit-display" style="min-width:100px; font-size:12px; color:var(--accent-gold);">利潤: TWD 0</div>
+                <button type="button" onclick="removeProductRow(this)" style="background:#e63946; color:white; border:none; padding:10px 15px; border-radius:4px;">✕</button>
+            `;
+            container.appendChild(div);
+        }
+        function removeProductRow(btn) { if(document.querySelectorAll('.product-row-item').length > 1) btn.parentElement.remove(); }
+        
+        function calculateRowProfit(input) {
+            const row = input.parentElement.parentElement;
+            const jpy = parseFloat(row.querySelector('.prod-jpy-buy').value) || 0;
+            const rate = parseFloat(row.querySelector('.prod-rate').value) || 0;
+            const twd = parseFloat(row.querySelector('.prod-twd-price').value) || 0;
+            const cost = Math.round(jpy * rate);
+            row.querySelector('.row-profit-display').innerHTML = `利潤: TWD ${twd - cost}<br><span style="color:#aaa; font-size:10px;">成本:${cost}</span>`;
+        }
+
+        // 儲存到資料庫
+        function saveActivityToFirebase() {
+            const name = document.getElementById('actName').value.trim();
+            const deadline = document.getElementById('actDeadline').value;
+            if(!name || !deadline) { alert('請填寫活動名稱與時間！'); return; }
+
+            const products = [];
+            document.querySelectorAll('.product-row-item').forEach(row => {
+                products.push({
+                    name: row.querySelector('.prod-name').value.trim(),
+                    specs: row.querySelector('.prod-specs').value.trim(),
+                    jpyBuy: row.querySelector('.prod-jpy-buy').value,
+                    rate: row.querySelector('.prod-rate').value,
+                    twdPrice: row.querySelector('.prod-twd-price').value,
+                    note: row.querySelector('.prod-note').value.trim()
+                });
+            });
+
+            db.collection("activities").add({ name, deadline, products, createdAt: new Date().toISOString() })
+            .then(() => { alert("活動發布成功！"); location.reload(); });
+        }
+
+        // 監聽並自動「分流下沉」場次
+        db.collection("activities").orderBy("deadline", "desc").onSnapshot(snapshot => {
+            const ongoingGrid = document.getElementById('frontOngoingGrid');
+            const expiredGrid = document.getElementById('frontExpiredGrid');
+            const adminBox = document.getElementById('adminActivitiesBox');
+            ongoingGrid.innerHTML = ''; expiredGrid.innerHTML = ''; adminBox.innerHTML = '';
+            globalActivities = [];
+
+            const now = new Date();
+            snapshot.forEach(doc => {
+                const act = { id: doc.id, ...doc.data() };
+                globalActivities.push(act);
+                const isExpired = new Date(act.deadline) < now;
+
+                // 渲染後台看板
+                adminBox.insertAdjacentHTML('beforeend', `
+                    <div style="background:#20242f; padding:10px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
+                        <span><strong>${act.name}</strong> (${isExpired?'已截止':'進行中'})</span>
+                        <button onclick="db.collection('activities').doc('${doc.id}').delete()" style="background:#e63946; color:white; border:none; padding:5px 10px; border-radius:4px;">刪除場次</button>
+                    </div>
+                `);
+
+                // 建立前台商品選單按鈕
+                let prodHtml = '';
+                if(act.products && act.products.length > 0) {
+                    act.products.forEach((p, idx) => {
+                        prodHtml += `
+                            <button class="product-item-btn" ${isExpired?'disabled':''} onclick="openOrderFlow('${act.id}', ${idx})">
+                                <span>🏷️ ${p.name}</span><span style="color:var(--accent-gold);">TWD ${p.twdPrice}</span>
+                            </button>
+                        `;
+                    });
+                } else { prodHtml = '<div style="color:#666; font-size:12px;">暫無商品</div>'; }
+
+                const cardHtml = `
+                    <div class="activity-card ${isExpired?'expired':''}">
+                        <div>
+                            <h3 style="margin:0 0 10px 0; color:#a3c9a8;">${act.name}</h3>
+                            <div style="font-size:13px; color:#aaa; margin-bottom:10px;">⏰ 截止: ${act.deadline.replace('T',' ')}</div>
+                            <div class="product-list-box">${prodHtml}</div>
+                        </div>
+                    </div>
+                `;
+                if(isExpired) expiredGrid.insertAdjacentHTML('beforeend', cardHtml);
+                else ongoingGrid.insertAdjacentHTML('beforeend', cardHtml);
+            });
         });
-    }
 
-    // 核心利潤算法：售價 - (購入價 * 匯率)
-    function calculateProfit(order) {
-        let profit = 0;
-        if (!order.items) return 0;
-        order.items.forEach(it => {
-            const p = products[it.pid] || {};
-            // 假設 buy_price_jpy 是購入成本，rate 是該場次匯率
-            const costTWD = (p.buy_price_jpy || 0) * (p.rate || 0.23); 
-            profit += (it.price - costTWD);
-        });
-        return Math.floor(profit);
-    }
+        // 喚起下單並切分多規格
+        function openOrderFlow(actId, idx) {
+            const act = globalActivities.find(a => a.id === actId);
+            const product = act.products[idx];
+            selectedProductData = product;
 
-    // 物流循環
-    const states = ['待採購', '已採購', '日本寄出', '抵台清關', '已出貨'];
-    function rotateStatus(key) {
-        let o = allOrders[key];
-        let current = o.logistics || states[0];
-        let next = states[(states.indexOf(current) + 1) % states.length];
-        db.ref(`orders/${key}`).update({ logistics: next });
-    }
-</script>
+            document.getElementById('modalProdName').innerText = product.name;
+            document.getElementById('modalProdNote').innerText = product.note || '現場連線品目';
+            document.getElementById('modalPriceDisplay').innerText = product.twdPrice;
+            
+            const select = document.getElementById('modalSpecSelect');
+            select.innerHTML = '';
+
+            if(product.specs && product.specs.trim() !== '') {
+                product.specs.split(/[,，]/).forEach(s => {
+                    if(s.trim()!=='') {
+                        const opt = document.createElement('option');
+                        opt.value = s.trim(); opt.innerText = s.trim();
+                        select.appendChild(opt);
+                    }
+                });
+            } else {
+                select.innerHTML = '<option value="單一規格">預設款 (單一規格)</option>';
+            }
+            document.getElementById('guestOrderModal').style.display = 'flex';
+        }
+        function closeGuestModal() { document.getElementById('guestOrderModal').style.display = 'none'; }
+
+        // 送出訂單至 Firebase
+        function submitGuestOrderFromModal() {
+            const name = document.getElementById('modalBuyerName').value.trim();
+            const spec = document.getElementById('modalSpecSelect').value;
+            const qty = parseInt(document.getElementById('modalQuantInput').value) || 1;
+            const note = document.getElementById('modalBuyerNote').value.trim();
+
+            if(!name) { alert("請填寫買家姓名！"); return; }
+
+            db.collection("orders").add({
+                buyerName: name, prodName: selectedProductData.name, selectedSpec: spec, quantity: qty,
+                totalPrice: selectedProductData.twdPrice * qty, status: "pending", note: note, createdAt: new Date().toISOString()
+            }).then(() => { alert("🎉 登記成功！已送往 33日本動物園 後台！"); closeGuestModal(); });
+        }
+
+        // 監聽並依賣貨便頁籤過濾訂單
+        function switchOrderTab(tab) { currentTab = tab; document.querySelectorAll('.order-tab').forEach(t=>t.classList.remove('active')); document.getElementById(`tab-${tab}`).classList.add('active'); renderOrders(); }
+        db.collection("orders").orderBy("createdAt", "desc").onSnapshot(snapshot => { cachedOrders = []; snapshot.forEach(doc => cachedOrders.push({id:doc.id, ...doc.data()})); renderOrders(); });
+
+        function renderOrders() {
+            const container = document.getElementById('orderListContainer'); container.innerHTML = '';
+            const filtered = cachedOrders.filter(o => currentTab === 'all' || o.status === currentTab);
+            if(filtered.length === 0) { container.innerHTML = '<div style="color:#aaa; text-align:center; padding:15px;">暫無訂單</div>'; return; }
+
+            filtered.forEach(order => {
+                const div = document.createElement('div');
+                div.style = "background: #20242f; padding: 15px; border-radius: 8px; border: 1px solid #444;";
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:between; margin-bottom:5px; border-bottom:1px solid #333; padding-bottom:5px;">
+                        <span>買家: <strong>${order.buyerName}</strong></span>
+                        <span style="color:var(--accent-gold); margin-left:auto;">${order.status==='pending'?'待確認':order.status==='unshipped'?'未出貨':order.status==='shipped'?'已出貨':'已完成'}</span>
+                    </div>
+                    <div style="font-size:14px; margin-bottom:8px;">品項: ${order.prodName} (${order.selectedSpec}) x ${order.quantity}件<br>總計: <strong>TWD ${order.totalPrice}</strong></div>
+                    <div><textarea class="note-edit" style="height:45px; background:#161920; margin-bottom:5px;">${order.note || ''}</textarea></div>
+                    <div style="display:flex; gap:5px;">
+                        <button onclick="db.collection('orders').doc('${order.id}').update({note: this.parentElement.parentElement.querySelector('.note-edit').value}).then(()=>alert('備註已變更'))" style="background:#709a77; border:none; color:white; padding:5px 10px; border-radius:4px;">儲存備註</button>
+                        <select onchange="db.collection('orders').doc('${order.id}').update({status: this.value})" style="background:#3a4150; color:white; width:auto; padding:5px;">
+                            <option value="pending" ${order.status==='pending'?'selected':''}>待確認</option>
+                            <option value="unshipped" ${order.status==='unshipped'?'selected':''}>未出貨</option>
+                            <option value="shipped" ${order.status==='shipped'?'selected':''}>已出貨</option>
+                            <option value="completed" ${order.status==='completed'?'selected':''}>已完成</option>
+                        </select>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+    </script>
 </body>
 </html>
