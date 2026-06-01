@@ -232,7 +232,7 @@
       
       <div class="p-4 border-t border-slate-100 bg-[#F8FAF8] flex justify-end space-x-2 rounded-b-2xl">
         <button onclick="closeEventModal()" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-5 text-xs font-medium">取消</button>
-        <button onclick="saveEventAndProducts()" class="px-5 py-2 bg-[#2D8A5E] hover:bg-[#226B46] text-white font-bold rounded-lg text-xs shadow-md"><i class="fa-floppy-disk fa-solid mr-1"></i> 儲儲並發布此場次</button>
+        <button onclick="saveEventAndProducts()" class="px-5 py-2 bg-[#2D8A5E] hover:bg-[#226B46] text-white font-bold rounded-lg text-xs shadow-md"><i class="fa-floppy-disk fa-solid mr-1"></i> 儲存並發布此場次</button>
       </div>
     </div>
   </div>
@@ -394,7 +394,7 @@
         if(p.variants && Object.keys(p.variants).length > 0) {
           Object.keys(p.variants).forEach(specKey => {
             const v = p.variants[specKey];
-            const stockNum = (v.stock !== undefined && v.stock !== "") ? parseInt(v.stock) : "無限";
+            const stockNum = (v && v.stock !== undefined && v.stock !== "") ? parseInt(v.stock) : "無限";
             
             if (stockNum === 0) {
               optionsHtml += `<option value="${escapeHtml(specKey)}">${escapeHtml(specKey)} (已斷貨/庫存: 0)</option>`;
@@ -441,7 +441,7 @@
       
       if(p.variants && p.variants[selectedSpec]) {
         const vObj = p.variants[selectedSpec];
-        if(vObj.stock !== undefined && vObj.stock !== "" && parseInt(vObj.stock) <= 0) {
+        if(vObj && vObj.stock !== undefined && vObj.stock !== "" && parseInt(vObj.stock) <= 0) {
           alert(`⚠️ 抱歉！規格【${selectedSpec}】目前已售罄斷貨，無法加入購物車喔！`);
           return;
         }
@@ -503,7 +503,7 @@
         const originProd = allProducts.find(p => String(p.id) === String(item.pId));
         if(originProd && originProd.variants && originProd.variants[item.spec]) {
           const vObj = originProd.variants[item.spec];
-          if(vObj.stock !== undefined && vObj.stock !== "") {
+          if(vObj && vObj.stock !== undefined && vObj.stock !== "") {
             const remainStock = parseInt(vObj.stock) - item.qty;
             if(remainStock < 0) {
               alert(`抱歉！商品【${item.name} - ${item.spec}】後台準備庫存不足，已被搶先下單完售。`);
@@ -529,7 +529,7 @@
       updates[`orders/${oKey}`] = newOrder;
 
       db.ref().update(updates, (err) => {
-        if(err) { alert("下單失敗，請重試。"); }
+        if(err) { alert("下單失敗：" + err.message); }
         else {
           alert(`🎉 連線下單成功！金額總計：$${totalAmount} 元。`);
           cart = [];
@@ -637,6 +637,7 @@
       db.ref().update(updates);
     }
 
+    // 🌟 超級無敵還原防當機核心
     function openEventModal(editTargetEventName = "") {
       const modal = document.getElementById('event-modal');
       const tbody = document.getElementById('modal-products-tbody');
@@ -653,22 +654,29 @@
           let specString = "";
           let stockString = "";
           
-          if(p.variants && Object.keys(p.variants).length > 0) {
-            // 如果只有唯一的「預設規格」，還原至輸入框時直接留空，方便園長觀看與操作
-            const keys = Object.keys(p.variants);
-            if(keys.length === 1 && keys[0] === "預設規格") {
-              specString = "";
-              const st = p.variants["預設規格"].stock;
-              stockString = (st === undefined || st === null || st === "") ? "不限" : st;
+          // 🛡️ 這裡加上極厚 try...catch，就算資料庫舊格式是壞的也絕不卡死
+          try {
+            if(p.variants && Object.keys(p.variants).length > 0) {
+              const keys = Object.keys(p.variants);
+              if(keys.length === 1 && (keys[0] === "預設規格" || keys[0] === "")) {
+                specString = "";
+                const st = p.variants[keys[0]] ? p.variants[keys[0]].stock : "";
+                stockString = (st === undefined || st === null || st === "") ? "不限" : st;
+              } else {
+                specString = keys.join(', ');
+                stockString = keys.map(k => {
+                  if(!p.variants[k]) return "不限";
+                  const st = p.variants[k].stock;
+                  if (st === undefined || st === null || st === "") return "不限";
+                  return st;
+                }).join(', ');
+              }
             } else {
-              specString = keys.join(', ');
-              stockString = keys.map(k => {
-                const st = p.variants[k].stock;
-                if (st === undefined || st === null || st === "") return "不限";
-                return st;
-              }).join(', ');
+              specString = "";
+              stockString = "不限";
             }
-          } else {
+          } catch(e) {
+            console.error("解析舊格式時發生相容性錯誤，自動重設：", e);
             specString = "";
             stockString = "不限";
           }
@@ -698,7 +706,7 @@
         <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input font-bold p-name" value="${escapeHtml(data?data.n:'')}" placeholder="品名(必填)"></td>
         <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input p-spec text-[#557A55] font-bold text-sm" value="${escapeHtml(data?data.s:'')}" placeholder="例: m, L"></td>
         <td class="p-2"><input type="number" oninput="calcRowTwdPrice('${rowId}')" class="w-full px-2 py-1 rounded sj-input text-right font-mono p-cost" value="${data?data.jpy_cost:''}" placeholder="0"></td>
-        <td class="p-2"><input type="number" oninput="calcRowTwmPrice('${rowId}')" class="w-full px-2 py-1 rounded sj-input text-right font-mono p-fee" value="${data?data.jpy_fee:''}" placeholder="0"></td>
+        <td class="p-2"><input type="number" oninput="calcRowTwdPrice('${rowId}')" class="w-full px-2 py-1 rounded sj-input text-right font-mono p-fee" value="${data?data.jpy_fee:''}" placeholder="0"></td>
         <td class="p-2"><input type="number" class="w-full px-2 py-1 rounded bg-[#FCFDFB] text-[#C87A28] font-bold border border-slate-300 text-right p-price" value="${data?data.p:''}" placeholder="賣價"></td>
         <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input border border-slate-300 text-center p-stock font-mono text-[#2D8A5E] font-bold text-sm" value="${escapeHtml(data?data.stock:'')}" placeholder="例: 6, 0"></td>
         <td class="p-2 text-center"><button onclick="document.getElementById('${rowId}').remove()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></td>
@@ -720,90 +728,94 @@
       rows.forEach(row => calcRowTwdPrice(row.id));
     }
 
-    // 🔥 核心修復：極致完美的防呆一頁流儲存解析邏輯
+    // 🌟 重新鍛造：百分之百防卡死、相容任何稀奇古怪填法儲存核心
     function saveEventAndProducts() {
-      const eventName = document.getElementById('modal-event-name').value.trim();
-      const rate = parseFloat(document.getElementById('modal-event-rate').value) || 0.22;
-      if(!eventName) { alert("請輸入活動場次名稱！"); return; }
+      try {
+        const eventName = document.getElementById('modal-event-name').value.trim();
+        const rate = parseFloat(document.getElementById('modal-event-rate').value) || 0.22;
+        if(!eventName) { alert("請輸入活動場次名稱！"); return; }
 
-      const rows = document.querySelectorAll('#modal-products-tbody > tr');
-      const finalProducts = [];
+        const rows = document.querySelectorAll('#modal-products-tbody > tr');
+        const finalProducts = [];
 
-      for(let row of rows) {
-        const n = row.querySelector('.p-name').value.trim();
-        if(!n) continue; 
+        for(let row of rows) {
+          const n = row.querySelector('.p-name').value.trim();
+          if(!n) continue; 
 
-        const img = row.querySelector('.p-img').value.trim() || "";
-        const specRaw = row.querySelector('.p-spec').value.trim();
-        const jpy_cost = parseFloat(row.querySelector('.p-cost').value) || 0;
-        const jpy_fee = parseFloat(row.querySelector('.p-fee').value) || 0;
-        const p = parseInt(row.querySelector('.p-price').value) || 0;
-        const stockRaw = row.querySelector('.p-stock').value.trim();
+          const img = row.querySelector('.p-img').value.trim() || "";
+          const specRaw = row.querySelector('.p-spec').value.trim();
+          const jpy_cost = parseFloat(row.querySelector('.p-cost').value) || 0;
+          const jpy_fee = parseFloat(row.querySelector('.p-fee').value) || 0;
+          const p = parseInt(row.querySelector('.p-price').value) || 0;
+          const stockRaw = row.querySelector('.p-stock').value.trim();
 
-        const variantsMap = {};
-        
-        // 1. 解析規格陣列 (如果留白，就當作是單一無規格商品)
-        let specArray = specRaw ? specRaw.split(/[,，]+/).map(s => s.trim()).filter(Boolean) : [];
-        if(specArray.length === 0) {
-          specArray = ["預設規格"];
-        }
-
-        // 2. 解析庫存陣列
-        let stockArray = stockRaw ? stockRaw.split(/[,，]+/).map(s => s.trim()).filter(Boolean) : [];
-
-        // 3. 完美對齊規格與庫存
-        specArray.forEach((specName, index) => {
-          let currentStockVal = ""; // 預設是不限庫存
+          const variantsMap = {};
           
-          if (stockArray.length > 0) {
-            // 如果庫存只有填一個（例如手帕只填一個 2），但規格也只有一個，那就直接配對
-            // 如果庫存有多個，就依照對應的位置抓取
-            const matchedStockStr = (stockArray.length === 1) ? stockArray[0] : stockArray[index];
-            
-            if (matchedStockStr !== undefined && matchedStockStr !== "" && matchedStockStr !== "不限") {
-              const parsed = parseInt(matchedStockStr);
-              currentStockVal = isNaN(parsed) ? 0 : parsed; 
-            }
+          // 1. 切割規格（相容全形、半形逗號）
+          let specArray = specRaw ? specRaw.split(/[,，]+/).map(s => s.trim()).filter(Boolean) : [];
+          if(specArray.length === 0) {
+            specArray = ["預設規格"]; // 手帕沒規格，直接填預設
           }
 
-          const safeSpecKey = specName.trim();
-          if (safeSpecKey) {
+          // 2. 切割庫存
+          let stockArray = stockRaw ? stockRaw.split(/[,，]+/).map(s => s.trim()).filter(Boolean) : [];
+
+          // 3. 極致相容配對
+          specArray.forEach((specName, index) => {
+            let currentStockVal = ""; // 預設是不限庫存
+            
+            if (stockArray.length > 0) {
+              // 核心防呆：如果庫存只有填一個（手帕的 2），直接抓第一個
+              const matchedStockStr = (stockArray.length === 1) ? stockArray[0] : stockArray[index];
+              
+              if (matchedStockStr !== undefined && matchedStockStr !== "" && matchedStockStr !== "不限" && matchedStockStr !== "無限") {
+                const parsed = parseInt(matchedStockStr);
+                currentStockVal = isNaN(parsed) ? "" : parsed; 
+              }
+            }
+
+            const safeSpecKey = specName.trim() || "預設規格";
             variantsMap[safeSpecKey] = {
               stock: currentStockVal
             };
+          });
+
+          finalProducts.push({
+            e: eventName, n: n, img: img, jpy_cost: jpy_cost, jpy_fee: jpy_fee, p: p, variants: variantsMap
+          });
+        }
+
+        const updates = {};
+        
+        // 清理該場次舊資料
+        allProducts.forEach(oldP => { 
+          if(oldP.e && oldP.e.trim() === eventName) {
+            updates[`products/${oldP.id}`] = null; 
+          } 
+        });
+        
+        // 寫入全新格式
+        finalProducts.forEach(newP => {
+          const newK = db.ref('products').push().key;
+          updates[`products/${newK}`] = newP;
+        });
+
+        const isCurrentClosed = (eventStatusMap[eventName] && eventStatusMap[eventName].isClosed) ? eventStatusMap[eventName].isClosed : false;
+        updates[`event_status/${eventName}`] = { isClosed: isCurrentClosed, rate: rate };
+
+        // 執行寫入
+        db.ref().update(updates, (err) => {
+          if(err) { 
+            alert("Firebase 拒絕寫入原因：" + err.message); 
+          } else { 
+            alert(`✨ 報告園長！這次連同沒有規格的【手帕】都一起完美儲存成功了！`); 
+            closeEventModal(); 
           }
         });
 
-        finalProducts.push({
-          e: eventName, n: n, img: img, jpy_cost: jpy_cost, jpy_fee: jpy_fee, p: p, variants: variantsMap
-        });
+      } catch (globalError) {
+        alert("🚨 系統運行發生致命錯誤，請截圖給工程師：" + globalError.message);
       }
-
-      const updates = {};
-      
-      allProducts.forEach(oldP => { 
-        if(oldP.e && oldP.e.trim() === eventName) {
-          updates[`products/${oldP.id}`] = null; 
-        } 
-      });
-      
-      finalProducts.forEach(newP => {
-        const newK = db.ref('products').push().key;
-        updates[`products/${newK}`] = newP;
-      });
-
-      const isCurrentClosed = (eventStatusMap[eventName] && eventStatusMap[eventName].isClosed) ? eventStatusMap[eventName].isClosed : false;
-      updates[`event_status/${eventName}`] = { isClosed: isCurrentClosed, rate: rate };
-
-      db.ref().update(updates, (err) => {
-        if(err) { 
-          console.error(err);
-          alert("儲存失敗！"); 
-        } else { 
-          alert(`✨ 報告園長！這次連同沒有規格的【手帕】都一起完美儲存成功了！`); 
-          closeEventModal(); 
-        }
-      });
     }
 
     function renderAdminOrders() {
