@@ -5,168 +5,176 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>33日本動物園</title>
   
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
+  <!-- Firebase App & Database (Compat v9) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
   <style>
-    /* 完美復刻 SJ PROXY 深色極致奢華科技感配色 */
+    /* 🍵 抹茶牛奶日系清爽色調調色盤 */
     body {
-      background-color: #0B0E14;
-      color: #E2E8F0;
+      background-color: #F4F7F4; /* 淡淡的清爽米綠底色 */
+      color: #334155; /* 溫柔的深灰字，拒絕死黑 */
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
     .sj-card {
-      background-color: #161B26;
-      border: 1px solid #232D3F;
+      background-color: #FFFFFF; /* 純白牛奶卡片 */
+      border: 1px solid #E2E8F0;
       border-radius: 0.75rem;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 4px 15px rgba(143, 168, 143, 0.1);
     }
     .sj-input {
-      background-color: #0F131A;
-      border: 1px solid #2D3748;
-      color: #F7FAFC;
+      background-color: #FAFAFA;
+      border: 1px solid #CBD5E1;
+      color: #1E293B;
     }
     .sj-input:focus {
-      border-color: #4C51BF;
+      border-color: #557A55; /* 抹茶綠焦點線 */
       outline: none;
+      box-shadow: 0 0 0 3px rgba(85, 122, 85, 0.15);
     }
+    /* 抹茶主色調按鈕 */
     .btn-primary {
-      background-color: #3182CE;
+      background-color: #557A55; /* 經典抹茶綠 */
       color: white;
       transition: all 0.2s;
     }
-    .btn-primary:hover { background-color: #4299E1; }
-    .btn-accent {
-      background-color: #2B6CB0;
-      color: white;
+    .btn-primary:hover { 
+      background-color: #436143; 
     }
-    .btn-accent:hover { background-color: #2C5282; }
     
-    /* 隱藏原生數字輸入框的上下箭頭 */
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
       -webkit-appearance: none; margin: 0;
     }
-    /* 客製化捲軸 */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #0B0E14; }
-    ::-webkit-scrollbar-thumb { background: #2D3748; border-radius: 3px; }
+    ::-webkit-scrollbar-track { background: #F4F7F4; }
+    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <header class="border-b border-slate-800 bg-[#0F131A] sticky top-0 z-40">
+  <!-- 🟢 頂部導覽列 (溫柔的乳白牛奶色) -->
+  <header class="border-b border-slate-200 bg-white/90 backdrop-blur-sm sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
       <div class="flex items-center space-x-3 cursor-pointer" onclick="switchView('lobby')">
-        <span class="text-xl text-blue-400">✨</span>
-        <h1 class="text-lg font-bold tracking-wider text-slate-100">33 日本動物園連線 PRO</h1>
+        <span class="text-xl">🍵</span>
+        <h1 class="text-lg font-bold tracking-wider text-[#3D523D]">33 日本動物園連線 PRO</h1>
       </div>
       <nav class="flex space-x-1">
-        <button onclick="switchView('lobby')" class="px-3 py-1.5 rounded-lg text-sm text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-cubes mr-1"></i> 活動場次</button>
-        <button onclick="switchView('orders-query')" class="px-3 py-1.5 rounded-lg text-sm text-slate-300 hover:bg-slate-800 transition"><i class="fa-solid fa-magnifying-glass mr-1"></i> 訂單查詢</button>
-        <button onclick="switchView('admin')" class="px-3 py-1.5 rounded-lg text-sm bg-blue-900/50 text-blue-300 border border-blue-700/50 hover:bg-blue-800 transition"><i class="fa-solid fa-user-shield mr-1"></i> 管理後台</button>
+        <button onclick="switchView('lobby')" class="px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-100 transition"><i class="fa-solid fa-cubes mr-1 text-[#557A55]"></i> 活動場次</button>
+        <button onclick="switchView('orders-query')" class="px-3 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-100 transition"><i class="fa-solid fa-magnifying-glass mr-1 text-[#557A55]"></i> 訂單查詢</button>
+        <button onclick="switchView('admin')" class="px-3 py-1.5 rounded-lg text-sm bg-[#EEF2EE] text-[#436143] border border-[#D0DDD0] hover:bg-[#DCE6DC] transition"><i class="fa-solid fa-user-shield mr-1"></i> 管理後台</button>
       </nav>
     </div>
   </header>
 
+  <!-- 🟡 主要核心內容抽換區 -->
   <main class="flex-grow max-w-7xl w-full mx-auto p-4">
     
+    <!-- ================= 1. 前台連線大廳 (lobby) ================= -->
     <section id="view-lobby" class="space-y-6">
-      <div>
-        <div id="active-events-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-      </div>
-
-      <div class="pt-6 border-t border-slate-800">
-        <div class="text-xs text-slate-500 uppercase font-bold tracking-wider text-center mb-4">--- 已截止活動 ---</div>
-        <div id="closed-events-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4 opacity-50"></div>
+      <div id="active-events-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+      <div class="pt-6 border-t border-slate-200">
+        <div class="text-xs text-slate-400 uppercase font-bold tracking-wider text-center mb-4">--- 已截止活動 ---</div>
+        <div id="closed-events-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4 opacity-60"></div>
       </div>
     </section>
 
+    <!-- ================= 2. 前台商品選購頁 (shop) ================= -->
     <section id="view-shop" class="hidden space-y-4">
-      <div class="flex items-center justify-between bg-[#161B26] p-4 rounded-xl border border-slate-800">
-        <button onclick="switchView('lobby')" class="text-slate-400 hover:text-slate-200 text-sm"><i class="fa-solid fa-arrow-left mr-1"></i> 返回場次大廳</button>
-        <h2 id="current-shop-title" class="text-base font-bold text-slate-200 text-center"></h2>
+      <div class="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <button onclick="switchView('lobby')" class="text-slate-500 hover:text-slate-700 text-sm"><i class="fa-solid fa-arrow-left mr-1"></i> 返回場次大廳</button>
+        <h2 id="current-shop-title" class="text-base font-bold text-slate-700 text-center"></h2>
         <div class="w-20"></div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 space-y-4">
+        <!-- 左側商品展示 -->
+        <div class="lg:col-span-2">
           <div id="shop-products-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
         </div>
+        <!-- 右側購物車 -->
         <div class="lg:col-span-1">
-          <div class="sj-card p-4 sticky top-20 space-y-4">
-            <h3 class="font-bold text-sm border-b border-slate-800 pb-2 text-slate-300 flex justify-between items-center">
-              <span>🛒 我的連線代購購物車</span>
-              <button onclick="clearCart()" class="text-xs text-slate-500 hover:text-red-400">清空</button>
+          <div class="sj-card p-4 sticky top-20 space-y-4 border-t-4 border-t-[#557A55]">
+            <h3 class="font-bold text-sm border-b border-slate-100 pb-2 text-slate-700 flex justify-between items-center">
+              <span class="text-[#3D523D]">🛒 我的連線代購購物車</span>
+              <button onclick="clearCart()" class="text-xs text-slate-400 hover:text-red-500">清空</button>
             </h3>
             <div id="cart-items" class="space-y-2 max-h-60 overflow-y-auto"></div>
-            <div class="border-t border-slate-800 pt-3 space-y-2">
-              <div class="flex justify-between font-bold text-base text-slate-200">
+            <div class="border-t border-slate-100 pt-3 space-y-2">
+              <div class="flex justify-between font-bold text-base text-slate-700">
                 <span>總計金額:</span>
-                <span id="cart-total" class="text-yellow-400">$0</span>
+                <span id="cart-total" class="text-[#C87A28]">$0</span>
               </div>
               <div class="space-y-2 text-xs">
                 <input type="text" id="buyer-line-id" placeholder="請輸入您的 LINE 暱稱 (對帳用)" class="w-full px-3 py-2 rounded-lg sj-input">
-                <textarea id="buyer-note" placeholder="有任何規格備註或備註需求請寫在這邊..." class="w-full px-3 py-2 rounded-lg sj-input h-16"></textarea>
+                <textarea id="buyer-note" placeholder="有任何規格或特殊需求請寫在這裡..." class="w-full px-3 py-2 rounded-lg sj-input h-16"></textarea>
               </div>
-              <button onclick="submitOrder()" class="w-full btn-primary py-2.5 rounded-lg text-sm font-bold shadow-lg tracking-wide"><i class="fa-solid fa-paper-plane mr-1"></i> 提交連線訂單</button>
+              <button onclick="submitOrder()" class="w-full btn-primary py-2.5 rounded-lg text-sm font-bold shadow-md tracking-wide"><i class="fa-solid fa-paper-plane mr-1"></i> 提交連線訂單</button>
             </div>
           </div>
         </div>
       </div>
     </section>
 
+    <!-- ================= 3. 買家自行查單 (orders-query) ================= -->
     <section id="view-orders-query" class="hidden space-y-4 max-w-2xl mx-auto">
       <div class="sj-card p-6 space-y-4">
-        <h2 class="text-base font-bold text-slate-300"><i class="fa-solid fa-magnifying-glass mr-1"></i> 買家個人訂單查詢</h2>
+        <h2 class="text-base font-bold text-slate-700"><i class="fa-solid fa-magnifying-glass mr-1 text-[#557A55]"></i> 買家個人訂單查詢</h2>
         <div class="flex space-x-2">
           <input type="text" id="query-line-input" placeholder="請輸入您下單時填寫的 LINE 暱稱" class="flex-grow px-3 py-2 rounded-lg sj-input text-sm">
-          <button onclick="queryBuyerOrders()" class="btn-primary px-6 py-2 rounded-lg font-bold text-sm">搜尋</button>
+          <button onclick="queryBuyerOrders()" class="btn-primary px-6 py-2 rounded-lg font-bold text-sm shadow">搜尋</button>
         </div>
         <div id="query-results" class="space-y-3 pt-2"></div>
       </div>
     </section>
 
+    <!-- ================= 4. 園長工作後台 (admin) ================= -->
     <section id="view-admin" class="hidden space-y-6">
+      <!-- 頂部數據看板 (牛奶純白底色 + 精緻小圖示) -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="sj-card p-4 flex items-center space-x-4 bg-slate-900/40">
-          <div class="p-3 bg-blue-900/50 text-blue-400 border border-blue-800 rounded-xl text-lg"><i class="fa-solid fa-wallet"></i></div>
+        <div class="sj-card p-4 flex items-center space-x-4">
+          <div class="p-3 bg-[#EEF2EE] text-[#557A55] rounded-xl text-lg"><i class="fa-solid fa-wallet"></i></div>
           <div>
-            <p class="text-[11px] text-slate-500 font-medium">總收取台幣金額</p>
-            <h4 id="stat-total-revenue" class="text-xl font-bold text-slate-200">$0</h4>
+            <p class="text-[11px] text-slate-400 font-medium">總收取台幣金額</p>
+            <h4 id="stat-total-revenue" class="text-xl font-bold text-slate-700">$0</h4>
           </div>
         </div>
-        <div class="sj-card p-4 flex items-center space-x-4 bg-slate-900/40">
-          <div class="p-3 bg-emerald-900/50 text-emerald-400 border border-emerald-800 rounded-xl text-lg"><i class="fa-solid fa-sack-dollar"></i></div>
+        <div class="sj-card p-4 flex items-center space-x-4">
+          <div class="p-3 bg-[#FDF6ED] text-[#C87A28] rounded-xl text-lg"><i class="fa-solid fa-sack-dollar"></i></div>
           <div>
-            <p class="text-[11px] text-slate-500 font-medium">扣除代購日幣後 園長台幣純利</p>
-            <h4 id="stat-total-profit" class="text-xl font-bold text-emerald-400">$0</h4>
+            <p class="text-[11px] text-slate-400 font-medium">園長估計利潤 (台幣)</p>
+            <h4 id="stat-total-profit" class="text-xl font-bold text-[#C87A28]">$0</h4>
           </div>
         </div>
-        <div class="sj-card p-4 flex items-center space-x-4 bg-slate-900/40">
-          <div class="p-3 bg-purple-900/50 text-purple-400 border border-purple-800 rounded-xl text-lg"><i class="fa-solid fa-receipt"></i></div>
+        <div class="sj-card p-4 flex items-center space-x-4">
+          <div class="p-3 bg-slate-100 text-slate-500 rounded-xl text-lg"><i class="fa-solid fa-receipt"></i></div>
           <div>
-            <p class="text-[11px] text-slate-500 font-medium">累積訂單總筆數</p>
-            <h4 id="stat-total-orders" class="text-xl font-bold text-slate-200">0 筆</h4>
+            <p class="text-[11px] text-slate-400 font-medium">累積訂單總筆數</p>
+            <h4 id="stat-total-orders" class="text-xl font-bold text-slate-700">0 筆</h4>
           </div>
         </div>
       </div>
 
-      <div class="border-b border-slate-800 flex space-x-4 text-sm">
-        <button onclick="switchAdminTab('events')" id="tab-btn-events" class="pb-2 border-b-2 border-blue-500 font-bold text-blue-400 px-2">📅 活動場次與商品維護</button>
-        <button onclick="switchAdminTab('orders')" id="tab-btn-orders" class="pb-2 border-b-2 border-transparent text-slate-500 hover:text-slate-300 px-2">📋 訂單記錄與對帳助理</button>
+      <!-- 後台頁籤控制 -->
+      <div class="border-b border-slate-200 flex space-x-4 text-sm">
+        <button onclick="switchAdminTab('events')" id="tab-btn-events" class="pb-2 border-b-2 border-[#557A55] font-bold text-[#557A55] px-2">📅 活動場次與商品維護</button>
+        <button onclick="switchAdminTab('orders')" id="tab-btn-orders" class="pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-600 px-2">📋 訂單記錄與對帳助理</button>
       </div>
 
+      <!-- 子分頁：場次控制清單 -->
       <div id="admin-tab-events" class="space-y-4">
         <div class="flex justify-between items-center">
-          <h3 class="text-sm font-bold text-slate-400">活動場次主列表</h3>
-          <button onclick="openEventModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg text-xs shadow"><i class="fa-solid fa-plus mr-1"></i> 一頁流極速配置全新場次</button>
+          <h3 class="text-sm font-bold text-slate-500">活動場次主列表</h3>
+          <button onclick="openEventModal()" class="px-4 py-2 bg-[#557A55] hover:bg-[#436143] text-white font-bold rounded-lg text-xs shadow"><i class="fa-solid fa-plus mr-1"></i> 一頁流極速配置全新場次</button>
         </div>
         <div class="sj-card overflow-x-auto">
           <table class="w-full text-left text-xs">
-            <thead class="bg-slate-900 text-slate-400 font-medium border-b border-slate-800">
+            <thead class="bg-[#F8FAF8] text-slate-500 font-medium border-b border-slate-200">
               <tr>
                 <th class="p-3">活動名稱</th>
                 <th class="p-3">計價換算匯率</th>
@@ -175,113 +183,92 @@
                 <th class="p-3 text-right">操作</th>
               </tr>
             </thead>
-            <tbody id="admin-events-tbody" class="divide-y divide-slate-800"></tbody>
+            <tbody id="admin-events-tbody" class="divide-y divide-slate-100 text-slate-600"></tbody>
           </table>
         </div>
       </div>
 
+      <!-- 子分頁：所有訂單清單 -->
       <div id="admin-tab-orders" class="hidden space-y-4">
-        <h3 class="text-sm font-bold text-slate-400">全球買家代購訂單紀錄</h3>
+        <h3 class="text-sm font-bold text-slate-500">全球買家代購訂單紀錄</h3>
         <div id="admin-orders-container" class="space-y-3"></div>
       </div>
     </section>
   </main>
 
-  <div id="event-modal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-[#161B26] border border-slate-800 rounded-2xl max-w-6xl w-full max-h-[92vh] flex flex-col shadow-2xl">
-      <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900 rounded-t-2xl">
-        <h3 id="modal-title" class="font-bold text-sm text-slate-200">✨ 一頁流極速配置全新連線場次</h3>
-        <button onclick="closeEventModal()" class="text-slate-500 hover:text-slate-300 text-lg"><i class="fa-solid fa-xmark"></i></button>
+  <!-- ================= 5. 【大彈窗】一頁流極速配置全新連線場次 (完美對齊 image_fc43ef.png 清爽牛奶配色) ================= -->
+  <div id="event-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-6xl w-full max-h-[92vh] flex flex-col shadow-2xl">
+      <!-- 彈窗頂部 -->
+      <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-[#F8FAF8] rounded-t-2xl">
+        <h3 id="modal-title" class="font-bold text-sm text-[#3D523D] flex items-center">
+          <span class="mr-1">✨</span> 一頁流極速配置全新連線場次
+        </h3>
+        <button onclick="closeEventModal()" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fa-solid fa-xmark"></i></button>
       </div>
+      
+      <!-- 彈窗主表格區 -->
       <div class="p-6 overflow-y-auto space-y-6 flex-grow text-xs">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#F4F7F4]/50 p-4 rounded-xl border border-[#E2E8F0]">
           <div>
-            <label class="block text-slate-400 font-bold mb-1">場次名稱 <span class="text-red-400">*</span></label>
-            <input type="text" id="modal-event-name" placeholder="例：雲日周" class="w-full px-3 py-2 rounded-lg sj-input">
-            <p class="text-[10px] text-slate-500 mt-1">系統會以此欄位串接舊商品歷史紀錄，建議名稱保持一致</p>
+            <label class="block text-slate-500 font-bold mb-1">場次名稱 <span class="text-red-500">*</span></label>
+            <input type="text" id="modal-event-name" placeholder="例：2026-06 迪士尼快閃店連線" class="w-full px-3 py-2 rounded-lg sj-input">
+            <p class="text-[10px] text-slate-400 mt-1">系統會以此欄位串接舊商品，建議名稱保持一致</p>
           </div>
           <div>
-            <label class="block text-slate-400 font-bold mb-1">當次換算匯率 <span class="text-red-400">*</span></label>
-            <input type="number" id="modal-event-rate" step="0.001" value="0.22" oninput="recalcAllModalPrices()" class="w-full px-3 py-2 rounded-lg sj-input font-mono">
-            <p class="text-[10px] text-slate-500 mt-1">用於依公式「(原價日幣 + 付代購日幣) × 匯率」自動換算預設台幣賣價</p>
+            <label class="block text-slate-500 font-bold mb-1">當次換算匯率 <span class="text-red-500">*</span></label>
+            <input type="number" id="modal-event-rate" step="0.001" value="0.22" oninput="recalcAllPricesByRate()" class="w-full px-3 py-2 rounded-lg sj-input font-mono">
+            <p class="text-[10px] text-slate-400 mt-1">用於快速公式「(原價+代購) × 匯率」換算台幣賣價</p>
           </div>
         </div>
 
         <div class="space-y-2">
           <div class="flex justify-between items-center">
-            <h4 class="font-bold text-slate-300 flex items-center"><span class="w-1 h-3.5 bg-blue-500 mr-2 rounded"></span>📦 場次內商品與規格分類清單</h4>
-            <button onclick="addModalProductRow()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded text-[11px]"><i class="fa-solid fa-plus mr-1"></i> 繼續新增下一個商品</button>
+            <h4 class="font-bold text-slate-600 flex items-center">
+              <span class="text-base mr-1.5">📦</span> 場次內商品清單明細
+            </h4>
+            <!-- 按鈕調回 image_fc43ef.png 的深綠色設計 -->
+            <button onclick="addModalProductRow()" class="px-3 py-1.5 bg-[#2D8A5E] hover:bg-[#226B46] text-white font-bold rounded text-[11px] flex items-center shadow-sm">
+              <i class="fa-solid fa-plus mr-1"></i> 繼續新增下一筆商品 (Tab)
+            </button>
           </div>
           
-          <div id="modal-products-container" class="space-y-4"></div>
-        </div>
-      </div>
-      <div class="p-4 border-t border-slate-800 bg-slate-900 flex justify-end space-x-2 rounded-b-2xl">
-        <button onclick="closeEventModal()" class="px-4 py-2 border border-slate-700 rounded-lg text-slate-400 hover:bg-slate-800 text-xs font-medium">取消</button>
-        <button onclick="saveEventAndProducts()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs shadow-md"><i class="fa-solid fa-floppy-disk mr-1"></i> 儲存並發布此場次</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="order-edit-modal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-[#161B26] border border-slate-800 rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl">
-      <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900 rounded-t-2xl">
-        <h3 class="font-bold text-sm text-slate-200"><i class="fa-solid fa-user-gear mr-1"></i> 訂單編輯器</h3>
-        <button onclick="closeOrderEditModal()" class="text-slate-500 hover:text-slate-300 text-lg"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="p-6 overflow-y-auto space-y-4 flex-grow text-xs">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-slate-400 font-bold mb-1">買家 LINE 暱稱</label>
-            <input type="text" id="edit-order-line" class="w-full px-3 py-2 rounded-lg sj-input">
-          </div>
-          <div>
-            <label class="block text-slate-400 font-bold mb-1">團長私密訂單備註</label>
-            <input type="text" id="edit-order-note" class="w-full px-3 py-2 rounded-lg sj-input">
-          </div>
-        </div>
-
-        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-2">
-          <h4 class="font-bold text-blue-400"><i class="fa-solid fa-cart-plus mr-1"></i> 為此買家追加商品項目</h4>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-            <select id="edit-order-add-select" onchange="updateEditOrderSpecSelect()" class="px-2 py-1.5 rounded sj-input"></select>
-            <select id="edit-order-add-spec" class="px-2 py-1.5 rounded sj-input"></select>
-            <button onclick="addInputToEditOrder()" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded">➕ 塞入此訂單</button>
-          </div>
-        </div>
-
-        <div class="space-y-1">
-          <h4 class="font-bold text-slate-400">現有購買明細調整：</h4>
-          <div class="border border-slate-800 rounded-xl overflow-hidden bg-slate-900/30">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-slate-900 text-slate-400 border-b border-slate-800">
+          <div class="overflow-x-auto border border-slate-100 rounded-lg">
+            <table class="w-full text-left text-xs min-w-[900px]">
+              <thead class="bg-[#F8FAF8] text-slate-500 border-b border-slate-200">
                 <tr>
-                  <th class="p-2">商品名稱與規格分類</th>
-                  <th class="p-2 w-28">單件台幣金額</th>
-                  <th class="p-2 w-20">購買數量</th>
-                  <th class="p-2 w-16 text-center">操作</th>
+                  <th class="p-2.5 w-32">商品圖片網址</th>
+                  <th class="p-2.5">商品品名 <span class="text-red-500">*</span></th>
+                  <th class="p-2.5 w-44">規格 (逗號隔開)</th>
+                  <th class="p-2.5 w-24">原價 (日幣)</th>
+                  <th class="p-2.5 w-24">付代購 (日幣)</th>
+                  <th class="p-2.5 w-28">台幣賣價 <span class="text-red-500">*</span></th>
+                  <th class="p-2.5 w-20 text-center">庫存</th>
+                  <th class="p-2.5 w-12 text-center">刪</th>
                 </tr>
               </thead>
-              <tbody id="edit-order-items-tbody" class="divide-y divide-slate-800"></tbody>
+              <tbody id="modal-products-tbody" class="divide-y divide-slate-100 bg-white"></tbody>
             </table>
           </div>
         </div>
-
-        <div class="text-right font-bold text-sm text-slate-300 pr-2">
-          即時重算總計：<span id="edit-order-grand-total" class="text-yellow-400 text-base">$0</span> 元
-        </div>
       </div>
-      <div class="p-4 border-t border-slate-800 bg-slate-900 flex justify-end space-x-2 rounded-b-2xl">
-        <button onclick="closeOrderEditModal()" class="px-4 py-2 border border-slate-700 rounded-lg text-slate-400 text-xs">取消</button>
-        <button onclick="saveOrderEdits()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg shadow"><i class="fa-solid fa-check mr-1"></i> 確認儲存整單修改</button>
+      
+      <!-- 彈窗底部控制鈕 -->
+      <div class="p-4 border-t border-slate-100 bg-[#F8FAF8] flex justify-end space-x-2 rounded-b-2xl">
+        <button onclick="closeEventModal()" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-50 text-xs font-medium">取消</button>
+        <button onclick="saveEventAndProducts()" class="px-5 py-2 bg-[#2D8A5E] hover:bg-[#226B46] text-white font-bold rounded-lg text-xs shadow-md"><i class="fa-solid fa-floppy-disk mr-1"></i> 儲存並發布此場次</button>
       </div>
     </div>
   </div>
 
-  <footer class="bg-[#0F131A] border-t border-slate-900 py-4 text-center text-xs text-slate-600 mt-12">
-    © 2026 33 日本動物園 ✨ 
+  <!-- 🟫 頁尾 -->
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400 mt-12">
+    © 2026 33 日本動物園 ✨ 園長專屬手動開關連線大廳系統 (日系抹茶牛奶版)
   </footer>
 
+  <!-- ============================================================================== -->
+  <!-- 🟢 FIREBASE 核心業務邏輯腳本區 (完美保存自動拆分庫存防超賣邏輯) -->
+  <!-- ============================================================================== -->
   <script>
     // 📢 【請將此更換為您原本的 Firebase 密鑰設定】
     const firebaseConfig = {
@@ -297,14 +284,11 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 全域快取記憶
     let allProducts = [];
     let allOrders = [];
     let eventStatusMap = {};
     let currentEventName = "";
     let cart = [];
-    let currentEditOrderId = null;
-    let tempEditOrderItems = [];
 
     window.addEventListener('DOMContentLoaded', () => {
       initDatabaseListeners();
@@ -320,11 +304,7 @@
         const val = snapshot.val();
         allProducts = [];
         if(val) {
-          if(Array.isArray(val)) {
-            val.forEach((p, idx) => { if(p) { p.id = idx; allProducts.push(p); } });
-          } else {
-            Object.keys(val).forEach(k => { if(val[k]) { val[k].id = k; allProducts.push(val[k]); } });
-          }
+          Object.keys(val).forEach(k => { if(val[k]) { val[k].id = k; allProducts.push(val[k]); } });
         }
         renderLobbyAndEvents();
         if(currentEventName) renderShopProducts();
@@ -357,19 +337,19 @@
     function switchAdminTab(tabName) {
       document.getElementById('admin-tab-events').classList.add('hidden');
       document.getElementById('admin-tab-orders').classList.add('hidden');
-      document.getElementById('tab-btn-events').className = "pb-2 border-b-2 border-transparent text-slate-500 hover:text-slate-300 px-2";
-      document.getElementById('tab-btn-orders').className = "pb-2 border-b-2 border-transparent text-slate-500 hover:text-slate-300 px-2";
+      document.getElementById('tab-btn-events').className = "pb-2 border-b-2 border-transparent text-slate-400 px-2";
+      document.getElementById('tab-btn-orders').className = "pb-2 border-b-2 border-transparent text-slate-400 px-2";
 
       if(tabName === 'events') {
         document.getElementById('admin-tab-events').classList.remove('hidden');
-        document.getElementById('tab-btn-events').className = "pb-2 border-b-2 border-blue-500 font-bold text-blue-400 px-2";
+        document.getElementById('tab-btn-events').className = "pb-2 border-b-2 border-[#557A55] font-bold text-[#557A55] px-2";
       } else if(tabName === 'orders') {
         document.getElementById('admin-tab-orders').classList.remove('hidden');
-        document.getElementById('tab-btn-orders').className = "pb-2 border-b-2 border-blue-500 font-bold text-blue-400 px-2";
+        document.getElementById('tab-btn-orders').className = "pb-2 border-b-2 border-[#557A55] font-bold text-[#557A55] px-2";
       }
     }
 
-    // ================= 1. 前台連線大廳渲染 (手動開關) =================
+    // ================= 1. 前台連線大廳渲染 (日系米白牛奶小卡) =================
     function renderLobbyAndEvents() {
       const eventNamesSet = new Set();
       allProducts.forEach(p => { if(p.e) eventNamesSet.add(p.e.trim()); });
@@ -385,7 +365,7 @@
 
       const uniqueEventsArray = Array.from(eventNamesSet);
       if(uniqueEventsArray.length === 0) {
-        activeGrid.innerHTML = `<p class="col-span-full text-center text-xs text-slate-500 py-12">目前尚無任何進行中的連線活動場次。</p>`;
+        activeGrid.innerHTML = `<p class="col-span-full text-center text-xs text-slate-400 py-12">目前尚無任何進行中的連線活動場次。</p>`;
       }
 
       uniqueEventsArray.forEach(eventName => {
@@ -393,19 +373,19 @@
         const prodCount = allProducts.filter(p => p.e === eventName).length;
 
         const cardHtml = `
-          <div class="sj-card p-5 bg-[#161B26] flex flex-col justify-between">
+          <div class="sj-card p-5 bg-white flex flex-col justify-between border border-slate-200">
             <div>
               <div class="flex items-center justify-between mb-3">
-                <span class="text-[10px] px-2 py-0.5 rounded font-bold ${status.isClosed ? 'bg-slate-800 text-slate-400':'bg-blue-950 text-blue-400 border border-blue-800/40'}">
+                <span class="text-[10px] px-2 py-0.5 rounded font-bold ${status.isClosed ? 'bg-slate-100 text-slate-400':'bg-[#EEF2EE] text-[#436143] border border-[#D0DDD0]'}">
                   ${status.isClosed ? '已截止活動':'活動進行中'}
                 </span>
-                <span class="text-[11px] font-mono text-slate-500">JPY × ${status.rate || 0.22}</span>
+                <span class="text-[11px] font-mono text-slate-400">JPY × ${status.rate || 0.22}</span>
               </div>
-              <h4 class="font-bold text-slate-200 text-base mb-1">${eventName}</h4>
-              <p class="text-xs text-slate-500 mb-4">共 ${prodCount} 項現場商品</p>
+              <h4 class="font-bold text-slate-700 text-base mb-1">${eventName}</h4>
+              <p class="text-xs text-slate-400 mb-4">共 ${prodCount} 項商品</p>
             </div>
-            <button onclick="enterShop('${escapeHtml(eventName)}')" class="w-full py-2 rounded-lg text-xs font-bold transition ${status.isClosed ? 'bg-slate-800 text-slate-400 hover:bg-slate-700':'bg-blue-600 text-white hover:bg-blue-500'}">
-              ${status.isClosed ? '進入查看商品 ↗' : '選購商品 →'}
+            <button onclick="enterShop('${escapeHtml(eventName)}')" class="w-full py-2 rounded-lg text-xs font-bold transition ${status.isClosed ? 'bg-slate-100 text-slate-400':'bg-[#557A55] text-white hover:bg-[#436143] shadow-sm'}">
+              ${status.isClosed ? '進入查看商品' : '選購商品 →'}
             </button>
           </div>
         `;
@@ -417,7 +397,7 @@
       renderAdminEventsTable(uniqueEventsArray);
     }
 
-    // ================= 2. 前台商品選購頁渲染 (庫存全面對前台隱藏) =================
+    // ================= 2. 前台商品選購頁渲染 (庫存完美隱藏) =================
     function enterShop(eventName) {
       currentEventName = eventName;
       document.getElementById('current-shop-title').innerText = eventName;
@@ -435,25 +415,29 @@
       const isEventClosed = eventStatusMap[currentEventName]?.isClosed || false;
 
       if(filtered.length === 0) {
-        grid.innerHTML = `<p class="col-span-full text-center text-xs text-slate-500 py-12">該場次目前尚無連線商品上架。</p>`;
+        grid.innerHTML = `<p class="col-span-full text-center text-xs text-slate-400 py-12">該場次目前尚無連線商品。</p>`;
         return;
       }
 
       filtered.forEach(p => {
         let optionsHtml = "";
-        let priceToShow = p.p || 0;
-
-        // 判斷多規格分類還是歷史舊單一結構
-        if(p.variants && p.variants.length > 0) {
-          p.variants.forEach((v, vIdx) => {
-            // ⚠️ 前台完全不顯示庫存數量，只在後台判定如果是0就無法選取
-            const isVOutOfStock = (v.stock !== undefined && v.stock !== null && v.stock !== "" && parseInt(v.stock) <= 0);
-            optionsHtml += `<option value="${vIdx}" ${isVOutOfStock ? 'disabled':''}>${escapeHtml(v.s)} ${isVOutOfStock ? '(斷貨)':''}</option>`;
+        
+        if(p.variants) {
+          let availableCount = 0;
+          Object.keys(p.variants).forEach(specKey => {
+            const v = p.variants[specKey];
+            if (v.stock !== undefined && v.stock !== "" && parseInt(v.stock) <= 0) {
+              return; 
+            }
+            availableCount++;
+            optionsHtml += `<option value="${escapeHtml(specKey)}">${escapeHtml(specKey)}</option>`;
           });
-          priceToShow = p.variants[0].p; // 預設顯示第一個規格的台幣售價
+          
+          if(availableCount === 0) {
+            optionsHtml = `<option value="" disabled>已全數斷貨</option>`;
+          }
         } else {
-          // 歷史舊商品相容結構
-          optionsHtml = `<option value="legacy">${escapeHtml(p.s || '預設規格')}</option>`;
+          optionsHtml = `<option value="default">預設規格</option>`;
         }
 
         const imgUrl = p.img || 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&w=300&q=80';
@@ -461,18 +445,18 @@
         grid.innerHTML += `
           <div class="sj-card p-3 flex flex-col justify-between">
             <div>
-              <div class="w-full h-44 bg-slate-900 rounded-lg overflow-hidden mb-2">
+              <div class="w-full h-44 bg-slate-100 rounded-lg overflow-hidden mb-2">
                 <img src="${imgUrl}" class="w-full h-full object-cover">
               </div>
-              <h4 class="font-bold text-slate-200 text-sm truncate">${p.n}</h4>
+              <h4 class="font-bold text-slate-700 text-sm truncate">${p.n}</h4>
               <div class="flex justify-between items-center mt-1">
-                <span id="price-display-${p.id}" class="text-base font-bold text-yellow-400">$${priceToShow} <span class="text-[10px] text-slate-500 font-normal">TWD</span></span>
+                <span class="text-base font-bold text-[#C87A28]">$${p.p} <span class="text-[10px] text-slate-400 font-normal">TWD</span></span>
               </div>
-              <select id="variant-select-${p.id}" onchange="updateShopProductPriceDisplay('${p.id}')" class="w-full mt-2 px-2 py-1.5 text-xs rounded sj-input">
+              <select id="spec-select-${p.id}" class="w-full mt-2 px-2 py-1.5 text-xs rounded sj-input">
                 ${optionsHtml}
               </select>
             </div>
-            <button onclick="addToCart('${p.id}')" ${isEventClosed ? 'disabled':''} class="w-full mt-3 py-2 rounded-lg font-bold text-xs transition ${isEventClosed ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'btn-primary'}">
+            <button onclick="addToCart('${p.id}')" ${isEventClosed ? 'disabled':''} class="w-full mt-3 py-2 rounded-lg font-bold text-xs transition ${isEventClosed ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'btn-primary shadow-sm'}">
               ${isEventClosed ? '連線已截止' : '<i class="fa-solid fa-plus mr-1"></i> 加入購物車'}
             </button>
           </div>
@@ -480,37 +464,20 @@
       });
     }
 
-    function updateShopProductPriceDisplay(pId) {
-      const p = allProducts.find(prod => String(prod.id) === String(pId));
-      if(!p || !p.variants) return;
-      const selectIdx = document.getElementById(`variant-select-${pId}`).value;
-      if(selectIdx !== "legacy") {
-        document.getElementById(`price-display-${pId}`).innerHTML = `$${p.variants[selectIdx].p} <span class="text-[10px] text-slate-500 font-normal">TWD</span>`;
-      }
-    }
-
-    // ================= 購物車處理 =================
     function addToCart(pId) {
       const p = allProducts.find(prod => String(prod.id) === String(pId));
       if(!p) return;
 
-      const selectVal = document.getElementById(`variant-select-${pId}`).value;
-      let specName = "預設規格";
-      let specPrice = parseInt(p.p || 0);
+      const specSelect = document.getElementById(`spec-select-${pId}`);
+      if(specSelect.disabled || !specSelect.value) { alert("此商品已無庫存可選購！"); return; }
+      
+      const selectedSpec = specSelect.value;
 
-      if(selectVal !== "legacy" && p.variants) {
-        const v = p.variants[parseInt(selectVal)];
-        specName = v.s;
-        specPrice = parseInt(v.p || 0);
-      } else if(p.s) {
-        specName = p.s;
-      }
-
-      const exist = cart.find(item => String(item.pId) === String(pId) && item.spec === specName);
+      const exist = cart.find(item => String(item.pId) === String(pId) && item.spec === selectedSpec);
       if(exist) {
         exist.qty += 1;
       } else {
-        cart.push({ pId: p.id, name: p.n, price: specPrice, spec: specName, variantIndex: selectVal, qty: 1 });
+        cart.push({ pId: p.id, name: p.n, price: parseInt(p.p || 0), spec: selectedSpec, qty: 1 });
       }
       updateCartUi();
     }
@@ -531,21 +498,21 @@
         const itemTotal = item.price * item.qty;
         total += itemTotal;
         container.innerHTML += `
-          <div class="bg-slate-900/60 p-2 rounded-lg border border-slate-800 flex justify-between items-center text-xs">
+          <div class="bg-slate-50 p-2 rounded-lg border border-slate-100 flex justify-between items-center text-xs">
             <div class="space-y-0.5 truncate pr-2">
-              <p class="font-bold text-slate-300 truncate">${item.name}</p>
-              <p class="text-[10px] text-slate-500">規格: ${item.spec} ｜ 單價: $${item.price}</p>
+              <p class="font-bold text-slate-700 truncate">${item.name}</p>
+              <p class="text-[10px] text-slate-400">規格: ${item.spec}</p>
             </div>
             <div class="flex items-center space-x-2 flex-shrink-0">
-              <button onclick="changeCartQty(${index}, -1)" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 font-bold">-</button>
-              <span class="font-bold text-slate-200 w-4 text-center">${item.qty}</span>
-              <button onclick="changeCartQty(${index}, 1)" class="w-5 h-5 bg-slate-800 hover:bg-slate-700 rounded text-slate-300 font-bold">+</button>
-              <span class="font-mono text-yellow-400 font-bold ml-1 w-12 text-right">$${itemTotal}</span>
+              <button onclick="changeCartQty(${index}, -1)" class="w-5 h-5 bg-white border border-slate-200 hover:bg-slate-100 rounded text-slate-600 font-bold">-</button>
+              <span class="font-bold text-slate-700 w-4 text-center">${item.qty}</span>
+              <button onclick="changeCartQty(${index}, 1)" class="w-5 h-5 bg-white border border-slate-200 hover:bg-slate-100 rounded text-slate-600 font-bold">+</button>
+              <span class="font-mono text-[#C87A28] font-bold ml-1 w-12 text-right">$${itemTotal}</span>
             </div>
           </div>
         `;
       });
-      if(cart.length === 0) container.innerHTML = `<p class="text-center text-slate-600 text-xs py-6">購物車尚無任何商品。</p>`;
+      if(cart.length === 0) container.innerHTML = `<p class="text-center text-slate-400 text-xs py-6">購物車空空如也。</p>`;
       document.getElementById('cart-total').innerText = `$${total}`;
     }
 
@@ -554,24 +521,21 @@
       const lineId = document.getElementById('buyer-line-id').value.trim();
       if(!lineId) { alert("請輸入您的 LINE 暱稱以利對帳！"); return; }
 
-      if(eventStatusMap[currentEventName]?.isClosed) { alert("此場次已截止收單囉！"); return; }
-
       const updates = {};
       let totalAmount = 0;
 
-      // 後台驗證並扣除獨立規格庫存
       for(let item of cart) {
         totalAmount += item.price * item.qty;
         const originProd = allProducts.find(p => String(p.id) === String(item.pId));
-        if(originProd && item.variantIndex !== "legacy" && originProd.variants) {
-          const vObj = originProd.variants[parseInt(item.variantIndex)];
-          if(vObj && vObj.stock !== undefined && vObj.stock !== null && vObj.stock !== "") {
+        if(originProd && originProd.variants && originProd.variants[item.spec]) {
+          const vObj = originProd.variants[item.spec];
+          if(vObj.stock !== undefined && vObj.stock !== "") {
             const remainStock = parseInt(vObj.stock) - item.qty;
             if(remainStock < 0) {
-              alert(`抱歉！商品【${item.name} - ${item.spec}】後台庫存不足，無法提交。`);
+              alert(`抱歉！商品【${item.name} - ${item.spec}】後台準備庫存不足，已被搶先下單完售。`);
               return;
             }
-            updates[`products/${item.pId}/variants/${item.variantIndex}/stock`] = remainStock;
+            updates[`products/${item.pId}/variants/${item.spec}/stock`] = remainStock;
           }
         }
       }
@@ -591,7 +555,7 @@
       updates[`orders/${oKey}`] = newOrder;
 
       db.ref().update(updates, (err) => {
-        if(err) { alert("下單失敗，請稍後再試。"); }
+        if(err) { alert("下單失敗，請重試。"); }
         else {
           alert(`🎉 連線下單成功！金額總計：$${totalAmount} 元。`);
           cart = [];
@@ -611,30 +575,30 @@
       resDiv.innerHTML = "";
 
       const filtered = allOrders.filter(o => o.line && o.line.toLowerCase() === input.toLowerCase());
-      if(filtered.length === 0) { resDiv.innerHTML = `<p class="text-xs text-slate-500 py-2">查無相關連線訂單紀錄。</p>`; return; }
+      if(filtered.length === 0) { resDiv.innerHTML = `<p class="text-xs text-slate-400 py-2">查無相關連線訂單紀錄。</p>`; return; }
 
       filtered.forEach(o => {
         let itemsHtml = "";
         if(o.items) {
-          o.items.forEach(it => { itemsHtml += `<div class="text-xs text-slate-400 flex justify-between"><span>• ${it.n} [${it.s}] x ${it.q}</span><span>$${it.p * it.q}</span></div>`; });
+          o.items.forEach(it => { itemsHtml += `<div class="text-xs text-slate-600 flex justify-between py-0.5"><span>• ${it.n} (${it.s}) x ${it.q}</span><span>$${it.p * it.q}</span></div>`; });
         }
         resDiv.innerHTML += `
-          <div class="p-4 bg-slate-900/60 border border-slate-800 rounded-xl space-y-2">
-            <div class="flex justify-between text-[11px] text-slate-500">
+          <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+            <div class="flex justify-between text-[11px] text-slate-400">
               <span>連線場次: ${o.eventName || '歷史舊單'}</span>
               <span>${o.timestamp ? new Date(o.timestamp).toLocaleString():''}</span>
             </div>
-            <div class="divide-y divide-slate-800/40">${itemsHtml}</div>
-            <div class="flex justify-between items-center font-bold text-xs pt-2 border-t border-slate-800/60">
-              <span class="text-slate-500 font-normal">備註: ${o.note || '無'}</span>
-              <span class="text-yellow-400">總計: $${o.total}</span>
+            <div class="divide-y divide-slate-100">${itemsHtml}</div>
+            <div class="flex justify-between items-center font-bold text-xs pt-2 border-t border-slate-200">
+              <span class="text-slate-400 font-normal">備註: ${o.note || '無'}</span>
+              <span class="text-[#C87A28]">總計: $${o.total}</span>
             </div>
           </div>
         `;
       });
     }
 
-    // ================= 4. 管理後台數據與場次主列表 =================
+    // ================= 4. 管理後台數據看板運算 =================
     function updateAdminStats() {
       let totalRev = 0;
       let totalProfit = 0;
@@ -646,24 +610,12 @@
         if(o.items) {
           o.items.forEach(it => {
             const p = allProducts.find(prod => String(prod.id) === String(it.pId));
-            let singleCostJpy = 0;
-            let singleFeeJpy = 0;
-
             if(p) {
-              if(p.variants && p.variants.length > 0) {
-                const matchedV = p.variants.find(v => v.s === it.s);
-                if(matchedV) {
-                  singleCostJpy = parseFloat(matchedV.jpy_cost || 0);
-                  singleFeeJpy = parseFloat(matchedV.jpy_fee || 0);
-                }
-              } else {
-                singleCostJpy = parseFloat(p.jpy_cost || 0);
-                singleFeeJpy = parseFloat(p.jpy_fee || 0);
-              }
+              const uCost = parseFloat(p.jpy_cost || 0);
+              const uFee = parseFloat(p.jpy_fee || 0);
+              const unitProfit = (it.p || 0) - ((uCost + uFee) * rate);
+              totalProfit += unitProfit * (it.q || 1);
             }
-            // 利潤 = 賣價台幣 - [(日幣原價 + 代購日幣) * 匯率]
-            const unitProfit = (it.p || 0) - ((singleCostJpy + singleFeeJpy) * rate);
-            totalProfit += unitProfit * (it.q || 1);
           });
         }
       });
@@ -682,18 +634,18 @@
         const count = allProducts.filter(p => p.e === eventName).length;
 
         tbody.innerHTML += `
-          <tr class="hover:bg-slate-900/40">
-            <td class="p-3 font-bold text-slate-300">${eventName}</td>
-            <td class="p-3 font-mono text-slate-400">${status.rate || 0.22}</td>
-            <td class="p-3 text-slate-400">${count} 類商品</td>
+          <tr class="hover:bg-slate-50">
+            <td class="p-3 font-bold text-slate-700">${eventName}</td>
+            <td class="p-3 font-mono text-slate-500">${status.rate || 0.22}</td>
+            <td class="p-3 text-slate-500">${count} 類商品</td>
             <td class="p-3">
-              <button onclick="toggleEventStatus('${escapeHtml(eventName)}')" class="px-2.5 py-1 rounded text-[11px] font-bold transition ${status.isClosed ? 'bg-red-950 text-red-400 border border-red-900':'bg-blue-950 text-blue-400 border border-blue-900'}">
+              <button onclick="toggleEventStatus('${escapeHtml(eventName)}')" class="px-2.5 py-1 rounded text-[11px] font-bold transition ${status.isClosed ? 'bg-red-50 text-red-600 border border-red-200':'bg-[#EEF2EE] text-[#436143] border border-[#D0DDD0]'}">
                 ${status.isClosed ? '🔒 已截止收單' : '🟢 連線接單中'}
               </button>
             </td>
-            <td class="p-3 text-right space-x-2">
-              <button onclick="openEventModal('${escapeHtml(eventName)}')" class="text-blue-400 hover:underline"><i class="fa-solid fa-pen"></i> 一頁流編輯</button>
-              <button onclick="deleteEventGroup('${escapeHtml(eventName)}')" class="text-red-400 hover:underline"><i class="fa-solid fa-trash"></i> 刪除</button>
+            <td class="p-3 text-right space-x-3 text-xs">
+              <button onclick="openEventModal('${escapeHtml(eventName)}')" class="text-[#557A55] hover:underline font-medium"><i class="fa-solid fa-pen"></i> 一頁流編輯</button>
+              <button onclick="deleteEventGroup('${escapeHtml(eventName)}')" class="text-red-500 hover:underline font-medium"><i class="fa-solid fa-trash"></i> 刪除</button>
             </td>
           </tr>
         `;
@@ -706,41 +658,42 @@
     }
 
     function deleteEventGroup(eventName) {
-      if(!confirm(`確定要下架刪除場次【${eventName}】嗎？商品資料會一併移除。 (歷史訂單仍會安全保留)`)) return;
+      if(!confirm(`確定要下架刪除場次【${eventName}】嗎？`)) return;
       const updates = {};
       allProducts.forEach(p => { if(p.e === eventName) updates[`products/${p.id}`] = null; });
       updates[`event_status/${eventName}`] = null;
       db.ref().update(updates);
     }
 
-    // ================= 5. 【一頁流】多規格分類商品配置彈窗核心邏輯 =================
-    let modalProductRows快取 = [];
-
+    // ================= 5. 【大彈窗】新增商品列表列渲染 (完美對應一頁流一行式快填結構) =================
     function openEventModal(editTargetEventName = "") {
       const modal = document.getElementById('event-modal');
-      const container = document.getElementById('modal-products-container');
-      container.innerHTML = "";
-      modalProductRows快取 = [];
+      const tbody = document.getElementById('modal-products-tbody');
+      tbody.innerHTML = "";
 
       if(editTargetEventName) {
-        document.getElementById('modal-title').innerText = `📝 一頁流極速配置管理活動：${editTargetEventName}`;
+        document.getElementById('modal-title').innerHTML = `📝 一頁流極速配置管理活動：<span class="text-[#557A55] ml-1">${editTargetEventName}</span>`;
         document.getElementById('modal-event-name').value = editTargetEventName;
         document.getElementById('modal-event-name').disabled = true;
         document.getElementById('modal-event-rate').value = eventStatusMap[editTargetEventName]?.rate || 0.22;
 
         const filtered = allProducts.filter(p => p.e === editTargetEventName);
         filtered.forEach(p => {
-          let loadedVariants = [];
-          if(p.variants && p.variants.length > 0) {
-            loadedVariants = JSON.parse(JSON.stringify(p.variants));
+          let specString = "";
+          let stockVal = "";
+          
+          if(p.variants) {
+            specString = Object.keys(p.variants).join(', ');
+            const firstKey = Object.keys(p.variants)[0];
+            stockVal = p.variants[firstKey]?.stock ?? "";
           } else {
-            // 舊資料相容轉換入規格表格
-            loadedVariants.push({ s: p.s || '預設規格', jpy_cost: p.jpy_cost || 0, jpy_fee: p.jpy_fee || 0, p: p.p || 0, stock: p.stock !== undefined ? p.stock : '' });
+            specString = p.s || "";
+            stockVal = p.stock ?? "";
           }
-          addModalProductRow({ n: p.n || '', img: p.img || '', variants: loadedVariants });
+          addModalProductRow({ img: p.img||'', n: p.n||'', s: specString, jpy_cost: p.jpy_cost||0, jpy_fee: p.jpy_fee||0, p: p.p||0, stock: stockVal });
         });
       } else {
-        document.getElementById('modal-title').innerText = `✨ 一頁流極速配置全新連線場次`;
+        document.getElementById('modal-title').innerHTML = `✨ 一頁流極速配置全新連線場次`;
         document.getElementById('modal-event-name').value = "";
         document.getElementById('modal-event-name').disabled = false;
         document.getElementById('modal-event-rate').value = "0.22";
@@ -751,96 +704,38 @@
 
     function closeEventModal() { document.getElementById('event-modal').classList.add('hidden'); }
 
-    // 建立一條獨立的商品外框卡片
     function addModalProductRow(data = null) {
-      const container = document.getElementById('modal-products-container');
-      const pRowId = 'p-' + Date.now() + Math.random().toString(36).substr(2, 4);
+      const tbody = document.getElementById('modal-products-tbody');
+      const rowId = 'row-' + Date.now() + Math.random().toString(36).substr(2, 4);
 
-      const div = document.createElement('div');
-      div.id = pRowId;
-      div.className = "p-4 bg-slate-900/40 rounded-xl border border-slate-800 space-y-3 relative";
-      div.innerHTML = `
-        <button onclick="removeModalProductRow('${pRowId}')" class="absolute top-3 right-3 text-slate-500 hover:text-red-400 text-sm"><i class="fa-solid fa-trash"></i> 刪除此品</button>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 pr-16">
-          <div>
-            <label class="block text-[10px] text-slate-500 font-bold mb-0.5">商品品名 *</label>
-            <input type="text" class="w-full px-2 py-1 rounded sj-input font-bold p-name" value="${escapeHtml(data?data.n:'')}" placeholder="例：米奇 T-SHIRT">
-          </div>
-          <div>
-            <label class="block text-[10px] text-slate-500 font-bold mb-0.5">商品照片連結</label>
-            <input type="text" class="w-full px-2 py-1 rounded sj-input p-img" value="${escapeHtml(data?data.img:'')}" placeholder="圖片 URL">
-          </div>
-        </div>
-        
-        <div class="space-y-1 bg-[#0F131A] p-2 rounded-lg border border-slate-800/60">
-          <div class="flex text-[10px] font-bold text-slate-500 pb-1 border-b border-slate-800 mb-1">
-            <span class="w-24 px-1">規格分類名稱 *</span>
-            <span class="w-24 px-1">原價(日幣)</span>
-            <span class="w-24 px-1">付代購(日幣)</span>
-            <span class="w-28 px-1">台幣賣價(自訂) *</span>
-            <span class="w-20 px-1 text-center">後台庫存</span>
-            <span class="flex-grow"></span>
-          </div>
-          <div class="variants-tbody space-y-1"></div>
-          <button onclick="addModalVariantRow('${pRowId}')" class="text-[11px] text-blue-400 hover:underline pt-1 block"><i class="fa-solid fa-plus-circle mr-1"></i> ＋新增一個規格分類欄位分支 (如：M、L號分開算)</button>
-        </div>
+      const tr = document.createElement('tr');
+      tr.id = rowId;
+      tr.className = "hover:bg-slate-50";
+      tr.innerHTML = `
+        <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input p-img text-[11px]" value="${escapeHtml(data?data.img:'')}" placeholder="圖片URL"></td>
+        <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input font-bold p-name" value="${escapeHtml(data?data.n:'')}" placeholder="品名(必填)"></td>
+        <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input p-spec text-[#557A55] font-medium" value="${escapeHtml(data?data.s:'')}" placeholder="大小,粉,藍"></td>
+        <td class="p-2"><input type="number" oninput="calcRowTwdPrice('${rowId}')" class="w-full px-2 py-1 rounded sj-input text-right font-mono p-cost" value="${data?data.jpy_cost:''}" placeholder="0"></td>
+        <td class="p-2"><input type="number" oninput="calcRowTwdPrice('${rowId}')" class="w-full px-2 py-1 rounded sj-input text-right font-mono p-fee" value="${data?data.jpy_fee:''}" placeholder="0"></td>
+        <td class="p-2"><input type="number" class="w-full px-2 py-1 rounded bg-[#FCFDFB] text-[#C87A28] font-bold border border-slate-300 text-right p-price" value="${data?data.p:''}" placeholder="台幣賣價"></td>
+        <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input text-center p-stock" value="${data!==null && data.stock!==undefined ? data.stock:''}" placeholder="不限"></td>
+        <td class="p-2 text-center"><button onclick="document.getElementById('${rowId}').remove()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></td>
       `;
-      container.appendChild(div);
-
-      // 載入子規格資料
-      if(data && data.variants && data.variants.length > 0) {
-        data.variants.forEach(v => addModalVariantRow(pRowId, v));
-      } else {
-        addModalVariantRow(pRowId); // 預設一條空白規格
-      }
+      tbody.appendChild(tr);
     }
 
-    function removeModalProductRow(pRowId) { document.getElementById(pRowId).remove(); }
-
-    // 建立規格子欄位分支 (符合 image_fca14d.png 需求再升級版)
-    function addModalVariantRow(pRowId, vData = null) {
-      const pRow = document.getElementById(pRowId);
-      const tbody = pRow.querySelector('.variants-tbody');
-      const vRowId = 'v-' + Date.now() + Math.random().toString(36).substr(2, 4);
-
-      const div = document.createElement('div');
-      div.id = vRowId;
-      div.className = "flex items-center space-x-1 py-1 hover:bg-slate-900/20 rounded transition";
-      div.innerHTML = `
-        <div class="w-24 px-1"><input type="text" class="w-full px-1.5 py-1 rounded sj-input v-spec" value="${escapeHtml(vData?vData.s:'')}" placeholder="例：M 號"></div>
-        <div class="w-24 px-1"><input type="number" oninput="calcSingleModalVariantPrice('${pRowId}','${vRowId}')" class="w-full px-1.5 py-1 rounded sj-input font-mono text-right v-cost" value="${vData?vData.jpy_cost:''}" placeholder="0"></div>
-        <div class="w-24 px-1"><input type="number" oninput="calcSingleModalVariantPrice('${pRowId}','${vRowId}')" class="w-full px-1.5 py-1 rounded sj-input font-mono text-right v-fee" value="${vData?vData.jpy_fee:''}" placeholder="0"></div>
-        <div class="w-28 px-1"><input type="number" class="w-full px-1.5 py-1 rounded bg-slate-900 text-yellow-400 font-bold border border-slate-700 text-right v-price" value="${vData?vData.p:''}" placeholder="台幣金額"></div>
-        <div class="w-20 px-1"><input type="number" class="w-full px-1.5 py-1 rounded sj-input text-center v-stock" value="${vData!==null && vData.stock!==undefined ? vData.stock:''}" placeholder="不限"></div>
-        <button onclick="document.getElementById('${vRowId}').remove()" class="text-slate-600 hover:text-red-400 px-2"><i class="fa-solid fa-trash-can"></i></button>
-      `;
-      tbody.appendChild(div);
-    }
-
-    function calcSingleModalVariantPrice(pRowId, vRowId) {
+    function calcRowTwdPrice(rowId) {
+      const row = document.getElementById(rowId);
       const rate = parseFloat(document.getElementById('modal-event-rate').value) || 0.22;
-      const vRow = document.getElementById(vRowId);
-      const costJpy = parseFloat(vRow.querySelector('.v-cost').value) || 0;
-      const feeJpy = parseFloat(vRow.querySelector('.v-fee').value) || 0;
-
-      // 公式：(原價日幣 + 付代購日幣) * 匯率 = 台幣基準賣價
-      const resPrice = Math.round((costJpy + feeJpy) * rate);
-      vRow.querySelector('.v-price').value = resPrice > 0 ? resPrice : "";
+      const cost = parseFloat(row.querySelector('.p-cost').value) || 0;
+      const fee = parseFloat(row.querySelector('.p-fee').value) || 0;
+      const res = Math.round((cost + fee) * rate);
+      row.querySelector('.p-price').value = res > 0 ? res : "";
     }
 
-    function recalcAllModalPrices() {
-      const container = document.getElementById('modal-products-container');
-      const pCards = container.children;
-      for (let card of pCards) {
-        const vRows = card.querySelectorAll('.variants-tbody > div');
-        vRows.forEach(vRow => {
-          const costJpy = parseFloat(vRow.querySelector('.v-cost').value) || 0;
-          const feeJpy = parseFloat(vRow.querySelector('.v-fee').value) || 0;
-          const rate = parseFloat(document.getElementById('modal-event-rate').value) || 0.22;
-          const resPrice = Math.round((costJpy + feeJpy) * rate);
-          vRow.querySelector('.v-price').value = resPrice > 0 ? resPrice : "";
-        });
-      }
+    function recalcAllPricesByRate() {
+      const rows = document.querySelectorAll('#modal-products-tbody > tr');
+      rows.forEach(row => calcRowTwdPrice(row.id));
     }
 
     function saveEventAndProducts() {
@@ -848,45 +743,36 @@
       const rate = parseFloat(document.getElementById('modal-event-rate').value) || 0.22;
       if(!eventName) { alert("請輸入活動場次名稱！"); return; }
 
-      const container = document.getElementById('modal-products-container');
-      const pCards = container.children;
-      const finalProductsToUpload = [];
-      let checkError = false;
+      const rows = document.querySelectorAll('#modal-products-tbody > tr');
+      const finalProducts = [];
 
-      for (let card of pCards) {
-        const n = card.querySelector('.p-name').value.trim();
-        const img = card.querySelector('.p-img').value.trim();
+      for(let row of rows) {
+        const n = row.querySelector('.p-name').value.trim();
         if(!n) continue;
 
-        const vRows = card.querySelectorAll('.variants-tbody > div');
-        const variantsArray = [];
+        const img = row.querySelector('.p-img').value.trim();
+        const specRaw = row.querySelector('.p-spec').value.trim();
+        const jpy_cost = parseFloat(row.querySelector('.p-cost').value) || 0;
+        const jpy_fee = parseFloat(row.querySelector('.p-fee').value) || 0;
+        const p = parseInt(row.querySelector('.p-price').value) || 0;
+        const stockRaw = row.querySelector('.p-stock').value.trim();
 
-        vRows.forEach(vRow => {
-          const s = vRow.querySelector('.v-spec').value.trim() || '預設規格';
-          const jpy_cost = parseFloat(vRow.querySelector('.v-cost').value) || 0;
-          const jpy_fee = parseFloat(vRow.querySelector('.v-fee').value) || 0;
-          const p = parseInt(vRow.querySelector('.v-price').value) || 0;
-          const stockStr = vRow.querySelector('.v-stock').value.trim();
-          const stock = stockStr === "" ? "" : parseInt(stockStr);
-
-          if(!p) { alert(`請完整填寫【${n}】之規格【${s}】的台幣最終賣價。`); checkError = true; }
-          variantsArray.push({ s, jpy_cost, jpy_fee, p, stock });
+        const variantsMap = {};
+        const specArray = specRaw ? specRaw.split(/[,，\s]+/).filter(Boolean) : ["預設規格"];
+        
+        specArray.forEach(specName => {
+          variantsMap[specName] = {
+            stock: stockRaw === "" ? "" : parseInt(stockRaw)
+          };
         });
 
-        if(variantsArray.length === 0) {
-          variantsArray.push({ s: '預設規格', jpy_cost: 0, jpy_fee: 0, p: 0, stock: "" });
-        }
-
-        finalProductsToUpload.push({ e: eventName, n, img, variants: variantsArray });
+        finalProducts.push({ e: eventName, n, img, jpy_cost, jpy_fee, p, variants: variantsMap });
       }
 
-      if(checkError) return;
-
       const updates = {};
-      // 清空資料庫中舊同名場次商品
       allProducts.forEach(oldP => { if(oldP.e === eventName) updates[`products/${oldP.id}`] = null; });
-      // 鋪入新多規格商品結構
-      finalProductsToUpload.forEach(newP => {
+      
+      finalProducts.forEach(newP => {
         const newK = db.ref('products').push().key;
         updates[`products/${newK}`] = newP;
       });
@@ -895,18 +781,18 @@
       updates[`event_status/${eventName}`] = { isClosed: isCurrentClosed, rate: rate };
 
       db.ref().update(updates, (err) => {
-        if(err) { alert("發布儲存失敗。"); }
-        else { alert(`✨ 場次【${eventName}】多規格分類配置發布儲存完畢！`); closeEventModal(); }
+        if(err) { alert("儲存失敗"); }
+        else { alert(`✨ 場次【${eventName}】規格庫存配置發布完成！`); closeEventModal(); }
       });
     }
 
-    // ================= 6. 後台買家訂單對帳與渲染 (顯示私密日幣與代購費) =================
+    // ================= 6. 後台買家訂單對帳與渲染 (清爽日系明細) =================
     function renderAdminOrders() {
       const container = document.getElementById('admin-orders-container');
       container.innerHTML = "";
 
       if(allOrders.length === 0) {
-        container.innerHTML = `<p class="text-center text-xs text-slate-600 py-12">目前尚未有任何連線對帳單。</p>`;
+        container.innerHTML = `<p class="text-center text-xs text-slate-400 py-12">目前尚未有任何連線對帳單。</p>`;
         return;
       }
 
@@ -919,22 +805,14 @@
         if(o.items) {
           o.items.forEach(it => {
             const p = allProducts.find(prod => String(prod.id) === String(it.pId));
-            let uCost = 0, uFee = 0;
             if(p) {
-              if(p.variants && p.variants.length > 0) {
-                const vMatch = p.variants.find(v => v.s === it.s);
-                if(vMatch) { uCost = parseFloat(vMatch.jpy_cost||0); uFee = parseFloat(vMatch.jpy_fee||0); }
-              } else {
-                uCost = parseFloat(p.jpy_cost||0); uFee = parseFloat(p.jpy_fee||0);
-              }
+              calcOrderJpyCost += parseFloat(p.jpy_cost || 0) * it.q;
+              calcOrderJpyFee += parseFloat(p.jpy_fee || 0) * it.q;
             }
-            calcOrderJpyCost += uCost * it.q;
-            calcOrderJpyFee += uFee * it.q;
-
             itemsListHtml += `
-              <div class="py-1 flex justify-between text-xs text-slate-400">
-                <span>📦 ${it.n} <span class="text-slate-600">[分類: ${it.s}]</span> <span class="text-slate-300 font-bold">x ${it.q}</span></span>
-                <span class="font-mono">$${it.p} → $${it.p * it.q}</span>
+              <div class="py-1 flex justify-between text-xs text-slate-600">
+                <span>• ${it.n} <span class="text-[#557A55] font-bold">[${it.s}]</span> <span class="text-slate-400 font-bold">x ${it.q}</span></span>
+                <span class="font-mono text-slate-700">$${it.p * it.q}</span>
               </div>
             `;
           });
@@ -943,30 +821,29 @@
         const profitCalculated = Math.round((o.total || 0) - ((calcOrderJpyCost + calcOrderJpyFee) * rate));
 
         container.innerHTML += `
-          <div class="sj-card p-4 bg-[#161B26] border-l-2 border-l-blue-500 space-y-2">
-            <div class="flex justify-between items-start border-b border-slate-800/80 pb-2">
+          <div class="sj-card p-4 bg-white border-l-4 border-l-[#557A55] space-y-2">
+            <div class="flex justify-between items-start border-b border-slate-100 pb-2">
               <div>
-                <h4 class="font-bold text-slate-200 text-xs flex items-center"><span class="bg-blue-950 text-blue-400 px-1.5 py-0.5 rounded text-[10px] font-mono mr-2">LINE</span> ${o.line}</h4>
-                <p class="text-[10px] text-slate-500 mt-1"><i class="fa-solid fa-history mr-1"></i> ${o.timestamp?new Date(o.timestamp).toLocaleString():''} ｜ 連線場次：${o.eventName||'歷史舊單'}</p>
+                <h4 class="font-bold text-slate-700 text-xs flex items-center"><span class="bg-[#EEF2EE] text-[#436143] px-1.5 py-0.5 rounded text-[10px] font-mono mr-2">LINE</span> ${o.line}</h4>
+                <p class="text-[10px] text-slate-400 mt-1">${o.timestamp?new Date(o.timestamp).toLocaleString():''} ｜ 場次：${o.eventName||'歷史舊單'}</p>
               </div>
-              <span class="text-[11px] font-mono text-slate-500 bg-slate-900 px-2 py-0.5 rounded">場次匯率: ${rate}</span>
+              <span class="text-[11px] font-mono text-slate-400 bg-slate-50 px-2 py-0.5 rounded">匯率: ${rate}</span>
             </div>
 
-            <div class="divide-y divide-slate-800/30">${itemsListHtml}</div>
+            <div class="divide-y divide-slate-100">${itemsListHtml}</div>
 
-            <div class="bg-slate-900/60 p-2 rounded-lg text-[11px] text-slate-500 grid grid-cols-2 md:grid-cols-4 gap-1 border border-slate-800/40">
-              <div>🇯🇵 日幣原價總額: <span class="font-mono text-slate-400">¥${calcOrderJpyCost}</span></div>
-              <div>🤝 付代購利潤總額: <span class="font-mono text-slate-400">¥${calcOrderJpyFee}</span></div>
-              <div>📉 台幣總採購成本: <span class="font-mono text-slate-400">$${Math.round((calcOrderJpyCost+calcOrderJpyFee)*rate)}</span></div>
-              <div class="text-emerald-400 font-bold">📈 園長實拿純利: <span>$${profitCalculated}</span></div>
+            <div class="bg-[#F8FAF8] p-2 rounded-lg text-[11px] text-slate-500 grid grid-cols-2 md:grid-cols-4 gap-1 border border-slate-100">
+              <div>🇯🇵 日幣原價: <span class="font-mono text-slate-600">¥${calcOrderJpyCost}</span></div>
+              <div>🤝 付代購利潤: <span class="font-mono text-slate-600">¥${calcOrderJpyFee}</span></div>
+              <div>📉 總採購成本: <span class="font-mono text-slate-600">$${Math.round((calcOrderJpyCost+calcOrderJpyFee)*rate)}</span></div>
+              <div class="text-[#2D8A5E] font-bold">📈 園長淨利: <span>$${profitCalculated}</span></div>
             </div>
 
-            <div class="flex justify-between items-center pt-2 mt-2 border-t border-slate-800/40 text-xs">
-              <div class="text-slate-500 max-w-sm truncate">📌 買家下單備註：<span class="text-slate-400 font-medium">${o.note || '無'}</span></div>
+            <div class="flex justify-between items-center pt-2 mt-2 border-t border-slate-100 text-xs">
+              <div class="text-slate-400 max-w-sm truncate">📌 備註：<span class="text-slate-600 font-medium">${o.note || '無'}</span></div>
               <div class="flex items-center space-x-2">
-                <span class="font-bold text-slate-400">應收台幣: <span class="text-yellow-400 text-sm">$${o.total}</span></span>
-                <button onclick="openOrderEditModal('${o.key}')" class="px-2.5 py-1 bg-slate-800 text-slate-300 font-bold rounded border border-slate-700 hover:bg-slate-700"><i class="fa-solid fa-edit mr-1"></i> 高級整單修改</button>
-                <button onclick="deleteOrder('${o.key}')" class="text-slate-600 hover:text-red-400 pl-1"><i class="fa-solid fa-trash"></i></button>
+                <span class="font-bold text-slate-500">應收台幣: <span class="text-[#C87A28] text-sm">$${o.total}</span></span>
+                <button onclick="deleteOrder('${o.key}')" class="text-slate-300 hover:text-red-500 p-1"><i class="fa-solid fa-trash"></i></button>
               </div>
             </div>
           </div>
@@ -975,108 +852,6 @@
     }
 
     function deleteOrder(oKey) { if(confirm("確定要刪除這筆買家訂單紀錄嗎？")) db.ref(`orders/${oKey}`).remove(); }
-
-    // ================= 7. 高級整單追加修改功能核心邏輯 =================
-    function openOrderEditModal(oKey) {
-      currentEditOrderId = oKey;
-      const order = allOrders.find(o => o.key === oKey);
-      if(!order) return;
-
-      document.getElementById('edit-order-line').value = order.line || '';
-      document.getElementById('edit-order-note').value = order.note || '';
-      tempEditOrderItems = order.items ? JSON.parse(JSON.stringify(order.items)) : [];
-
-      const select = document.getElementById('edit-order-add-select');
-      select.innerHTML = "<option value=''>-- 選擇要追加的商品項目 --</option>";
-
-      // 過濾出與該訂單同場次的商品可選
-      const allowedProducts = allProducts.filter(p => !order.eventName || p.e === order.eventName);
-      allowedProducts.forEach(p => { select.innerHTML += `<option value="${p.id}">${escapeHtml(p.n)}</option>`; });
-
-      updateEditOrderSpecSelect();
-      renderEditOrderItemsTable();
-      document.getElementById('order-edit-modal').classList.remove('hidden');
-    }
-
-    function closeOrderEditModal() { document.getElementById('order-edit-modal').classList.add('hidden'); currentEditOrderId = null; }
-
-    function updateEditOrderSpecSelect() {
-      const pId = document.getElementById('edit-order-add-select').value;
-      const specSelect = document.getElementById('edit-order-add-spec');
-      specSelect.innerHTML = "";
-
-      if(!pId) { specSelect.innerHTML = "<option value='預設規格'>預設規格</option>"; return; }
-      const p = allProducts.find(prod => String(prod.id) === String(pId));
-      if(p && p.variants && p.variants.length > 0) {
-        p.variants.forEach(v => { specSelect.innerHTML += `<option value="${escapeHtml(v.s)}">${escapeHtml(v.s)} ($${v.p})</option>`; });
-      } else {
-        specSelect.innerHTML = "<option value='預設規格'>預設規格</option>";
-      }
-    }
-
-    function addInputToEditOrder() {
-      const pId = document.getElementById('edit-order-add-select').value;
-      const spec = document.getElementById('edit-order-add-spec').value;
-      if(!pId) { alert("請選取要追加入單的連線商品！"); return; }
-
-      const p = allProducts.find(prod => String(prod.id) === String(pId));
-      if(!p) return;
-
-      let determinedPrice = parseInt(p.p || 0);
-      if(p.variants) {
-        const vMatch = p.variants.find(v => v.s === spec);
-        if(vMatch) determinedPrice = parseInt(vMatch.p || 0);
-      }
-
-      const exist = tempEditOrderItems.find(it => String(it.pId) === String(pId) && it.s === spec);
-      if(exist) { exist.q += 1; }
-      else { tempEditOrderItems.push({ pId: p.id, n: p.n, p: determinedPrice, s: spec, q: 1 }); }
-      renderEditOrderItemsTable();
-    }
-
-    function removeEditOrderItem(idx) { tempEditOrderItems.splice(idx, 1); renderEditOrderItemsTable(); }
-
-    function updateEditOrderCacheValue(idx, field, val) {
-      if(field === 'p') tempEditOrderItems[idx].p = parseInt(val) || 0;
-      if(field === 'q') tempEditOrderItems[idx].q = parseInt(val) || 0;
-      recalcEditOrderGrandTotal();
-    }
-
-    function renderEditOrderItemsTable() {
-      const tbody = document.getElementById('edit-order-items-tbody');
-      tbody.innerHTML = "";
-      tempEditOrderItems.forEach((it, idx) => {
-        tbody.innerHTML += `
-          <tr class="hover:bg-slate-900/40">
-            <td class="p-2 font-bold text-slate-300">${it.n} <span class="text-slate-500 font-normal">[${it.s}]</span></td>
-            <td class="p-2"><input type="number" oninput="updateEditOrderCacheValue(${idx}, 'p', this.value)" class="w-24 px-1.5 py-0.5 rounded sj-input font-mono text-right" value="${it.p}"></td>
-            <td class="p-2"><input type="number" oninput="updateEditOrderCacheValue(${idx}, 'q', this.value)" class="w-14 px-1.5 py-0.5 rounded sj-input text-center" value="${it.q}"></td>
-            <td class="p-2 text-center"><button onclick="removeEditOrderItem(${idx})" class="text-red-400 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button></td>
-          </tr>
-        `;
-      });
-      recalcEditOrderGrandTotal();
-    }
-
-    function recalcEditOrderGrandTotal() {
-      let g = 0; tempEditOrderItems.forEach(it => { g += (it.p || 0) * (it.q || 0); });
-      document.getElementById('edit-order-grand-total').innerText = g;
-    }
-
-    function saveOrderEdits() {
-      if(!currentEditOrderId) return;
-      const line = document.getElementById('edit-order-line').value.trim();
-      const note = document.getElementById('edit-order-note').value.trim();
-      if(!line) { alert("買家 LINE 暱稱必填。"); return; }
-
-      let finalTotal = 0;
-      tempEditOrderItems.forEach(it => finalTotal += it.p * it.q);
-
-      db.ref(`orders/${currentEditOrderId}`).update({ line, note, items: tempEditOrderItems, total: finalTotal }, (err) => {
-        if(err) { alert("儲存訂單失敗。"); }
-        else { alert("👍 訂單微調修改成功，總金額已自動重算更新。"); closeOrderEditModal(); }
-      });
-    }
 
     function escapeHtml(str) {
       if(!str) return '';
