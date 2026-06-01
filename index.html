@@ -12,7 +12,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
   <style>
-    /* 🍵 抹茶牛奶日系清爽色調調色盤 */
     body {
       background-color: #F4F7F4; 
       color: #334155; 
@@ -233,7 +232,7 @@
       
       <div class="p-4 border-t border-slate-100 bg-[#F8FAF8] flex justify-end space-x-2 rounded-b-2xl">
         <button onclick="closeEventModal()" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-500 hover:bg-slate-5 text-xs font-medium">取消</button>
-        <button onclick="saveEventAndProducts()" class="px-5 py-2 bg-[#2D8A5E] hover:bg-[#226B46] text-white font-bold rounded-lg text-xs shadow-md"><i class="fa-solid fa-floppy-disk mr-1"></i> 儲存並發布此場次</button>
+        <button onclick="saveEventAndProducts()" class="px-5 py-2 bg-[#2D8A5E] hover:bg-[#226B46] text-white font-bold rounded-lg text-xs shadow-md"><i class="fa-floppy-disk fa-solid mr-1"></i> 儲儲並發布此場次</button>
       </div>
     </div>
   </div>
@@ -392,12 +391,11 @@
       filtered.forEach(p => {
         let optionsHtml = "";
         
-        if(p.variants) {
+        if(p.variants && Object.keys(p.variants).length > 0) {
           Object.keys(p.variants).forEach(specKey => {
             const v = p.variants[specKey];
             const stockNum = (v.stock !== undefined && v.stock !== "") ? parseInt(v.stock) : "無限";
             
-            // ✨ 應園長要求：絕對不隱藏！就算是 0 件，也在前台大大方方秀出來，並標記庫存
             if (stockNum === 0) {
               optionsHtml += `<option value="${escapeHtml(specKey)}">${escapeHtml(specKey)} (已斷貨/庫存: 0)</option>`;
             } else {
@@ -441,7 +439,6 @@
       
       const selectedSpec = specSelect.value;
       
-      // 🔒 買家防呆攔截機制：如果選到的規格在資料庫內庫存小於等於 0，跳出警告阻止加入
       if(p.variants && p.variants[selectedSpec]) {
         const vObj = p.variants[selectedSpec];
         if(vObj.stock !== undefined && vObj.stock !== "" && parseInt(vObj.stock) <= 0) {
@@ -640,7 +637,6 @@
       db.ref().update(updates);
     }
 
-    // ================= 5. 【大彈窗】一頁流編輯還原雙逗號 =================
     function openEventModal(editTargetEventName = "") {
       const modal = document.getElementById('event-modal');
       const tbody = document.getElementById('modal-products-tbody');
@@ -657,15 +653,23 @@
           let specString = "";
           let stockString = "";
           
-          if(p.variants) {
-            specString = Object.keys(p.variants).join(', ');
-            stockString = Object.keys(p.variants).map(k => {
-              const st = p.variants[k].stock;
-              if (st === undefined || st === null || st === "") return "不限";
-              return Math.floor(parseFloat(st));
-            }).join(', ');
+          if(p.variants && Object.keys(p.variants).length > 0) {
+            // 如果只有唯一的「預設規格」，還原至輸入框時直接留空，方便園長觀看與操作
+            const keys = Object.keys(p.variants);
+            if(keys.length === 1 && keys[0] === "預設規格") {
+              specString = "";
+              const st = p.variants["預設規格"].stock;
+              stockString = (st === undefined || st === null || st === "") ? "不限" : st;
+            } else {
+              specString = keys.join(', ');
+              stockString = keys.map(k => {
+                const st = p.variants[k].stock;
+                if (st === undefined || st === null || st === "") return "不限";
+                return st;
+              }).join(', ');
+            }
           } else {
-            specString = "預設規格";
+            specString = "";
             stockString = "不限";
           }
           addModalProductRow({ img: p.img||'', n: p.n||'', s: specString, jpy_cost: p.jpy_cost||0, jpy_fee: p.jpy_fee||0, p: p.p||0, stock: stockString });
@@ -694,7 +698,7 @@
         <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input font-bold p-name" value="${escapeHtml(data?data.n:'')}" placeholder="品名(必填)"></td>
         <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input p-spec text-[#557A55] font-bold text-sm" value="${escapeHtml(data?data.s:'')}" placeholder="例: m, L"></td>
         <td class="p-2"><input type="number" oninput="calcRowTwdPrice('${rowId}')" class="w-full px-2 py-1 rounded sj-input text-right font-mono p-cost" value="${data?data.jpy_cost:''}" placeholder="0"></td>
-        <td class="p-2"><input type="number" oninput="calcRowTwdPrice('${rowId}')" class="w-full px-2 py-1 rounded sj-input text-right font-mono p-fee" value="${data?data.jpy_fee:''}" placeholder="0"></td>
+        <td class="p-2"><input type="number" oninput="calcRowTwmPrice('${rowId}')" class="w-full px-2 py-1 rounded sj-input text-right font-mono p-fee" value="${data?data.jpy_fee:''}" placeholder="0"></td>
         <td class="p-2"><input type="number" class="w-full px-2 py-1 rounded bg-[#FCFDFB] text-[#C87A28] font-bold border border-slate-300 text-right p-price" value="${data?data.p:''}" placeholder="賣價"></td>
         <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input border border-slate-300 text-center p-stock font-mono text-[#2D8A5E] font-bold text-sm" value="${escapeHtml(data?data.stock:'')}" placeholder="例: 6, 0"></td>
         <td class="p-2 text-center"><button onclick="document.getElementById('${rowId}').remove()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></td>
@@ -716,6 +720,7 @@
       rows.forEach(row => calcRowTwdPrice(row.id));
     }
 
+    // 🔥 核心修復：極致完美的防呆一頁流儲存解析邏輯
     function saveEventAndProducts() {
       const eventName = document.getElementById('modal-event-name').value.trim();
       const rate = parseFloat(document.getElementById('modal-event-rate').value) || 0.22;
@@ -737,21 +742,27 @@
 
         const variantsMap = {};
         
-        const specArray = specRaw ? specRaw.split(/[,，]+/).map(s => s.trim()).filter(Boolean) : ["預設規格"];
-        const stockArray = stockRaw ? stockRaw.split(/[,，]+/).map(s => s.trim()) : [];
+        // 1. 解析規格陣列 (如果留白，就當作是單一無規格商品)
+        let specArray = specRaw ? specRaw.split(/[,，]+/).map(s => s.trim()).filter(Boolean) : [];
+        if(specArray.length === 0) {
+          specArray = ["預設規格"];
+        }
 
+        // 2. 解析庫存陣列
+        let stockArray = stockRaw ? stockRaw.split(/[,，]+/).map(s => s.trim()).filter(Boolean) : [];
+
+        // 3. 完美對齊規格與庫存
         specArray.forEach((specName, index) => {
-          let currentStockVal = ""; 
+          let currentStockVal = ""; // 預設是不限庫存
           
           if (stockArray.length > 0) {
-            const matchedStockStr = stockArray[index];
+            // 如果庫存只有填一個（例如手帕只填一個 2），但規格也只有一個，那就直接配對
+            // 如果庫存有多個，就依照對應的位置抓取
+            const matchedStockStr = (stockArray.length === 1) ? stockArray[0] : stockArray[index];
+            
             if (matchedStockStr !== undefined && matchedStockStr !== "" && matchedStockStr !== "不限") {
               const parsed = parseInt(matchedStockStr);
               currentStockVal = isNaN(parsed) ? 0 : parsed; 
-            } else if (stockArray.length === 1 && index > 0) {
-              currentStockVal = "";
-            } else {
-              currentStockVal = 0; 
             }
           }
 
@@ -789,7 +800,7 @@
           console.error(err);
           alert("儲存失敗！"); 
         } else { 
-          alert(`✨ 報告園長！規格對齊版已完美同步儲存到雲端！`); 
+          alert(`✨ 報告園長！這次連同沒有規格的【手帕】都一起完美儲存成功了！`); 
           closeEventModal(); 
         }
       });
