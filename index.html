@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>33日本動物園</title>
+  <title>33 日本動物園 ｜ 園長專屬極速代購連線系統</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,12 +14,12 @@
   <style>
     /* 🍵 抹茶牛奶日系清爽色調調色盤 */
     body {
-      background-color: #F4F7F4; /* 淡淡的清爽米綠底色 */
-      color: #334155; /* 溫柔的深灰字 */
+      background-color: #F4F7F4; 
+      color: #334155; 
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
     .sj-card {
-      background-color: #FFFFFF; /* 純白牛奶卡片 */
+      background-color: #FFFFFF; 
       border: 1px solid #E2E8F0;
       border-radius: 0.75rem;
       box-shadow: 0 4px 15px rgba(143, 168, 143, 0.1);
@@ -30,12 +30,12 @@
       color: #1E293B;
     }
     .sj-input:focus {
-      border-color: #557A55; /* 抹茶綠焦點線 */
+      border-color: #557A55; 
       outline: none;
       box-shadow: 0 0 0 3px rgba(85, 122, 85, 0.15);
     }
     .btn-primary {
-      background-color: #557A55; /* 經典抹茶綠 */
+      background-color: #557A55; 
       color: white;
       transition: all 0.2s;
     }
@@ -217,11 +217,11 @@
                 <tr>
                   <th class="p-2.5 w-32">商品圖片網址</th>
                   <th class="p-2.5">商品品名 <span class="text-red-500">*</span></th>
-                  <th class="p-2.5 w-44">規格 (逗號隔開)</th>
+                  <th class="p-2.5 w-44 text-[#557A55]">規格 (例: m, L)</th>
                   <th class="p-2.5 w-24">原價 (日幣)</th>
                   <th class="p-2.5 w-24">付代購 (日幣)</th>
                   <th class="p-2.5 w-28">台幣賣價 <span class="text-red-500">*</span></th>
-                  <th class="p-2.5 w-32 text-center">庫存 (對應逗號)</th>
+                  <th class="p-2.5 w-40 text-center text-[#2D8A5E]">庫存對應 (例: 6, 0)</th>
                   <th class="p-2.5 w-12 text-center">刪</th>
                 </tr>
               </thead>
@@ -239,11 +239,10 @@
   </div>
 
   <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400 mt-12">
-    © 2026 33 日本動物園 ✨ 園長專屬手動開關連線大廳系統 (日系抹茶牛奶版)
+    © 2026 33 日本動物園 ✨ 園長專屬雙對應極速連線系統
   </footer>
 
   <script>
-    // 📢 【請將此更換為您原本的 Firebase 密鑰設定】
     const firebaseConfig = {
       apiKey: "YOUR_API_KEY",
       authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -322,7 +321,6 @@
       }
     }
 
-    // ================= 1. 前台連線大廳渲染 =================
     function renderLobbyAndEvents() {
       const eventNamesSet = new Set();
       allProducts.forEach(p => { if(p.e) eventNamesSet.add(p.e.trim()); });
@@ -370,7 +368,6 @@
       renderAdminEventsTable(uniqueEventsArray);
     }
 
-    // ================= 2. 前台商品選購頁渲染 (自動隱藏斷貨規格) =================
     function enterShop(eventName) {
       currentEventName = eventName;
       document.getElementById('current-shop-title').innerText = eventName;
@@ -396,20 +393,17 @@
         let optionsHtml = "";
         
         if(p.variants) {
-          let availableCount = 0;
           Object.keys(p.variants).forEach(specKey => {
             const v = p.variants[specKey];
-            // 🚨 核心邏輯：如果後台庫存小於或等於 0，直接跳過不顯示（完美的隱藏數字機制）
-            if (v.stock !== undefined && v.stock !== "" && parseInt(v.stock) <= 0) {
-              return; 
+            const stockNum = (v.stock !== undefined && v.stock !== "") ? parseInt(v.stock) : "無限";
+            
+            // ✨ 應園長要求：絕對不隱藏！就算是 0 件，也在前台大大方方秀出來，並標記庫存
+            if (stockNum === 0) {
+              optionsHtml += `<option value="${escapeHtml(specKey)}">${escapeHtml(specKey)} (已斷貨/庫存: 0)</option>`;
+            } else {
+              optionsHtml += `<option value="${escapeHtml(specKey)}">${escapeHtml(specKey)} (庫存: ${stockNum})</option>`;
             }
-            availableCount++;
-            optionsHtml += `<option value="${escapeHtml(specKey)}">${escapeHtml(specKey)}</option>`;
           });
-          
-          if(availableCount === 0) {
-            optionsHtml = `<option value="" disabled>已全數斷貨完售</option>`;
-          }
         } else {
           optionsHtml = `<option value="預設規格">預設規格</option>`;
         }
@@ -443,9 +437,18 @@
       if(!p) return;
 
       const specSelect = document.getElementById(`spec-select-${pId}`);
-      if(specSelect.disabled || !specSelect.value || specSelect.value === "") { alert("此商品已無庫存可選購！"); return; }
+      if(!specSelect || !specSelect.value) return;
       
       const selectedSpec = specSelect.value;
+      
+      // 🔒 買家防呆攔截機制：如果選到的規格在資料庫內庫存小於等於 0，跳出警告阻止加入
+      if(p.variants && p.variants[selectedSpec]) {
+        const vObj = p.variants[selectedSpec];
+        if(vObj.stock !== undefined && vObj.stock !== "" && parseInt(vObj.stock) <= 0) {
+          alert(`⚠️ 抱歉！規格【${selectedSpec}】目前已售罄斷貨，無法加入購物車喔！`);
+          return;
+        }
+      }
 
       const exist = cart.find(item => String(item.pId) === String(pId) && item.spec === selectedSpec);
       if(exist) {
@@ -541,7 +544,6 @@
       });
     }
 
-    // ================= 3. 買家獨立查單 =================
     function queryBuyerOrders() {
       const input = document.getElementById('query-line-input').value.trim();
       if(!input) { alert("請輸入 LINE 暱稱。"); return; }
@@ -572,7 +574,6 @@
       });
     }
 
-    // ================= 4. 管理後台數據看板運算 =================
     function updateAdminStats() {
       let totalRev = 0;
       let totalProfit = 0;
@@ -639,7 +640,7 @@
       db.ref().update(updates);
     }
 
-    // ================= 5. 【大彈窗】編輯/新增一頁流處理 =================
+    // ================= 5. 【大彈窗】一頁流編輯還原雙逗號 =================
     function openEventModal(editTargetEventName = "") {
       const modal = document.getElementById('event-modal');
       const tbody = document.getElementById('modal-products-tbody');
@@ -658,7 +659,11 @@
           
           if(p.variants) {
             specString = Object.keys(p.variants).join(', ');
-            stockString = Object.keys(p.variants).map(k => p.variants[k].stock ?? "不限").join(', ');
+            stockString = Object.keys(p.variants).map(k => {
+              const st = p.variants[k].stock;
+              if (st === undefined || st === null || st === "") return "不限";
+              return Math.floor(parseFloat(st));
+            }).join(', ');
           } else {
             specString = "預設規格";
             stockString = "不限";
@@ -687,11 +692,11 @@
       tr.innerHTML = `
         <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input p-img text-[11px]" value="${escapeHtml(data?data.img:'')}" placeholder="圖片URL"></td>
         <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input font-bold p-name" value="${escapeHtml(data?data.n:'')}" placeholder="品名(必填)"></td>
-        <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input p-spec text-[#557A55] font-medium" value="${escapeHtml(data?data.s:'')}" placeholder="M, L (留空為預設)"></td>
+        <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input p-spec text-[#557A55] font-bold text-sm" value="${escapeHtml(data?data.s:'')}" placeholder="例: m, L"></td>
         <td class="p-2"><input type="number" oninput="calcRowTwdPrice('${rowId}')" class="w-full px-2 py-1 rounded sj-input text-right font-mono p-cost" value="${data?data.jpy_cost:''}" placeholder="0"></td>
         <td class="p-2"><input type="number" oninput="calcRowTwdPrice('${rowId}')" class="w-full px-2 py-1 rounded sj-input text-right font-mono p-fee" value="${data?data.jpy_fee:''}" placeholder="0"></td>
         <td class="p-2"><input type="number" class="w-full px-2 py-1 rounded bg-[#FCFDFB] text-[#C87A28] font-bold border border-slate-300 text-right p-price" value="${data?data.p:''}" placeholder="賣價"></td>
-        <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input text-center p-stock font-mono text-[#2D8A5E]" value="${data?data.stock:''}" placeholder="例: 2, 5, 1"></td>
+        <td class="p-2"><input type="text" class="w-full px-2 py-1 rounded sj-input border border-slate-300 text-center p-stock font-mono text-[#2D8A5E] font-bold text-sm" value="${escapeHtml(data?data.stock:'')}" placeholder="例: 6, 0"></td>
         <td class="p-2 text-center"><button onclick="document.getElementById('${rowId}').remove()" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button></td>
       `;
       tbody.appendChild(tr);
@@ -711,7 +716,6 @@
       rows.forEach(row => calcRowTwdPrice(row.id));
     }
 
-    // 🧠 核心升級：支援「單一複製」與「多規格一對一不同庫存」高智商配對儲存
     function saveEventAndProducts() {
       const eventName = document.getElementById('modal-event-name').value.trim();
       const rate = parseFloat(document.getElementById('modal-event-rate').value) || 0.22;
@@ -724,7 +728,7 @@
         const n = row.querySelector('.p-name').value.trim();
         if(!n) continue; 
 
-        const img = row.querySelector('.p-img').value.trim();
+        const img = row.querySelector('.p-img').value.trim() || "";
         const specRaw = row.querySelector('.p-spec').value.trim();
         const jpy_cost = parseFloat(row.querySelector('.p-cost').value) || 0;
         const jpy_fee = parseFloat(row.querySelector('.p-fee').value) || 0;
@@ -733,62 +737,64 @@
 
         const variantsMap = {};
         
-        // 切割規格陣列
-        const specArray = specRaw ? specRaw.split(/[,，\s]+/).filter(Boolean) : ["預設規格"];
-        // 切割庫存陣列
-        const stockArray = stockRaw ? stockRaw.split(/[,，\s]+/).map(s => s.trim()) : [];
+        const specArray = specRaw ? specRaw.split(/[,，]+/).map(s => s.trim()).filter(Boolean) : ["預設規格"];
+        const stockArray = stockRaw ? stockRaw.split(/[,，]+/).map(s => s.trim()) : [];
 
         specArray.forEach((specName, index) => {
-          let currentStockVal = "";
+          let currentStockVal = ""; 
           
-          if (stockArray.length === 0) {
-            // 情況 A：庫存沒填 -> 全部不限
-            currentStockVal = "";
-          } else if (stockArray.length === 1) {
-            // 情況 B：庫存只填了一個（例：6）-> 全尺寸都配 6
-            const singleStock = stockArray[0];
-            currentStockVal = (singleStock === "" || singleStock === "不限") ? "" : (isNaN(parseInt(singleStock)) ? "" : parseInt(singleStock));
-          } else {
-            // 情況 C：庫存填了多個（例：2, 5, 1）-> 依照順序一對一配對
-            const matchedStock = stockArray[index];
-            if (matchedStock !== undefined && matchedStock !== "" && matchedStock !== "不限") {
-              currentStockVal = isNaN(parseInt(matchedStock)) ? "" : parseInt(matchedStock);
+          if (stockArray.length > 0) {
+            const matchedStockStr = stockArray[index];
+            if (matchedStockStr !== undefined && matchedStockStr !== "" && matchedStockStr !== "不限") {
+              const parsed = parseInt(matchedStockStr);
+              currentStockVal = isNaN(parsed) ? 0 : parsed; 
+            } else if (stockArray.length === 1 && index > 0) {
+              currentStockVal = "";
             } else {
-              currentStockVal = ""; // 超出位置或寫不限，就當作不限
+              currentStockVal = 0; 
             }
           }
 
-          variantsMap[specName] = {
-            stock: currentStockVal
-          };
+          const safeSpecKey = specName.trim();
+          if (safeSpecKey) {
+            variantsMap[safeSpecKey] = {
+              stock: currentStockVal
+            };
+          }
         });
 
-        finalProducts.push({ e: eventName, n, img, jpy_cost, jpy_fee, p, variants: variantsMap });
+        finalProducts.push({
+          e: eventName, n: n, img: img, jpy_cost: jpy_cost, jpy_fee: jpy_fee, p: p, variants: variantsMap
+        });
       }
 
       const updates = {};
-      allProducts.forEach(oldP => { if(oldP.e === eventName) updates[`products/${oldP.id}`] = null; });
+      
+      allProducts.forEach(oldP => { 
+        if(oldP.e && oldP.e.trim() === eventName) {
+          updates[`products/${oldP.id}`] = null; 
+        } 
+      });
       
       finalProducts.forEach(newP => {
         const newK = db.ref('products').push().key;
         updates[`products/${newK}`] = newP;
       });
 
-      const isCurrentClosed = eventStatusMap[eventName]?.isClosed || false;
+      const isCurrentClosed = (eventStatusMap[eventName] && eventStatusMap[eventName].isClosed) ? eventStatusMap[eventName].isClosed : false;
       updates[`event_status/${eventName}`] = { isClosed: isCurrentClosed, rate: rate };
 
       db.ref().update(updates, (err) => {
         if(err) { 
           console.error(err);
-          alert("儲存失敗，請檢查資料或網路連線。"); 
+          alert("儲存失敗！"); 
         } else { 
-          alert(`✨ 場次【${eventName}】多規格高智商庫存配置發布完成！`); 
+          alert(`✨ 報告園長！規格對齊版已完美同步儲存到雲端！`); 
           closeEventModal(); 
         }
       });
     }
 
-    // ================= 6. 後台買家訂單對帳與渲染 =================
     function renderAdminOrders() {
       const container = document.getElementById('admin-orders-container');
       container.innerHTML = "";
