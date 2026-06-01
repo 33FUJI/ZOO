@@ -637,7 +637,6 @@
       db.ref().update(updates);
     }
 
-    // 🌟 超級無敵還原防當機核心
     function openEventModal(editTargetEventName = "") {
       const modal = document.getElementById('event-modal');
       const tbody = document.getElementById('modal-products-tbody');
@@ -654,7 +653,6 @@
           let specString = "";
           let stockString = "";
           
-          // 🛡️ 這裡加上極厚 try...catch，就算資料庫舊格式是壞的也絕不卡死
           try {
             if(p.variants && Object.keys(p.variants).length > 0) {
               const keys = Object.keys(p.variants);
@@ -728,19 +726,21 @@
       rows.forEach(row => calcRowTwdPrice(row.id));
     }
 
-    // 🌟 重新鍛造：百分之百防卡死、相容任何稀奇古怪填法儲存核心
+    // 🔥 鍛造神級防呆核心：將全形、半形、空格徹底熔煉
     function saveEventAndProducts() {
       try {
         const eventName = document.getElementById('modal-event-name').value.trim();
         const rate = parseFloat(document.getElementById('modal-event-rate').value) || 0.22;
-        if(!eventName) { alert("請輸入活動場次名稱！"); return; }
+        if(!eventName) { alert("⚠️ 請填寫活動場次名稱！"); return; }
 
         const rows = document.querySelectorAll('#modal-products-tbody > tr');
         const finalProducts = [];
+        let rowIndex = 0;
 
         for(let row of rows) {
+          rowIndex++;
           const n = row.querySelector('.p-name').value.trim();
-          if(!n) continue; 
+          if(!n) continue; // 如果沒品名就跳過該行
 
           const img = row.querySelector('.p-img').value.trim() || "";
           const specRaw = row.querySelector('.p-spec').value.trim();
@@ -751,22 +751,21 @@
 
           const variantsMap = {};
           
-          // 1. 切割規格（相容全形、半形逗號）
-          let specArray = specRaw ? specRaw.split(/[,，]+/).map(s => s.trim()).filter(Boolean) : [];
+          // 🧠 【終極熔煉】相容全形中文逗號「，」與英文半形「,」
+          let specArray = specRaw ? specRaw.split(/[,，\s]+/).map(s => s.trim()).filter(Boolean) : [];
           if(specArray.length === 0) {
-            specArray = ["預設規格"]; // 手帕沒規格，直接填預設
+            specArray = ["預設規格"];
           }
 
-          // 2. 切割庫存
-          let stockArray = stockRaw ? stockRaw.split(/[,，]+/).map(s => s.trim()).filter(Boolean) : [];
+          let stockArray = stockRaw ? stockRaw.split(/[,，\s]+/).map(s => s.trim()).filter(Boolean) : [];
 
-          // 3. 極致相容配對
-          specArray.forEach((specName, index) => {
-            let currentStockVal = ""; // 預設是不限庫存
+          // 🧠 【雙配對終極去毒】
+          specArray.forEach((specName, idx) => {
+            let currentStockVal = ""; // 空字串代表不限庫存
             
             if (stockArray.length > 0) {
-              // 核心防呆：如果庫存只有填一個（手帕的 2），直接抓第一個
-              const matchedStockStr = (stockArray.length === 1) ? stockArray[0] : stockArray[index];
+              // 防呆：如果買家只填一個庫存數（例如手帕只填一個 2），則全部規格均套用此庫存；否則依順序配對
+              const matchedStockStr = (stockArray.length === 1) ? stockArray[0] : stockArray[idx];
               
               if (matchedStockStr !== undefined && matchedStockStr !== "" && matchedStockStr !== "不限" && matchedStockStr !== "無限") {
                 const parsed = parseInt(matchedStockStr);
@@ -787,14 +786,14 @@
 
         const updates = {};
         
-        // 清理該場次舊資料
+        // 抹除舊資料
         allProducts.forEach(oldP => { 
           if(oldP.e && oldP.e.trim() === eventName) {
             updates[`products/${oldP.id}`] = null; 
           } 
         });
         
-        // 寫入全新格式
+        // 塞入清洗乾淨的全新物件
         finalProducts.forEach(newP => {
           const newK = db.ref('products').push().key;
           updates[`products/${newK}`] = newP;
@@ -803,18 +802,18 @@
         const isCurrentClosed = (eventStatusMap[eventName] && eventStatusMap[eventName].isClosed) ? eventStatusMap[eventName].isClosed : false;
         updates[`event_status/${eventName}`] = { isClosed: isCurrentClosed, rate: rate };
 
-        // 執行寫入
+        // 執行資料庫推送
         db.ref().update(updates, (err) => {
           if(err) { 
-            alert("Firebase 拒絕寫入原因：" + err.message); 
+            alert("❌ Firebase 資料庫拒絕寫入，原因：" + err.message); 
           } else { 
-            alert(`✨ 報告園長！這次連同沒有規格的【手帕】都一起完美儲存成功了！`); 
+            alert(`✨ 報告園長！中英文逗號與格式已自動清洗完畢，場次【${eventName}】完美儲存發布成功！`); 
             closeEventModal(); 
           }
         });
 
       } catch (globalError) {
-        alert("🚨 系統運行發生致命錯誤，請截圖給工程師：" + globalError.message);
+        alert("🚨 防護攔截！儲存時發生未預期錯誤，請檢查是否有特殊字元：" + globalError.message);
       }
     }
 
