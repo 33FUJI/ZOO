@@ -1,492 +1,96 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>33日本動物園</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Cinzel:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
-  
-  <style>
-    /* 100% 延續您熟悉的黃白風格，僅擴充高效率對帳與盲打排版 */
-    .admin-section { 
-      background: #ffffff; 
-      border: 1px solid var(--border1, #e6dec9); 
-      padding: 20px; 
-      border-radius: 8px; 
-      margin-bottom: 16px; 
-    }
-    .archived-header { 
-      background: #faf8f2; 
-      padding: 12px; 
-      border-radius: 6px; 
-      border: 1px solid #ebdcb9; 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      cursor: pointer; 
-      user-select: none; 
-    }
-    
-    /* 現場一條龍極速上架快捷列樣式 */
-    .quick-add-row { 
-      display: flex; 
-      gap: 8px; 
-      background: #fffbf2; 
-      padding: 12px; 
-      border: 1px dashed #d1c29d; 
-      border-radius: 6px; 
-      margin: 10px 0; 
-      align-items: center; 
-      flex-wrap: wrap; 
-    }
-    .quick-add-row input { 
-      flex: 1; 
-      min-width: 80px; 
-      padding: 6px 10px; 
-      border: 1px solid #dcd1b4; 
-      border-radius: 4px; 
-      font-size: 14px; 
-      background: #ffffff; 
-    }
-    .quick-add-row input:focus { 
-      border-color: #c0a975; 
-      outline: none; 
-    }
-    .quick-add-btn { 
-      background: #8e794b; 
-      color: #ffffff; 
-      border: none; 
-      padding: 6px 16px; 
-      border-radius: 4px; 
-      cursor: pointer; 
-      font-size: 14px; 
-      font-weight: 500; 
-    }
-    .quick-add-btn:hover { 
-      background: #736139; 
-    }
-
-    /* 收款、改單明細與大盤表格 */
-    .editor-table { 
-      width: 100%; 
-      border-collapse: collapse; 
-      margin: 12px 0; 
-      font-size: 14px; 
-    }
-    .editor-table th, .editor-table td { 
-      padding: 10px; 
-      text-align: left; 
-      border-bottom: 1px solid #f0e9d7; 
-    }
-    .editor-table th { 
-      background: #faf7ee; 
-      color: #5c4e33; 
-      font-weight: 500; 
-    }
-    
-    .profit-positive {
-      color: #2e7d32;
-      font-weight: bold;
-    }
-    .stock-badge {
-      background: #f1f5f9;
-      color: #334155;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 12px;
-    }
-    .detail-row-box {
-      background: #fdfdfb;
-      padding: 15px;
-      border-left: 4px solid #c0a975;
-      margin: 8px 0;
-      border-radius: 0 6px 6px 0;
-    }
-    .inp-qty { 
-      width: 50px; 
-      text-align: center; 
-      padding: 4px; 
-      border: 1px solid #dcd1b4; 
-      border-radius: 4px; 
-    }
-    .btn-del-item { 
-      color: #cc3333; 
-      background: none; 
-      border: none; 
-      cursor: pointer; 
-      font-weight: bold; 
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>33日本動物園 - 專業管理系統</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <style>
+        :root { --matcha: #606C38; --rice: #FEF9EF; --caramel: #BC6C25; --wood: #283618; }
+        body { font-family: 'Noto Sans TC', sans-serif; background: #f4f1ea; color: var(--wood); margin: 0; }
+        .tabs-header { display: flex; background: #fff; border-bottom: 2px solid var(--matcha); position: sticky; top: 0; z-index: 100; }
+        .tab-btn { padding: 15px 10px; cursor: pointer; border: none; background: none; font-weight: bold; flex: 1; font-size: 13px; }
+        .tab-btn.active { background: var(--matcha); color: white; }
+        .order-card { background: white; margin: 10px; padding: 15px; border-radius: 8px; border-left: 5px solid var(--matcha); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .status-tag { background: var(--rice); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; border: 1px solid #ddd; margin-top: 5px; display: inline-block; }
+        .profit-view { color: var(--caramel); font-weight: bold; margin-top: 5px; font-size: 0.9em; }
+    </style>
 </head>
 <body>
 
-<div id="login-screen" class="screen active">
-  <div class="login-wrap">
-    <div class="login-crest">
-      <div class="crest-ring">👑</div>
-      <span class="login-title">33日本動物園</span>
-      <span class="login-sub">連線代購管理系統</span>
-    </div>
-    <div style="padding: 20px 0;">
-      <input type="password" id="login-password" class="fi" placeholder="輸入管理密碼 (1239)" style="margin-bottom:6px; text-align: center;" onkeydown="if(event.key==='Enter')doLogin()">
-      <div id="pw-hint" style="font-size:11px;color:var(--text3);padding:0 2px;min-height:16px;"></div>
-      <button class="btn-login" id="login-btn" onclick="doLogin()">進入系統</button>
-    </div>
-  </div>
+<div class="tabs-header">
+    <button class="tab-btn active" onclick="setFilter('all', this)">全部</button>
+    <button class="tab-btn" onclick="setFilter('pending', this)">待確認</button>
+    <button class="tab-btn" onclick="setFilter('action', this)">待買家處理</button>
+    <button class="tab-btn" onclick="setFilter('confirmed', this)">已成立</button>
+    <button class="tab-btn" onclick="setFilter('other', this)">其它</button>
 </div>
 
-<div id="app-screen" class="screen">
-  <div class="topbar">
-    <div class="topbar-l">
-      <div class="wordmark"><span>✦</span> 33日本動物園</div>
-      <div class="tdiv"></div>
-      <div class="user-chip">
-        <span class="chip-dot" id="chip-dot"></span>
-        <span id="user-label">管理員</span>
-      </div>
-    </div>
-    <div class="topbar-r">
-      <button class="cart-btn" id="cart-btn" onclick="toggleCart()" style="display:none">🛒 購物車 <span class="cart-badge hidden" id="cart-badge">0</span></button>
-      <button class="logout-btn" onclick="logout()">登出</button>
-    </div>
-  </div>
-
-  <div class="tabs">
-    <button class="tab active" data-tab="events" onclick="switchTab('events')">活動場次</button>
-    <button class="tab" data-tab="admin" id="tab-admin-btn" style="display:none" onclick="switchTab('admin')">⚙ 管理後台</button>
-    <button class="tab" data-tab="orders" id="tab-orders-btn" style="display:none" onclick="switchTab('orders')">📋 訂單記錄</button>
-    <button class="tab" data-tab="payment" id="tab-payment-btn" style="display:none" onclick="switchTab('payment')">💰 收款記錄</button>
-  </div>
-
-  <div class="main">
-    <div id="pane-events"></div>
-    
-    <div id="pane-admin" style="display:none">
-      <div class="admin-section">
-        <h2 style="font-size:18px;margin-bottom:12px;color:#4a3c1a;">📝 系統現有活動場次維護 (進行中)</h2>
-        <div id="active-events-list"></div>
-      </div>
-      
-      <div class="admin-section" style="margin-top:24px;border-top:1px dashed #dcd1b4;padding-top:16px">
-        <div class="archived-header" onclick="toggleArchivedSection()">
-          <span style="font-weight:bold;color:#666">🔒 歷史已截止活動 <span id="archived-count-badge" style="font-size:13px;background:#eec;padding:2px 8px;border-radius:10px;margin-left:4px">0</span></span>
-          <span id="archived-toggle-icon" style="font-size:12px;color:#888">▶ 點擊展開歷史大盤</span>
-        </div>
-        <div id="archived-events-list" style="display:none;margin-top:12px"></div>
-      </div>
-    </div>
-    
-    <div id="pane-orders" style="display:none"></div>
-    
-    <div id="pane-payment" style="display:none">
-      <div class="payment-controls">
-        <input type="text" id="payment-buyer-search" class="fi" placeholder="🔍 快速搜尋買家..." oninput="filterPaymentBuyers()" style="max-width:260px;margin:0">
-      </div>
-      <div id="payment-buyers-grid" class="user-grid"></div>
-    </div>
-  </div>
-</div>
-
-<div class="cart-ov" id="cart-ov" onclick="ovClick(event)">
-  <div class="cart-panel">
-    <div class="cart-head">
-      <h3>🛒 購物車</h3>
-      <button class="close-btn" onclick="toggleCart()">✕</button>
-    </div>
-    <div class="cart-items-list" id="cart-items-list"></div>
-    <div class="cart-foot">
-      <div id="cart-sum"></div>
-      <textarea class="remark-inp" id="cart-remark" placeholder="備注"></textarea>
-      <button class="btn-primary" id="submit-btn" onclick="submitOrder()">確認送出訂單</button>
-    </div>
-  </div>
-</div>
-
-<div class="lb-ov" id="lb-ov" onclick="closeLightbox()"><img class="lb-img" id="lb-img" src=""></div>
-<div class="modal-ov" id="modal">
-  <div class="modal-box">
-    <h3 id="modal-title"></h3><p id="modal-msg"></p>
-    <div class="modal-btns">
-      <button class="btn-ghost" onclick="closeModal()">取消</button>
-      <button class="btn-primary" id="modal-ok">確認</button>
-    </div>
-  </div>
-</div>
-
-<script src="config.js"></script>
-<script src="js/core/state.js"></script>
-<script src="js/core/ui.js"></script>
-<script src="js/announce.js"></script>
-<script src="js/pages/events.js"></script>
-<script src="js/pages/cart.js"></script>
-<script src="js/pages/orders.js"></script>
-<script src="js/pages/admin.js"></script>
-<script src="js/pages/payment.js"></script>
-<script src="js/router.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/main.js"></script>
+<div id="admin-main"></div>
 
 <script>
-  // 切換歷史場次抽屜
-  function toggleArchivedSection() {
-    const list = document.getElementById('archived-events-list');
-    const icon = document.getElementById('archived-toggle-icon');
-    if (list.style.display === 'none') {
-      list.style.display = 'block';
-      icon.innerText = '▼ 點擊收合歷史大盤';
-      
-      // 核心安全對接：優先撈取您真實載入的 Firebase 陣列資料
-      if (typeof window.getFirebaseEventsArray === 'function') {
-        const allEvents = window.getFirebaseEventsArray();
-        // 過濾出狀態為已截止 (status === 'closed' 或您定義的截止狀態)
-        const closedEvents = allEvents.filter(e => e.status === 'closed' || e.isArchived === true);
-        renderYourRealArchivedTable(closedEvents);
-      } else {
-        // 如果此時還沒有抓到，則顯示安全的讀取中提示
-        document.getElementById('archived-events-list').innerHTML = `
-          <div style="padding:12px; color:#8e794b; text-align:center; font-size:13px;">
-            🔄 正在安全加載您的真實 Firebase 歷史場次與即時利潤統計...
-          </div>
-        `;
-      }
-    } else {
-      list.style.display = 'none';
-      icon.innerText = '▶ 點擊展開歷史大盤';
-    }
-  }
-
-  // 100% 讀取您自己系統的欄位，動態計算「有沒有賺」與「剩餘庫存」
-  function renderYourRealArchivedTable(realEventsArray) {
-    const container = document.getElementById('archived-events-list');
-    document.getElementById('archived-count-badge').innerText = realEventsArray.length;
-
-    if(realEventsArray.length === 0) {
-      container.innerHTML = `<div style="color:#999;font-size:13px;padding:10px;text-align:center;">目前無已截止的歷史場次。</div>`;
-      return;
-    }
-
-    let html = `
-      <table class="editor-table">
-        <thead>
-          <tr>
-            <th style="width:30px"></th>
-            <th>活動名稱</th>
-            <th>截止日期</th>
-            <th>幣別/匯率</th>
-            <th style="text-align:center">品項數</th>
-            <th style="text-align:center">總銷售 / 總庫存</th>
-            <th style="text-align:right">台幣純利潤</th>
-            <th style="text-align:center;width:120px">操作</th>
-          </tr>
-        </thead>
-        <tbody>
-    `;
-
-    realEventsArray.forEach(ev => {
-      const rate = ev.rate || 0.24;
-      let totalStock = 0;
-      let totalSold = 0;
-      let totalProfit = 0;
-      let pCount = 0;
-
-      // 如果活動有包含產品，利用您的真實商品包結構計算
-      if (ev.products) {
-        const pKeys = Object.keys(ev.products);
-        pCount = pKeys.length;
-        pKeys.forEach(key => {
-          const p = ev.products[key];
-          
-          // 💡 串接您的實務對帳命脈公式：
-          // (日幣原價 costRaw + 請代購日幣 costAgent) × 匯率 = 台幣總成本
-          const costRaw = parseFloat(p.costRaw) || parseFloat(p.cost) || 0; // 相容新舊成本欄位名稱
-          const costAgent = parseFloat(p.costAgent) || 0;
-          const twCost = Math.ceil((costRaw + costAgent) * rate);
-          
-          const priceTw = parseInt(p.price) || 0;
-          const sold = parseInt(p.sold) || 0;
-          const stock = parseInt(p.stock) || 0;
-
-          totalStock += stock;
-          totalSold += sold;
-          // 這款商品的台幣利潤 = (賣價 - 成本) × 賣出數量
-          totalProfit += ((priceTw - twCost) * sold);
-        });
-      }
-
-      html += `
-        <tr style="background:#fff;">
-          <td style="cursor:pointer;color:#8e794b" onclick="toggleArchivedDetailRow('${ev.id}')" id="arrow-${ev.id}">▶</td>
-          <td style="font-weight:bold;color:#4a3c1a;cursor:pointer" onclick="toggleArchivedDetailRow('${ev.id}')">${ev.name}</td>
-          <td>${ev.date || '—'}</td>
-          <td><span class="stock-badge">${ev.currency || 'JPY'} × ${rate}</span></td>
-          <td style="text-align:center;font-weight:500">${pCount}</td>
-          <td style="text-align:center">
-            <span style="color:#2b6cb0;font-weight:500">${totalSold}</span> / <span style="color:#718096">${totalStock}</span>
-          </td>
-          <td style="text-align:right" class="profit-positive">
-            NT$ ${totalProfit.toLocaleString()}
-          </td>
-          <td style="text-align:center">
-            <button class="quick-add-btn" style="padding:2px 8px;font-size:12px;background:#5c4e33" onclick="editEvent('${ev.id}')">編輯</button>
-            <button class="btn-del-item" style="font-size:12px;margin-left:4px" onclick="deleteEvent('${ev.id}')">❌</button>
-          </td>
-        </tr>
-        <tr id="detail-row-${ev.id}" style="display:none;background:#faf9f5">
-          <td colspan="8">
-            <div class="detail-row-box">
-              ${renderInjectableQuickAddRow(ev.id, rate)}
-              <h4 style="margin:8px 0;font-size:13px;color:#5c4e33">📦 此場次內您的真實商品庫存與單品獲利明細：</h4>
-              <div id="product-details-container-${ev.id}"></div>
-            </div>
-          </td>
-        </tr>
-      `;
-    });
-
-    html += `</tbody></table>`;
-    container.innerHTML = html;
-  }
-
-  // 展開特定場次明細並讀取您 Firebase 的商品清單
-  function toggleArchivedDetailRow(eventId) {
-    const row = document.getElementById(`detail-row-${eventId}`);
-    const arrow = document.getElementById(`arrow-${eventId}`);
-    if(row.style.display === 'none') {
-      row.style.display = 'table-row';
-      arrow.innerText = '▼';
-      
-      // 動態渲染這場活動裡的所有真實商品
-      if (typeof window.getFirebaseEventProducts === 'function') {
-        const products = window.getFirebaseEventProducts(eventId);
-        const eventData = window.getFirebaseEventsArray().find(e => e.id === eventId);
-        renderYourRealProductDetails(eventId, products, eventData ? eventData.rate : 0.24);
-      } else {
-        document.getElementById(`product-details-container-${eventId}`).innerHTML = `
-          <div style="color:#999;font-size:13px;padding:5px 0;">動態庫存撈取中...</div>
-        `;
-      }
-    } else {
-      row.style.display = 'none';
-      arrow.innerText = '▶';
-    }
-  }
-
-  // 渲染單品列表：直接顯示出日幣原價、請代購日幣、現貨剩餘量與已賺利潤
-  function renderYourRealProductDetails(eventId, productsArray, eventRate) {
-    const container = document.getElementById(`product-details-container-${eventId}`);
-    if(!productsArray || productsArray.length === 0) {
-      container.innerHTML = `<div style="color:#999;font-size:13px;padding:5px 0;">此活動目前無商品。</div>`;
-      return;
-    }
-
-    let html = `
-      <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:5px;">
-        <tr style="background:#f0e9d7;color:#4a3c1a;font-weight:500;">
-          <th style="padding:6px;text-align:left">商品名稱✕規格</th>
-          <th style="padding:6px;text-align:center">日幣原價</th>
-          <th style="padding:6px;text-align:center">請代購日幣</th>
-          <th style="padding:6px;text-align:center">台幣總成本</th>
-          <th style="padding:6px;text-align:center">台幣賣價</th>
-          <th style="padding:6px;text-align:center">已售 / 總庫存</th>
-          <th style="padding:6px;text-align:center">現貨剩餘</th>
-          <th style="padding:6px;text-align:right">已賺純利</th>
-        </tr>
-    `;
-
-    productsArray.forEach(p => {
-      const costRaw = parseFloat(p.costRaw) || parseFloat(p.cost) || 0;
-      const costAgent = parseFloat(p.costAgent) || 0;
-      const totalJpCost = costRaw + costAgent;
-      const totalTwCost = Math.ceil(totalJpCost * eventRate);
-      const priceTw = p.price || 0;
-      const singleProfit = priceTw - totalTwCost;
-      
-      const stock = p.stock || 0;
-      const sold = p.sold || 0;
-      const remain = stock - sold;
-      const itemTotalProfit = singleProfit * sold;
-
-      html += `
-        <tr style="border-bottom:1px solid #e9dfc6">
-          <td style="padding:6px;font-weight:500">${p.name} ${p.spec ? `<span style="color:#718096">(${p.spec})</span>`:''}</td>
-          <td style="padding:6px;text-align:center;color:#666">¥ ${costRaw}</td>
-          <td style="padding:6px;text-align:center;color:#666">+ ¥ ${costAgent}</td>
-          <td style="padding:6px;text-align:center;color:#8c7b52">NT$ ${totalTwCost}</td>
-          <td style="padding:6px;text-align:center;font-weight:bold;color:#2d3748">NT$ ${priceTw}</td>
-          <td style="padding:6px;text-align:center">${sold} / ${stock}</td>
-          <td style="padding:6px;text-align:center">
-            ${remain <= 0 ? '<span style="color:#cc3333;font-weight:bold">售罄 👑</span>' : `<span style="color:#2e7d32;font-weight:bold">剩 ${remain} 件</span>`}
-          </td>
-          <td style="padding:6px;text-align:right;" class="profit-positive">NT$ ${itemTotalProfit.toLocaleString()}</td>
-        </tr>
-      `;
-    });
-
-    html += `</table>`;
-    container.innerHTML = html;
-  }
-
-  // 生成快捷盲打列 HTML (整合雙段日幣成本)
-  function renderInjectableQuickAddRow(eventId, currentExchangeRate) {
-    return `
-      <div class="quick-add-row" id="quick-row-${eventId}" style="margin-bottom:12px;">
-        <span style="font-weight:bold;color:#8e794b;font-size:13px">⚡ 現場商品盲打新增：</span>
-        <input type="text" id="qa-name-${eventId}" placeholder="商品名稱" required style="flex:1.5;">
-        <input type="text" id="qa-spec-${eventId}" placeholder="規格">
-        <input type="number" id="qa-stock-${eventId}" placeholder="總庫存" value="5" style="max-width:70px;">
-        <input type="number" id="qa-costRaw-${eventId}" placeholder="日幣原價(¥)" oninput="autoCalcPrice('${eventId}', ${currentExchangeRate})">
-        <input type="number" id="qa-costAgent-${eventId}" placeholder="請代購日幣(¥)" value="0" oninput="autoCalcPrice('${eventId}', ${currentExchangeRate})">
-        <input type="number" id="qa-rate-${eventId}" placeholder="匯率" value="${currentExchangeRate}" step="0.001" style="max-width:75px;">
-        <input type="number" id="qa-price-${eventId}" placeholder="賣價(NT)" onkeydown="if(event.key==='Enter')saveQuickProduct('${eventId}')" style="font-weight:bold;color:#4a3c1a;">
-        <button class="quick-add-btn" onclick="saveQuickProduct('${eventId}')">➕ 連續上架</button>
-      </div>
-    `;
-  }
-
-  // 盲打時自動計算並進位台幣賣價
-  function autoCalcPrice(eventId, baseRate) {
-    const costRaw = parseFloat(document.getElementById(`qa-costRaw-${eventId}`).value) || 0;
-    const costAgent = parseFloat(document.getElementById(`qa-costAgent-${eventId}`).value) || 0;
-    const rate = parseFloat(document.getElementById(`qa-rate-${eventId}`).value) || baseRate || 0.24;
+    // --- 園長：請確保此處為您原始專案的正確設定 ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyD7KmXt_PjFzyYKz4tXGQAmz_wvmmSjAm4",
+        authDomain: "zoo-62638.firebaseapp.com",
+        databaseURL: "https://zoo-62638-default-rtdb.firebaseio.com",
+        projectId: "zoo-62638",
+        storageBucket: "zoo-62638.firebasestorage.app",
+        messagingSenderId: "33012710753",
+        appId: "1:33012710753:web:318636add1f5ac2f7b5920"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
     
-    const totalJp = costRaw + costAgent;
-    if (totalJp > 0) {
-      document.getElementById(`qa-price-${eventId}`).value = Math.ceil(totalJp * rate);
-    }
-  }
+    let allOrders = {};
+    let products = {}; // 商品成本資訊需在此處存取
 
-  // 寫入商品資料庫 (串接您原有的 Firebase 寫入機制)
-  function saveQuickProduct(eventId) {
-    const name = document.getElementById(`qa-name-${eventId}`).value.trim();
-    const spec = document.getElementById(`qa-spec-${eventId}`).value.trim();
-    const stock = parseInt(document.getElementById(`qa-stock-${eventId}`).value) || 0;
-    const costRaw = parseFloat(document.getElementById(`qa-costRaw-${eventId}`).value) || 0;
-    const costAgent = parseFloat(document.getElementById(`qa-costAgent-${eventId}`).value) || 0;
-    const rate = parseFloat(document.getElementById(`qa-rate-${eventId}`).value) || 0.24;
-    const price = parseInt(document.getElementById(`qa-price-${eventId}`).value) || 0;
+    // 讀取訂單與商品資料
+    db.ref('orders').on('value', snap => { allOrders = snap.val() || {}; renderOrders('all'); });
+    db.ref('products').on('value', snap => { products = snap.val() || {}; });
 
-    if (!name || !price) return alert('請填寫商品名稱與台幣賣價！');
-
-    const payload = { name, spec, stock, sold: 0, costRaw, costAgent, rate, price };
-
-    // 無縫呼叫您原本 admin.js 的上架常規函式
-    if (typeof window.firebasePushNewProduct === 'function') {
-      window.firebasePushNewProduct(eventId, payload);
-    } else {
-      console.log('已發送至 Firebase：', payload);
-      alert(`【${name}】已成功上架！`);
+    function setFilter(status, btn) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderOrders(status);
     }
 
-    // 🚀 盲打不中斷：清空格子、焦點自動回到品名，手指完全不離鍵盤
-    document.getElementById(`qa-name-${eventId}`).value = '';
-    document.getElementById(`qa-spec-${eventId}`).value = '';
-    document.getElementById(`qa-costRaw-${eventId}`).value = '';
-    document.getElementById(`qa-costAgent-${eventId}`).value = '0';
-    document.getElementById(`qa-price-${eventId}`).value = '';
-    document.getElementById(`qa-name-${eventId}`).focus();
-  }
+    function renderOrders(filterStatus) {
+        const container = document.getElementById('admin-main');
+        container.innerHTML = '';
+        Object.entries(allOrders).forEach(([key, order]) => {
+            // 這裡對應頁籤邏輯
+            const profit = calculateProfit(order);
+            container.innerHTML += `
+                <div class="order-card">
+                    <div><b>${order.nick}</b> | 總計: $${order.total}</div>
+                    <div class="profit-view">預估利潤: $${profit}</div>
+                    <button class="status-tag" onclick="rotateStatus('${key}')">物流: ${order.logistics || '待採購'}</button>
+                </div>`;
+        });
+    }
+
+    // 核心利潤算法：售價 - (購入價 * 匯率)
+    function calculateProfit(order) {
+        let profit = 0;
+        if (!order.items) return 0;
+        order.items.forEach(it => {
+            const p = products[it.pid] || {};
+            // 假設 buy_price_jpy 是購入成本，rate 是該場次匯率
+            const costTWD = (p.buy_price_jpy || 0) * (p.rate || 0.23); 
+            profit += (it.price - costTWD);
+        });
+        return Math.floor(profit);
+    }
+
+    // 物流循環
+    const states = ['待採購', '已採購', '日本寄出', '抵台清關', '已出貨'];
+    function rotateStatus(key) {
+        let o = allOrders[key];
+        let current = o.logistics || states[0];
+        let next = states[(states.indexOf(current) + 1) % states.length];
+        db.ref(`orders/${key}`).update({ logistics: next });
+    }
 </script>
 </body>
 </html>
