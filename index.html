@@ -4,9 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>33日本動物園 連線登記與管理系統</title>
-    <!-- 引入 Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <script>
+        // =================================================================
+        // 🔑 園長專用快速通道：請在下方雙引號內，貼上妳原本的 Firebase 網址
+        // =================================================================
+        const MY_FIREBASE_URL = "請在此處貼上妳的Firebase網址";
+        // =================================================================
+    </script>
     
     <style>
         /* 🎨 100% 恢復原本精緻的日系抹茶牛奶原創色調 */
@@ -95,21 +102,16 @@
 </head>
 <body>
 
-    <!-- ================================================================= -->
-    <!-- 🟢 前台區域（完全保留原本簡潔日系抹茶風格） -->
-    <!-- ================================================================= -->
     <div id="front-area">
         <div style="text-align: center; margin-bottom: 20px;">
             <h2 style="color:var(--wood); margin: 0;">🐾 33日本動物園 連線登記處 🐾</h2>
         </div>
 
-        <!-- 前台：活動場次清單 -->
         <div id="front-event-layer">
             <h3 style="color:var(--matcha); border-left:4px solid var(--matcha); padding-left:8px;">🟢 開放中連線場次</h3>
             <div id="active-events-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:12px;"></div>
         </div>
 
-        <!-- 前台：場次內商品卡片 -->
         <div id="front-prod-layer" style="display:none;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                 <h3 id="current-selected-event-title" style="color:var(--wood); margin:0;">📌 當前活動場次</h3>
@@ -120,7 +122,6 @@
 
         <br>
 
-        <!-- 🛒 購物車與自助對帳查詢面板 -->
         <div class="panel-box" style="border-top: 4px solid var(--caramel);">
             <h3 style="color:var(--caramel); margin-top:0;">🛒 我的登記選購清單</h3>
             <div id="cart-items" style="max-height:200px; overflow-y:auto; margin-bottom:15px;"></div>
@@ -143,16 +144,12 @@
             <div id="search-results-area"></div>
         </div>
 
-        <!-- 🔒 管理入口密碼鎖 -->
         <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #DDD;">
             <button onclick="promptAdmin()" style="background: none; border: none; color: #BBB; font-size: 11px; cursor: pointer;">⚙️ 進入後台工作管理入口</button>
         </div>
     </div>
 
 
-    <!-- ================================================================= -->
-    <!-- 🛠️ 後台管理工作台 -->
-    <!-- ================================================================= -->
     <div id="admin-area" style="display:none;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
             <h2 style="color:var(--wood); margin: 0;">🛠️ 33日本動物園 - 園長專屬工作台</h2>
@@ -165,7 +162,6 @@
             <button id="t-money" class="tab-btn" onclick="switchTab('tab-money')">💰 全局對帳面板</button>
         </div>
 
-        <!-- 【分頁 1：場次概覽與維護】 -->
         <div id="tab-events" class="tab-content">
             <div style="display:flex; gap:10px; margin-bottom:15px;">
                 <button class="btn-action" onclick="openAddEventModal()">＋ 建立全新活動場次 (支援一鍵多商品)</button>
@@ -186,7 +182,6 @@
             </div>
         </div>
 
-        <!-- 【分頁 2：訂單明細管理】 -->
         <div id="tab-orders" class="tab-content" style="display:none;">
             <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px;">
                 <button class="btn-action" style="background:#4A6FA5;" onclick="mergeSelected()">📦 合併勾選訂單</button>
@@ -202,7 +197,6 @@
             <div id="admin-orders-list"></div>
         </div>
 
-        <!-- 【分頁 3：全局對帳面板】 -->
         <div id="tab-money" class="tab-content" style="display:none;">
             <div id="unpaid-summary-banner" class="panel-box" style="background:#FEF3C7; color:#92400E; font-weight:bold; font-size:15px; border-left:5px solid #F59E0B;">
                 💰 未收款小計金額：載入中...
@@ -222,9 +216,6 @@
     </div>
 
 
-    <!-- ================================================================= -->
-    <!-- 🪟 共用維護彈出視窗（100%保留原本精密編輯功能） -->
-    <!-- ================================================================= -->
     <div id="edit-modal" class="modal-overlay">
         <div class="modal-content">
             <h3 id="modal-title" style="margin-top:0; color:var(--wood);">維護面板</h3>
@@ -237,18 +228,8 @@
     </div>
 
 
-<!-- ================================================================= -->
-<!-- 📜 核心 JavaScript -->
-<!-- ================================================================= -->
 <script>
-    // ⚠️ 園長注意！請在下方引號中貼回妳原本的 Firebase 資料庫網址，紀錄就會立刻全數回歸！
-    const firebaseConfig = {
-        databaseURL: "請在這裡貼上妳原本的FIREBASE網址"
-    };
-    
-    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-    const db = firebase.database();
-
+    // 1. 先宣告所有全域變數，確保不發生載入順序錯誤
     let products = [];
     let orders = {};
     let cart = [];
@@ -260,7 +241,15 @@
     let currentFilterUser = 'all';
     let currentMoneyFilter = 'all';
 
-    // 監聽資料庫
+    // 2. 初始化 Firebase 連線
+    const firebaseConfig = {
+        databaseURL: typeof MY_FIREBASE_URL !== 'undefined' ? MY_FIREBASE_URL : ""
+    };
+    
+    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+    const db = firebase.database();
+
+    // 3. 監聽資料庫
     db.ref('products').on('value', snapshot => {
         products = snapshot.val() || [];
         renderActiveEventsPage();
@@ -389,6 +378,7 @@
     function renderAdminEvents() {
         const evts = [...new Set(products.map(p => p ? p.e : ''))].filter(e => e);
         const tbody = document.getElementById('admin-events-table');
+        if(!tbody) return;
         if(evts.length === 0) {
             tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999; padding:20px;">目前沒有建立任何場次。</td></tr>`;
             return;
@@ -407,7 +397,7 @@
         }).join('');
     }
 
-    // 💰 園長最在意的私密利潤對帳核心，100%保留與修復
+    // 💰 園長最在意的私密利潤對帳核心
     function renderAdminProdsView(evtName) {
         const tbody = document.getElementById('admin-events-table');
         let html = `<tr><td colspan="4" style="background:#FFF; padding:15px;"><b style="color:var(--matcha);">[${evtName}] 私密內部利潤對帳明細：</b><br><br>`;
@@ -468,7 +458,6 @@
                         </span>
                         <div>
                             <span style="font-weight:bold; margin-right:15px; color:var(--wood);">$ ${it.p || 0}</span>
-                            <!-- ❌ 點擊單項商品右側的 ✕ 即可單獨剔除該項商品，自動重新計算總金額 -->
                             <button onclick="deleteSingleItem('${k}', ${idx}); event.stopPropagation();" style="color:#EF4444; background:none; border:none; font-size:13px; cursor:pointer; font-weight:bold;">✕ 刪除品項</button>
                         </div>
                     </div>`;
@@ -502,13 +491,13 @@
         main.innerHTML = listHtml || `<p style="color:#999; text-align:center; padding:30px;">目前沒有訂單紀錄。</p>`;
     }
 
-    /* ==================== 🌟 升級功能：一鍵新增多商品場次彈窗 ==================== */
+    /* ==================== 批次建立與商品上架功能 ==================== */
     function openAddEventModal() {
         document.getElementById('modal-title').innerText = "建立全新連線場次與商品上架";
         document.getElementById('modal-body').innerHTML = `
             <div>
                 <strong>1. 設定連線活動名稱：</strong>
-                <input id="new-evt-name" class="input-std" placeholder="例如: 日本迪士尼連線 / 雲日周" style="font-size:14px; font-weight:bold;">
+                <input id="new-evt-name" class="input-std" placeholder="例如: " style="font-size:14px; font-weight:bold;">
             </div>
             <hr style="border:none; border-top:1px dashed #DDD; margin:15px 0;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -518,7 +507,6 @@
             <div id="multi-prod-container"></div>
         `;
         
-        // 預設先給一行，方便直接填寫
         addProdRowToModal();
         
         document.getElementById('edit-modal').style.display = 'flex';
@@ -547,7 +535,6 @@
             });
             
             if(!hasValidProd) {
-                // 如果沒填任何商品，就只建立一個初始化占位卡片
                 nP.push({ e: evtName, n: "【活動場次初始化卡片】", p: 0, s: "一般", fp: 0, cp: 0, rate: 0.22 });
             }
             
@@ -557,6 +544,7 @@
 
     function addProdRowToModal() {
         const container = document.getElementById('multi-prod-container');
+        if(!container) return;
         const div = document.createElement('div');
         div.className = 'multi-prod-row';
         div.innerHTML = `
@@ -577,7 +565,7 @@
         container.appendChild(div);
     }
 
-    // 🔧 單一商品的精密成本/利潤修改彈窗功能，完整保留
+    // 🔧 單一商品的精密成本修改
     function openProductEdit(index) {
         const p = products[index];
         document.getElementById('modal-title').innerText = "修改商品精密欄位與成本設定";
@@ -605,7 +593,7 @@
         };
     }
 
-    /* ==================== 💰 全局財務記錄與其他共用輔助函數 ==================== */
+    /* ==================== 💰 全局財務與輔助函數 ==================== */
     function renderMoneyRecords() {
         const container = document.getElementById('money-events-container');
         if (!container) return; container.innerHTML = '';
@@ -628,7 +616,10 @@
             groupedByEvent[evtName].push({ key: k, order: o, nick: buyerNick, total: oTotal, timeStr: orderTime, paid: isPaid });
         });
 
-        document.getElementById('unpaid-summary-banner').innerText = `💰 全局未收小計金額：${unpaidCount} 筆 ｜ 合計未收總額：NT$ ${unpaidSum.toLocaleString()}`;
+        const banner = document.getElementById('unpaid-summary-banner');
+        if(banner) {
+            banner.innerText = `💰 全局未收小計金額：${unpaidCount} 筆 ｜ 合計未收總額：NT$ ${unpaidSum.toLocaleString()}`;
+        }
 
         for(let evtName in groupedByEvent) {
             const list = groupedByEvent[evtName];
@@ -725,6 +716,7 @@
         navigator.clipboard.writeText(txt).then(() => alert(`已成功複製 ${nick} 的對帳文字囉！`));
     }
 
+    // 匯出 csv
     function exportToCSV() {
         let csv = "\uFEFF暱稱,場次,商品名稱,規格,價格,出貨狀態,收款狀態\n";
         Object.values(orders).forEach(o => { if(o&&o.items){ o.items.forEach(it => { if(it){ csv += `${o.nick || ''},${it.e || ''},${it.n || ''},${it.sel || ''},${it.p || 0},${it.isShipped?'已出貨':'未出貨'},${o.paid?'已核帳':'未收款'}\n`; } }); } });
