@@ -2,42 +2,73 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>33日本動物園 穩定版</title>
+    <title>33日本動物園 系統管理台</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script>
-        // 🚨 這是您的專屬資料庫，請勿刪除
-        const firebaseConfig = {
-            databaseURL: "https://zoo-62638-default-rtdb.firebaseio.com/"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-    </script>
     <style>
-        body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
-        .box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        /* 保持原有顏色變數，移除無效醜格式 */
+        :root { --matcha: #709a77; --wood: #5a4b41; --caramel: #b87d4b; --rice: #f1ede4; }
+        body { font-family: sans-serif; background: #fdfdfd; color: var(--wood); padding: 20px; }
+        .btn-sm { padding: 4px 8px; font-size: 12px; cursor: pointer; }
+        .input-std { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
+        .collapse-group { margin-bottom: 10px; border: 1px solid #eee; border-radius: 6px; overflow: hidden; }
+        .collapse-header { padding: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .collapse-body { padding: 15px; border-top: 1px solid #eee; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h1>🐾 33日本動物園 管理台</h1>
-        <p id="status">正在同步連線中...</p>
-    </div>
 
-    <script>
-        // 核心邏輯：確保資料抓取安全，不會因為空節點而報錯
-        db.ref('products').on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                document.getElementById('status').innerText = "✅ 連線成功，商品清單已讀取。";
-                console.log("商品資料:", data);
-            } else {
-                document.getElementById('status').innerText = "ℹ️ 目前尚無商品資料。";
-            }
-        }, (error) => {
-            document.getElementById('status').innerText = "❌ 連線失敗，請檢查網路。";
-            console.error(error);
-        });
-    </script>
+<div id="admin-events-table"></div>
+<div id="admin-orders-list"></div>
+<div id="edit-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+    <div style="background:#fff; padding:20px; width:80%; max-width:500px;">
+        <h3 id="modal-title"></h3>
+        <div id="modal-body"></div>
+        <button id="modal-save">確認儲存更新</button>
+        <button onclick="closeModal()">取消</button>
+    </div>
+</div>
+
+<script>
+    // 1. 初始化 (保持完整)
+    const firebaseConfig = { databaseURL: "https://zoo-62638-default-rtdb.firebaseio.com/" };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    
+    let products = [], orders = {}, currentFilterUser = 'all', currentMoneyFilter = 'all';
+
+    // 2. 資料監聽 (保持完整)
+    database.ref('/').on('value', (snapshot) => {
+        const data = snapshot.val();
+        products = data.products || [];
+        orders = data.orders || {};
+        renderAdminEvents();
+        renderAdminOrders();
+    });
+
+    // 3. 將您原有的完整函數貼入下方 (無任何刪減)
+    /* ==================== 💎 核心：精密成本利潤計算與場次維護 ==================== */
+    function renderAdminEvents() { /* 您的原始函數 */ }
+    function renderAdminProdsView(evtName) { /* 您的原始函數 */ }
+    /* ==================== 📋 訂單管理與個別商品編輯/刪除功能 ==================== */
+    function renderAdminOrders() { /* 您的原始函數 */ }
+    function openAddEventModal() { /* 您的原始函數 */ }
+    function addProdRowToModal() { /* 您的原始函數 */ }
+    function openProductEdit(index) { /* 您的原始函數 */ }
+    /* ==================== 💰 全局財務與輔助函數 ==================== */
+    function renderMoneyRecords() { /* 您的原始函數 */ }
+    function markEventAllPaid(evtName) { /* 您的原始函數 */ }
+    function deleteSingleItem(orderKey, itemIdx) { /* 您的原始函數 */ }
+    function mergeSelected() { /* 您的原始函數 */ }
+    function openPackAssistant() { /* 您的原始函數 */ }
+    function updateFilterButtons() { /* 您的原始函數 */ }
+    function filterOrderUser(nick) { /* 您的原始函數 */ }
+    function filterMoneyStatus(type, btn) { /* 您的原始函數 */ }
+    function copyOrderInfo(nick) { /* 您的原始函數 */ }
+    function exportToCSV() { /* 您的原始函數 */ }
+    function deleteEntireEvent(evtName) { /* 您的原始函數 */ }
+    function closeModal() { document.getElementById('edit-modal').style.display = 'none'; }
+
+</script>
 </body>
 </html>
